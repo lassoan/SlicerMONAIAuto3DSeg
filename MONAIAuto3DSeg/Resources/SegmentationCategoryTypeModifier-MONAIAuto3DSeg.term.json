@@ -1,0 +1,2103 @@
+{
+  "SegmentationCategoryTypeContextName": "Segmentation category and type - MONAI Auto3DSeg",
+  "@schema": "https://raw.githubusercontent.com/qiicr/dcmqi/master/doc/segment-context-schema.json#",
+  "SegmentationCodes": {
+    "Category": [
+      {
+        "CodeMeaning": "Anatomical Structure",
+        "CodingSchemeDesignator": "SCT",
+        "showAnatomy": false,
+        "cid": "7150",
+        "CodeValue": "123037004",
+        "contextGroupName": "SegmentationPropertyCategories",
+        "Type": [
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              188,
+              102
+            ],
+            "CodeMeaning": "Sacrum",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "4031",
+            "UMLSConceptUID": "C0036037",
+            "CodeValue": "54735007",
+            "contextGroupName": "CommonAnatomicRegions",
+            "SNOMEDCTConceptID": "54735007",
+            "paired": "U"
+          },
+          {
+            "CodeMeaning": "Scapula",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "4031,6114",
+            "UMLSConceptUID": "C0036277",
+            "CodeValue": "79601000",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "79601000",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  212,
+                  188,
+                  102
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right scapula",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  212,
+                  188,
+                  102
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left scapula",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  212,
+                  188,
+                  102
+                ],
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Humerus",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "4031,6114",
+            "UMLSConceptUID": "C0020164",
+            "CodeValue": "85050009",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "85050009",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  205,
+                  179,
+                  108
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right humerus",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  205,
+                  179,
+                  108
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left humerus",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  205,
+                  179,
+                  108
+                ],
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Femur",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "4031",
+            "UMLSConceptUID": "C0015811",
+            "CodeValue": "71341001",
+            "contextGroupName": "CommonAnatomicRegions",
+            "SNOMEDCTConceptID": "71341001",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  255,
+                  238,
+                  170
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right femur",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  255,
+                  238,
+                  170
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left femur",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Erector spinae muscle",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6116",
+            "UMLSConceptUID": "C0224301",
+            "CodeValue": "44947003",
+            "contextGroupName": "MuscularAnatomy",
+            "SNOMEDCTConceptID": "44947003",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  171,
+                  85,
+                  68
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "3dSlicerLabel": "right erector spinae muscle",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  171,
+                  85,
+                  68
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left erector spinae muscle",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Deep muscle of back",
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "244849004",
+            "SNOMEDCTConceptID": "244849004",
+            "contextGroupName": "MuscularAnatomy",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  171,
+                  85,
+                  68
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "3dSlicerLabel": "right deep back muscle",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  171,
+                  85,
+                  68
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left deep back muscle",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              0,
+              122,
+              171
+            ],
+            "CodeMeaning": "Pulmonary artery",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "pulmonary artery",
+            "3dSlicerIntegerLabel": 288,
+            "cid": "3010,4030,6117",
+            "UMLSConceptUID": "C0034052",
+            "CodeValue": "81040000",
+            "contextGroupName": "CardiovascularAnatomicLocations,CT,MRandPETAnatomyImaged,VascularAnatomy",
+            "SNOMEDCTConceptID": "81040000",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Common iliac artery",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "3010",
+            "UMLSConceptUID": "C1261084",
+            "CodeValue": "73634005",
+            "contextGroupName": "CardiovascularAnatomicLocations",
+            "SNOMEDCTConceptID": "73634005",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  216,
+                  101,
+                  79
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right common iliac artery",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  216,
+                  101,
+                  79
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left common iliac artery",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              0,
+              151,
+              206
+            ],
+            "CodeMeaning": "Inferior vena cava",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "inferior vena cava",
+            "cid": "3010,6117,7154",
+            "UMLSConceptUID": "C0042458",
+            "CodeValue": "64131007",
+            "contextGroupName": "CardiovascularAnatomicLocations,VascularAnatomy,AbdominalSegmentationTypes",
+            "SNOMEDCTConceptID": "64131007",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              0,
+              141,
+              226
+            ],
+            "CodeMeaning": "Superior vena cava",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "superior vena cava",
+            "cid": "3010,6117",
+            "UMLSConceptUID": "C0042459",
+            "CodeValue": "48345005",
+            "contextGroupName": "CardiovascularAnatomicLocations,VascularAnatomy",
+            "SNOMEDCTConceptID": "48345005",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              0,
+              151,
+              206
+            ],
+            "CodeMeaning": "Portal vein",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "portal vein",
+            "cid": "3010",
+            "UMLSConceptUID": "C0032718",
+            "CodeValue": "32764006",
+            "contextGroupName": "CardiovascularAnatomicLocations",
+            "SNOMEDCTConceptID": "32764006",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Portal vein and splenic vein",
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "110765007",
+            "SNOMEDCTConceptID": "110765007",
+            "contextGroupName": "CardiovascularAnatomicLocations",
+            "3dSlicerLabel": "portal vein and splenic vein",
+            "recommendedDisplayRGBValue": [
+              0,
+              151,
+              206
+            ]
+          },
+          {
+            "CodeMeaning": "Common iliac vein",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "3010",
+            "UMLSConceptUID": "C0226758",
+            "CodeValue": "46027005",
+            "contextGroupName": "CardiovascularAnatomicLocations",
+            "SNOMEDCTConceptID": "46027005",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  0,
+                  151,
+                  206
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right common iliac vein",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  0,
+                  151,
+                  206
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "3dSlicerLabel": "left common iliac vein",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "First rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 1",
+            "cid": "4031,6114,7155",
+            "CodeValue": "48535007",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "48535007",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 1",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 1",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Second rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 2",
+            "cid": "4031,6114,7155",
+            "CodeValue": "78247007",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "78247007",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 2",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 2",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Third rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 3",
+            "cid": "4031,6114,7155",
+            "CodeValue": "25888004",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "25888004",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 3",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 3",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Fourth rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 4",
+            "cid": "4031,6114,7155",
+            "CodeValue": "25523003",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "25523003",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 4",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 4",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Fifth rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 5",
+            "cid": "4031,6114,7155",
+            "CodeValue": "15339008",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "15339008",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 5",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 5",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Sixth rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 6",
+            "cid": "4031,6114,7155",
+            "CodeValue": "59558009",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "59558009",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 6",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 6",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Seventh rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 7",
+            "cid": "4031,6114,7155",
+            "CodeValue": "24915002",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "24915002",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 7",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 7",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Eighth rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 8",
+            "cid": "4031,6114,7155",
+            "CodeValue": "5953002",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "5953002",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 8",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 8",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Ninth rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 9",
+            "cid": "4031,6114,7155",
+            "CodeValue": "22565002",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "22565002",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 9",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 9",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Tenth rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 10",
+            "cid": "4031,6114,7155",
+            "CodeValue": "77644006",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "77644006",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 10",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 10",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Eleventh rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 11",
+            "cid": "4031,6114,7155",
+            "CodeValue": "58830002",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "58830002",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 11",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 11",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              253,
+              232,
+              158
+            ],
+            "CodeMeaning": "Twelfth rib",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "rib 12",
+            "cid": "4031,6114,7155",
+            "CodeValue": "43993008",
+            "contextGroupName": "CommonAnatomicRegions,OsseousAnatomyFindingorFeature,ThoracicSegmentationTypes",
+            "SNOMEDCTConceptID": "43993008",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right rib 12",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  253,
+                  232,
+                  158
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left rib 12",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              255,
+              255,
+              207
+            ],
+            "CodeMeaning": "C1 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0004170",
+            "CodeValue": "14806007",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "14806007",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              255,
+              255,
+              207
+            ],
+            "CodeMeaning": "C2 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0004457",
+            "CodeValue": "39976000",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "39976000",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              255,
+              255,
+              207
+            ],
+            "CodeMeaning": "C3 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459939",
+            "CodeValue": "113205007",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "113205007",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              255,
+              255,
+              207
+            ],
+            "CodeMeaning": "C4 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459941",
+            "CodeValue": "5329002",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "5329002",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              255,
+              255,
+              207
+            ],
+            "CodeMeaning": "C5 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459943",
+            "CodeValue": "36978003",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "36978003",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              255,
+              255,
+              207
+            ],
+            "CodeMeaning": "C6 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459944",
+            "CodeValue": "36054005",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "36054005",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              255,
+              255,
+              207
+            ],
+            "CodeMeaning": "C7 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0223176",
+            "CodeValue": "87391001",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "87391001",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T1 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459933",
+            "CodeValue": "64864005",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "64864005",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T2 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459936",
+            "CodeValue": "53733008",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "53733008",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T3 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459952",
+            "CodeValue": "1626008",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "1626008",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T4 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459951",
+            "CodeValue": "73071006",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "73071006",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T5 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459950",
+            "CodeValue": "56401006",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "56401006",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T6 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459949",
+            "CodeValue": "45296009",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "45296009",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T7 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459947",
+            "CodeValue": "62487009",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "62487009",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T8 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459953",
+            "CodeValue": "11068009",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "11068009",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T9 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459954",
+            "CodeValue": "82687006",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "82687006",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T10 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459955",
+            "CodeValue": "7610001",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "7610001",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T11 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459956",
+            "CodeValue": "12989004",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "12989004",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              226,
+              202,
+              134
+            ],
+            "CodeMeaning": "T12 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0459957",
+            "CodeValue": "23215003",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "23215003",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              188,
+              102
+            ],
+            "CodeMeaning": "L1 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0223492",
+            "CodeValue": "66794005",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "66794005",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              188,
+              102
+            ],
+            "CodeMeaning": "L2 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0223507",
+            "CodeValue": "14293000",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "14293000",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              188,
+              102
+            ],
+            "CodeMeaning": "L3 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0223522",
+            "CodeValue": "36470004",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "36470004",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              188,
+              102
+            ],
+            "CodeMeaning": "L4 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0223537",
+            "CodeValue": "11994002",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "11994002",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              188,
+              102
+            ],
+            "CodeMeaning": "L5 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6114",
+            "UMLSConceptUID": "C0223552",
+            "CodeValue": "49668003",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "49668003",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              208,
+              122
+            ],
+            "CodeMeaning": "S1 vertebra",
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "65985001",
+            "contextGroupName": "OsseousAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "65985001",
+            "paired": "U"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              212,
+              188,
+              102
+            ],
+            "CodeMeaning": "Hip",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "4031",
+            "UMLSConceptUID": "C0019552",
+            "CodeValue": "29836001",
+            "contextGroupName": "CommonAnatomicRegions",
+            "SNOMEDCTConceptID": "29836001",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  212,
+                  188,
+                  102
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right hip",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  212,
+                  188,
+                  102
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left hip",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  212,
+                  188,
+                  102
+                ],
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Iliopsoas muscle",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6116",
+            "CodeValue": "68455001",
+            "contextGroupName": "MuscularAnatomy",
+            "SNOMEDCTConceptID": "68455001",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  188,
+                  95,
+                  76
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right iliopsoas muscle",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  188,
+                  95,
+                  76
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left iliopsoas muscle",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  188,
+                  95,
+                  76
+                ],
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Gluteus maximus muscle",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6116",
+            "CodeValue": "181674001",
+            "contextGroupName": "MuscularAnatomy",
+            "SNOMEDCTConceptID": "181674001",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  188,
+                  95,
+                  76
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right gluteus maximus",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  188,
+                  95,
+                  76
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left gluteus maximus",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  188,
+                  95,
+                  76
+                ],
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Gluteus medius muscle",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6116",
+            "CodeValue": "78333006",
+            "contextGroupName": "MuscularAnatomy",
+            "SNOMEDCTConceptID": "78333006",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  178,
+                  105,
+                  76
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right gluteus medius",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  178,
+                  105,
+                  76
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left gluteus medius",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  178,
+                  105,
+                  76
+                ],
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Gluteus minimus muscle",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "6116",
+            "CodeValue": "75297007",
+            "contextGroupName": "MuscularAnatomy",
+            "SNOMEDCTConceptID": "75297007",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "recommendedDisplayRGBValue": [
+                  178,
+                  95,
+                  86
+                ],
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "right gluteus minimus",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  178,
+                  95,
+                  86
+                ],
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "3dSlicerLabel": "left gluteus minimus",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "recommendedDisplayRGBValue": [
+                  178,
+                  95,
+                  86
+                ],
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Myocardium",
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "74281007",
+            "SNOMEDCTConceptID": "74281007",
+            "contextGroupName": "AnatomicRegion,CommonAnatomicRegions,MediastinumAnatomyFindingorFeature,CardiacStructureSegmentationTypes",
+            "3dSlicerLabel": "myocardium",
+            "recommendedDisplayRGBValue": [
+              206,
+              110,
+              84
+            ]
+          },
+          {
+            "CodeMeaning": "Brachiocephalic artery",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "3010,6117",
+            "UMLSConceptUID": "C0006094",
+            "CodeValue": "12691009",
+            "contextGroupName": "CardiovascularAnatomicLocations,VascularAnatomy",
+            "3dSlicerLabel": "brachiocephalic trunk",
+            "SNOMEDCTConceptID": "12691009",
+            "paired": "U",
+            "recommendedDisplayRGBValue": [
+              196,
+              121,
+              79
+            ]
+          },
+          {
+            "CodeMeaning": "Subclavian artery",
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "29700009",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007",
+                "3dSlicerLabel": "right subclavian artery",
+                "recommendedDisplayRGBValue": [
+                  216,
+                  101,
+                  89
+                ]
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000",
+                "3dSlicerLabel": "left subclavian artery",
+                "recommendedDisplayRGBValue": [
+                  216,
+                  101,
+                  69
+                ]
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Common carotid artery",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "3010,6117",
+            "UMLSConceptUID": "C0162859",
+            "CodeValue": "32062004",
+            "contextGroupName": "CardiovascularAnatomicLocations,VascularAnatomy",
+            "SNOMEDCTConceptID": "32062004",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007",
+                "3dSlicerLabel": "right common carotid artery",
+                "recommendedDisplayRGBValue": [
+                  0,
+                  112,
+                  165
+                ]
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000",
+                "3dSlicerLabel": "left common carotid artery",
+                "recommendedDisplayRGBValue": [
+                  10,
+                  105,
+                  155
+                ]
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Brachiocephalic vein",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "3010,6117",
+            "UMLSConceptUID": "C0006095",
+            "CodeValue": "8887007",
+            "contextGroupName": "CardiovascularAnatomicLocations,VascularAnatomy",
+            "SNOMEDCTConceptID": "8887007",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007",
+                "3dSlicerLabel": "right brachiocephalic vein",
+                "recommendedDisplayRGBValue": [
+                  0,
+                  151,
+                  206
+                ]
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000",
+                "3dSlicerLabel": "left brachiocephalic vein",
+                "recommendedDisplayRGBValue": [
+                  0,
+                  161,
+                  196
+                ]
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeMeaning": "Auricular appendage",
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "68786006",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007",
+                "3dSlicerLabel": "right atrial appendage",
+                "recommendedDisplayRGBValue": [
+                  0,
+                  151,
+                  206
+                ]
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000",
+                "3dSlicerLabel": "left atrial appendage",
+                "recommendedDisplayRGBValue": [
+                  0,
+                  161,
+                  196
+                ]
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              111,
+              184,
+              210
+            ],
+            "CodeMeaning": "Costal Cartilage",
+            "CodingSchemeDesignator": "SCT",
+            "3dSlicerLabel": "costal cartilage",
+            "cid": "6113",
+            "UMLSConceptUID": "C0222787",
+            "CodeValue": "50016007",
+            "contextGroupName": "MediastinumAnatomyFindingorFeature",
+            "SNOMEDCTConceptID": "50016007",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              180,
+              20,
+              22
+            ],
+            "3dSlicerLabel": "blood vessel",
+            "CodeMeaning": "Blood vessel",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "7166",
+            "UMLSConceptUID": "C0005847",
+            "CodeValue": "59820001",
+            "contextGroupName": "CommonTissueSegmentationTypes",
+            "SNOMEDCTConceptID": "59820001"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              178,
+              222,
+              248
+            ],
+            "3dSlicerLabel": "trachea and bronchus",
+            "CodeMeaning": "Trachea and bronchus",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "4040",
+            "UMLSConceptUID": "C1268276",
+            "CodeValue": "110726009",
+            "contextGroupName": "EndoscopyAnatomicRegions",
+            "SNOMEDCTConceptID": "110726009"
+          },
+          {
+            "recommendedDisplayRGBValue": [
+              220,
+              20,
+              22
+            ],
+            "3dSlicerLabel": "coronary artery",
+            "CodeMeaning": "Coronary artery",
+            "CodingSchemeDesignator": "SCT",
+            "cid": "3010,4030",
+            "UMLSConceptUID": "C0205042",
+            "CodeValue": "41801008",
+            "contextGroupName": "CardiovascularAnatomicLocations,CT,MRandPETAnatomyImaged",
+            "SNOMEDCTConceptID": "41801008",
+            "paired": "Y",
+            "Modifier": [
+              {
+                "CodeMeaning": "Right",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205090",
+                "CodeValue": "24028007",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "24028007"
+              },
+              {
+                "CodeMeaning": "Left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0205091",
+                "CodeValue": "7771000",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "7771000"
+              },
+              {
+                "CodeMeaning": "Right and left",
+                "CodingSchemeDesignator": "SCT",
+                "cid": "244",
+                "UMLSConceptUID": "C0238767",
+                "CodeValue": "51440002",
+                "contextGroupName": "Laterality",
+                "SNOMEDCTConceptID": "51440002"
+              }
+            ]
+          },
+          {
+            "CodeValue": "69748006",
+            "cid": "6113",
+            "UMLSConceptUID": "C0040132",
+            "CodeMeaning": "Thyroid",
+            "contextGroupName": "Mediastinum Anatomy Finding or Feature",
+            "CodingSchemeDesignator": "SCT",
+            "SNOMEDCTConceptID": "69748006",
+            "recommendedDisplayRGBValue": [
+              220,
+              160,
+              30
+            ],
+            "3dSlicerLabel": "thyroid"
+          }
+        ]
+      }
+    ]
+  }
+}
