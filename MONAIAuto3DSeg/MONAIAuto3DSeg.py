@@ -342,13 +342,67 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         self.tasks = OrderedDict()
 
         # Main
-        self.tasks["17-segments-TotalSegmentator"] = {"title": "TotalSegmentator 17 segments"}
-        self.tasks["104-segments-TotalSegmentator"] = {"title": "TotalSegmentator 104 segments"}
+        self.tasks["17-segments-TotalSegmentator"] = {
+            "title": "TotalSegmentator 17 segments",
+            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator.zip",
+            "sha256": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator.sha256"
+            }
+        self.tasks["104-segments-TotalSegmentator"] = {
+            "title": "TotalSegmentator 104 segments",
+            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/104-segments-TotalSegmentator.zip",
+            "sha256": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/104-segments-TotalSegmentator.sha256"
+            }
         self.defaultTask = "17-segments-TotalSegmentator"
 
     def modelPath(self, modelName):
         import pathlib
         return self.fileCachePath.joinpath("models").joinpath(modelName)
+
+    def isModelDownloaded(self, modelName):
+        import pathlib
+        modelPath = self.modelPath(modelName)
+        if not modelPath.exists():
+            return False
+        if not modelPath.joinpath("labels.csv").exists():
+            return False
+        return True
+
+    def downloadModel(self, modelName):
+
+        url = self.tasks[modelName]["url"]
+
+        # TODO: ask user to download manually until download from github release is fixed
+        raise RuntimeError(f"Please download\n\n{url}\n\nand unzip to\n\n{self.modelPath(modelName)}")
+
+        self.log(f"Downloading model {modelName} from {url}...")
+
+        import http.client
+        # helps to solve incomplete read erros
+        # https://stackoverflow.com/questions/37816596/restrict-request-to-only-ask-for-http-1-0-to-prevent-chunking-error
+        http.client.HTTPConnection._http_vsn = 10
+        http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
+
+        import time
+        import requests
+
+        tempfile = self.fileCachePath.joinpath("tmp_download_file.zip")
+        try:
+            st = time.time()
+            with open(tempfile, 'wb') as f:
+                with requests.get(url, stream=True) as r:
+                    r.raise_for_status()
+                    for chunk in r.iter_content(chunk_size=8192 * 16):
+                        f.write(chunk)
+
+            self.log("Download finished. Extracting...")
+            with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
+                zip_f.extractall(config_dir)
+            self.log(f"  downloaded in {time.time()-st:.2f}s")
+        except Exception as e:
+            raise e
+        finally:
+            if tempfile.exists():
+                os.remove(tempfile)
 
     def _MONAIAuto3DSegTerminologyPropertyTypes(self):
         """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
@@ -433,7 +487,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                     row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator")]
                     + "^" + row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodeValue")])
                 if terminologyPropertyTypeStr in self.MONAIAuto3DSegTerminologyPropertyTypes:
-                    terminologyEntryStr = "Segmentation category and type - Total Segmentator" + terminologyEntryStrWithoutCategoryName
+                    terminologyEntryStr = "Segmentation category and type - MONAI Auto3DSeg" + terminologyEntryStrWithoutCategoryName
                 else:
                     terminologyEntryStr = "Segmentation category and type - DICOM master list" + terminologyEntryStrWithoutCategoryName
 
@@ -578,7 +632,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         Can be used without GUI widget.
         :param inputVolume: volume to be thresholded
         :param outputVolume: thresholding result
-        :param task: one of self.tasks, default is "total"
+        :param task: one of self.tasks
         :param subset: a list of structures (MONAIAuto3DSeg classe names https://github.com/wasserth/MONAIAuto3DSeg#class-detailsMONAIAuto3DSeg) to segment.
           Default is None, which means that all available structures will be segmented."
         """
@@ -591,6 +645,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         if task == None:
             task = self.defaultTask
+
+        if not self.isModelDownloaded(task):
+            self.downloadModel(task)
 
         import time
         startTime = time.time()
@@ -772,8 +829,6 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
         """
         self.setUp()
         self.test_MONAIAuto3DSeg1()
-        self.setUp()
-        self.test_MONAIAuto3DSegSubset()
 
     def test_MONAIAuto3DSeg1(self):
         """ Ideally you should have several levels of tests.  At the lowest level
@@ -820,46 +875,3 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
 
     def _mylog(self,text):
         print(text)
-
-    def test_MONAIAuto3DSegSubset(self):
-        """ Ideally you should have several levels of tests.  At the lowest level
-        tests should exercise the functionality of the logic with different inputs
-        (both valid and invalid).  At higher levels your tests should emulate the
-        way the user would interact with your code and confirm that it still works
-        the way you intended.
-        One of the most important features of the tests is that it should alert other
-        developers when their changes will have an impact on the behavior of your
-        module.  For example, if a developer removes a feature that you depend on,
-        your test should break so they know that the feature is needed.
-        """
-
-        self.delayDisplay("Starting the test")
-
-        # Get/create input data
-
-        import SampleData
-        inputVolume = SampleData.downloadSample("CTACardio")
-        self.delayDisplay("Loaded test data set")
-
-        outputSegmentation = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
-
-        # Test the module logic
-
-        # Logic testing is disabled by default to not overload automatic build machines (pytorch is a huge package and computation
-        # on CPU takes 5-10 minutes). Set testLogic to True to enable testing.
-        testLogic = False
-
-        if testLogic:
-            logic = MONAIAuto3DSegLogic()
-            logic.logCallback = self._mylog
-
-            self.delayDisplay("Set up required Python packages")
-            logic.setupPythonRequirements()
-
-            self.delayDisplay("Compute output")
-            logic.process(inputVolume, outputSegmentation)
-
-        else:
-            logging.warning("test_MONAIAuto3DSeg1 logic testing was skipped")
-
-        self.delayDisplay("Test passed")

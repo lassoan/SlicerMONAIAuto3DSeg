@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TotalSegmentator</class>
- <widget class="qMRMLWidget" name="TotalSegmentator">
+ <class>MONAIAuto3DSeg</class>
+ <widget class="qMRMLWidget" name="MONAIAuto3DSeg">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -55,7 +55,7 @@
       <item row="1" column="1">
        <widget class="QComboBox" name="taskComboBox">
         <property name="toolTip">
-         <string>Choose &quot;total&quot; for segmenting all structures, or any of the more specialized segmentation tasks (that segment only a handful of specific structures in a certain region).</string>
+         <string>Choose &quot;TotalSegmentator 17 segments&quot; for a quick test.</string>
         </property>
        </widget>
       </item>
@@ -152,7 +152,7 @@
       <item row="0" column="1">
        <widget class="QCheckBox" name="useStandardSegmentNamesCheckBox">
         <property name="toolTip">
-         <string>If enabled (default) then segment names are obtained from Slicer standard terminology files. If disabled then TotalSegmentator identifiers are used as segment names.</string>
+         <string>If enabled (default) then segment names are obtained from Slicer standard terminology files. If disabled then internal identifiers are used as segment names.</string>
         </property>
         <property name="text">
          <string/>
@@ -189,7 +189,7 @@
       <item row="2" column="1">
        <widget class="QPushButton" name="packageUpgradeButton">
         <property name="toolTip">
-         <string>Force upgrade of TotalSegmentator Python package to the version required by this module.</string>
+         <string>Force upgrade of MONAI Python package to the version required by this module.</string>
         </property>
         <property name="text">
          <string>Force reinstall</string>
@@ -199,7 +199,7 @@
       <item row="3" column="0" colspan="2">
        <widget class="QPushButton" name="packageInfoUpdateButton">
         <property name="toolTip">
-         <string>Update to latest version of TotalSegmentator Python package from GitHub</string>
+         <string>Get information on the installed MONAI Python package</string>
         </property>
         <property name="text">
          <string>Get Python package information</string>
@@ -287,7 +287,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>TotalSegmentator</sender>
+   <sender>MONAIAuto3DSeg</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>inputVolumeSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
@@ -303,7 +303,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>TotalSegmentator</sender>
+   <sender>MONAIAuto3DSeg</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>outputSegmentationSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>

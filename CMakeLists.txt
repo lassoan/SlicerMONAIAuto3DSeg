@@ -19,7 +19,7 @@ include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 # Extension modules
-add_subdirectory(TotalSegmentator)
+add_subdirectory(MONAIAuto3DSeg)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
