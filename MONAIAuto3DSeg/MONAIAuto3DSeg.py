@@ -378,6 +378,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         tempfile = self.fileCachePath.joinpath("tmp_download_file.zip")
         modelsDir = self.fileCachePath.joinpath("models")
 
+        if not os.path.exists(modelsDir):
+            os.makedirs(modelsDir)
+
         self.log(f"Downloading model {modelName} from {url}...")
         logging.debug(f"Downloading from {url} to {tempfile}...")
 
@@ -403,7 +406,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         except Exception as e:
             raise e
         finally:
-            import os.path
             if os.path.exists(tempfile):
                 os.remove(tempfile)
 
