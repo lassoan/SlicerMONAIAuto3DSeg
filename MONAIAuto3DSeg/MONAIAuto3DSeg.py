@@ -367,42 +367,46 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             return False
         return True
 
+
     def downloadModel(self, modelName):
 
         url = self.tasks[modelName]["url"]
 
-        # TODO: ask user to download manually until download from github release is fixed
-        raise RuntimeError(f"Please download\n\n{url}\n\nand unzip to\n\n{self.modelPath(modelName)}")
-
-        self.log(f"Downloading model {modelName} from {url}...")
-
-        import http.client
-        # helps to solve incomplete read erros
-        # https://stackoverflow.com/questions/37816596/restrict-request-to-only-ask-for-http-1-0-to-prevent-chunking-error
-        http.client.HTTPConnection._http_vsn = 10
-        http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
-
-        import time
+        import zipfile
         import requests
 
         tempfile = self.fileCachePath.joinpath("tmp_download_file.zip")
+        modelsDir = self.fileCachePath.joinpath("models")
+
+        self.log(f"Downloading model {modelName} from {url}...")
+        logging.debug(f"Downloading from {url} to {tempfile}...")
+
         try:
-            st = time.time()
             with open(tempfile, 'wb') as f:
                 with requests.get(url, stream=True) as r:
                     r.raise_for_status()
+                    total_size = int(r.headers.get('content-length', 0))
+                    reporting_increment_percent = 1.0
+                    last_reported_download_percent = -reporting_increment_percent
+                    downloaded_size = 0
                     for chunk in r.iter_content(chunk_size=8192 * 16):
                         f.write(chunk)
+                        downloaded_size += len(chunk)
+                        downloaded_percent = 100.0 * downloaded_size / total_size
+                        if downloaded_percent - last_reported_download_percent > reporting_increment_percent:
+                            self.log(f"Downloading model: {downloaded_size/1024/1024:.1f}MB / {total_size/1024/1024:.1f}MB ({downloaded_percent:.1f}%)")
+                            last_reported_download_percent = downloaded_percent
 
-            self.log("Download finished. Extracting...")
-            with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
-                zip_f.extractall(config_dir)
-            self.log(f"  downloaded in {time.time()-st:.2f}s")
+            self.log(f"Download finished. Extracting to {modelsDir}...")
+            with zipfile.ZipFile(tempfile, 'r') as zip_f:
+                zip_f.extractall(modelsDir)
         except Exception as e:
             raise e
         finally:
-            if tempfile.exists():
+            import os.path
+            if os.path.exists(tempfile):
                 os.remove(tempfile)
+
 
     def _MONAIAuto3DSegTerminologyPropertyTypes(self):
         """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
