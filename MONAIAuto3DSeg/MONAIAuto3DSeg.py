@@ -371,19 +371,28 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         self.tasks = OrderedDict()
 
         # Main
-        self.tasks["17-segments-TotalSegmentator-v2"] = {
-            "title": "TotalSegmentator 17 segments (V2)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V2.zip",
+        self.tasks["17-segments-TotalSegmentator-V3"] = {
+            "title": "TotalSegmentator 17 segments (V3)",
+            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V3.zip",
+            }
+        self.tasks["hips-and-spine-segments-V1"] = {
+            "title": "Hips and spine (V1)",
+            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-segments-V1.zip",
             }
         self.tasks["104-segments-TotalSegmentator"] = {
             "title": "TotalSegmentator 104 segments (V1)",
             "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/104-segments-TotalSegmentator.zip",
-            "sha256": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/104-segments-TotalSegmentator.sha256"
             }
+
+        # Deprecated
         self.tasks["17-segments-TotalSegmentator"] = {
             "title": "TotalSegmentator 17 segments (V1)",
             "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator.zip",
-            "sha256": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator.sha256",
+            "deprecated": True
+            }
+        self.tasks["17-segments-TotalSegmentator-v2"] = {
+            "title": "TotalSegmentator 17 segments (V2)",
+            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V2.zip",
             "deprecated": True
             }
         self.defaultTask = next(iter(self.tasks))
