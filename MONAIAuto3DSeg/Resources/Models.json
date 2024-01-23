@@ -7,6 +7,12 @@
             "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V3.zip"
         },
         {
+            "id": "lungs-V1",
+            "title": "Lungs (V1)",
+            "description": "Segment lungs in CT images",
+            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-V1.zip"
+        },
+        {
             "id": "hips-and-spine-segments-V1",
             "title": "Hips and spine (V1)",
             "description": "Segment hip and spine in CT images",
