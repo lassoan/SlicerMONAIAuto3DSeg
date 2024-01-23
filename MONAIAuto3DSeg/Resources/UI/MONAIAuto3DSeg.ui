@@ -48,14 +48,14 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Segmentation task:</string>
+         <string>Segmentation model:</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QComboBox" name="taskComboBox">
+       <widget class="QComboBox" name="modelComboBox">
         <property name="toolTip">
-         <string>Choose &quot;TotalSegmentator 17 segments&quot; for a quick test.</string>
+         <string>Show all models in &quot;Segmentation model&quot; list, including deprecated and experimental models.</string>
         </property>
        </widget>
       </item>
@@ -222,14 +222,14 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>Show all tasks:</string>
+         <string>Show all models:</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QCheckBox" name="showAllTasksCheckBox">
+       <widget class="QCheckBox" name="showAllModelsCheckBox">
         <property name="toolTip">
-         <string>Show all tasks, including deprecated and experimental ones</string>
+         <string>Show all models in &quot;Segmentation model&quot; list, including deprecated and experimental models.</string>
         </property>
         <property name="text">
          <string/>
@@ -239,7 +239,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Manage tasks:</string>
+         <string>Manage models:</string>
         </property>
        </widget>
       </item>
@@ -248,17 +248,17 @@
         <item>
          <widget class="QPushButton" name="browseToModelsFolderButton">
           <property name="toolTip">
-           <string>Open the folder that contains all downloaded files for tasks.</string>
+           <string>Open the folder that contains all downloaded files for models.</string>
           </property>
           <property name="text">
-           <string>Open tasks cache folder</string>
+           <string>Open models cache folder</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="deleteAllModelsButton">
           <property name="toolTip">
-           <string>Delete all downloaded files for all tasks. The files will be automatically downloaded again as needed.</string>
+           <string>Delete all downloaded files for all models. The files will be automatically downloaded again as needed.</string>
           </property>
           <property name="text">
            <string>Clear cache</string>

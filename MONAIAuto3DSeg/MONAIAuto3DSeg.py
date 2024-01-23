@@ -92,10 +92,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # (in the selected parameter node).
         self.ui.inputVolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.cpuCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
-        self.ui.showAllTasksCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
+        self.ui.showAllModelsCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.useStandardSegmentNamesCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
 
-        self.ui.taskComboBox.currentTextChanged.connect(self.updateParameterNodeFromGUI)
+        self.ui.modelComboBox.currentTextChanged.connect(self.updateParameterNodeFromGUI)
         self.ui.outputSegmentationSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.outputSegmentationSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.ui.segmentationShow3DButton.setSegmentationNode)
 
@@ -187,6 +187,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         This method is called whenever parameter node is changed.
         The module GUI is updated to show the current state of the parameter node.
         """
+        import qt
 
         if self._parameterNode is None or self._updatingGUIFromParameterNode:
             return
@@ -194,25 +195,27 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Make sure GUI changes do not call updateParameterNodeFromGUI (it could cause infinite loop)
         self._updatingGUIFromParameterNode = True
 
-        showAllTasks = self._parameterNode.GetParameter("showAllTasks") == "true"
-        self.ui.taskComboBox.clear()
-        for task in self.logic.tasks:
-            deprecated = self.logic.tasks[task].get("deprecated")
-            taskTitle = self.logic.tasks[task]["title"]
+        showAllModels = self._parameterNode.GetParameter("showAllModels") == "true"
+        self.ui.modelComboBox.clear()
+        for model in self.logic.models:
+            deprecated = model.get("deprecated")
+            modelTitle = model["title"]
             if deprecated:
-                if showAllTasks:
-                    taskTitle += " -- deprecated"
+                if showAllModels:
+                    modelTitle += " -- deprecated"
                 else:
-                    # Do not show deprecated tasks
+                    # Do not show deprecated models
                     continue
-            self.ui.taskComboBox.addItem(taskTitle, task)
+            itemIndex = self.ui.modelComboBox.count
+            self.ui.modelComboBox.addItem(modelTitle, model["id"])
+            self.ui.modelComboBox.setItemData(itemIndex, model.get("description"), qt.Qt.ToolTipRole)
 
         # Update node selectors and sliders
         self.ui.inputVolumeSelector.setCurrentNode(self._parameterNode.GetNodeReference("InputVolume"))
-        task = self._parameterNode.GetParameter("Task")
-        self.ui.taskComboBox.setCurrentIndex(self.ui.taskComboBox.findData(task))
+        model = self._parameterNode.GetParameter("Model")
+        self.ui.modelComboBox.setCurrentIndex(self.ui.modelComboBox.findData(model))
         self.ui.cpuCheckBox.checked = self._parameterNode.GetParameter("CPU") == "true"
-        self.ui.showAllTasksCheckBox.checked = showAllTasks
+        self.ui.showAllModelsCheckBox.checked = showAllModels
         self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
         self.ui.outputSegmentationSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputSegmentation"))
 
@@ -243,9 +246,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
         self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.inputVolumeSelector.currentNodeID)
-        self._parameterNode.SetParameter("Task", self.ui.taskComboBox.currentData)
+        self._parameterNode.SetParameter("Model", self.ui.modelComboBox.currentData)
         self._parameterNode.SetParameter("CPU", "true" if self.ui.cpuCheckBox.checked else "false")
-        self._parameterNode.SetParameter("showAllTasks", "true" if self.ui.showAllTasksCheckBox.checked else "false")
+        self._parameterNode.SetParameter("showAllModels", "true" if self.ui.showAllModelsCheckBox.checked else "false")
         self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.useStandardSegmentNamesCheckBox.checked else "false")
         self._parameterNode.SetNodeReferenceID("OutputSegmentation", self.ui.outputSegmentationSelector.currentNodeID)
 
@@ -294,7 +297,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             # Compute output
             self.logic.process(self.ui.inputVolumeSelector.currentNode(), self.ui.outputSegmentationSelector.currentNode(),
-                self.ui.taskComboBox.currentData, self.ui.cpuCheckBox.checked)
+                self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked)
 
         self.ui.statusLabel.appendPlainText("\nProcessing finished.")
 
@@ -319,12 +322,12 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onClearModelsFolder(self):
         if not os.path.exists(self.logic.modelsPath()):
-            slicer.util.messageBox("There are no downloaded tasks.")
+            slicer.util.messageBox("There are no downloaded models.")
             return
-        if not slicer.util.confirmOkCancelDisplay("All downloaded task files will be deleted. The files will be automatically downloaded again as needed."):
+        if not slicer.util.confirmOkCancelDisplay("All downloaded model files will be deleted. The files will be automatically downloaded again as needed."):
             return
         self.logic.deleteAllModels()
-        slicer.util.messageBox("Downloaded tasks are deleted.")
+        slicer.util.messageBox("Downloaded models are deleted.")
 
 #
 # MONAIAuto3DSegLogic
@@ -366,36 +369,31 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         #
         self.MONAIAuto3DSegTerminologyPropertyTypes = self._MONAIAuto3DSegTerminologyPropertyTypes()
 
-        # Segmentation tasks specified by MONAIAuto3DSeg
+        # Segmentation models specified by MONAIAuto3DSeg
         # Ideally, this information should be provided by MONAIAuto3DSeg itself.
-        self.tasks = OrderedDict()
+        self.models = OrderedDict()
 
         # Main
-        self.tasks["17-segments-TotalSegmentator-V3"] = {
-            "title": "TotalSegmentator 17 segments (V3)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V3.zip",
-            }
-        self.tasks["hips-and-spine-segments-V1"] = {
-            "title": "Hips and spine (V1)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-segments-V1.zip",
-            }
-        self.tasks["104-segments-TotalSegmentator"] = {
-            "title": "TotalSegmentator 104 segments (V1)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/104-segments-TotalSegmentator.zip",
-            }
+        self.models = self.loadModelsDescription()
+        self.defaultModel = self.models[0]["id"]
 
-        # Deprecated
-        self.tasks["17-segments-TotalSegmentator"] = {
-            "title": "TotalSegmentator 17 segments (V1)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator.zip",
-            "deprecated": True
-            }
-        self.tasks["17-segments-TotalSegmentator-v2"] = {
-            "title": "TotalSegmentator 17 segments (V2)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V2.zip",
-            "deprecated": True
-            }
-        self.defaultTask = next(iter(self.tasks))
+    def model(self, modelId):
+        for model in self.models:
+            if model["id"] == modelId:
+                return model
+        raise RuntimeError(f"Model {modelId} not found")
+
+    def loadModelsDescription(self):
+        moduleDir = os.path.dirname(slicer.util.getModule('MONAIAuto3DSeg').path)
+        modelsJsonFilePath = os.path.join(moduleDir, "Resources", "Models.json")
+        try:
+            import json
+            with open(modelsJsonFilePath) as f:
+                return json.load(f)["models"]
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise RuntimeError(f"Failed to load models description from {modelsJsonFilePath}")
 
     def modelsPath(self):
         import pathlib
@@ -426,7 +424,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
     def downloadModel(self, modelName):
 
-        url = self.tasks[modelName]["url"]
+        url = self.model(modelName)["url"]
 
         import zipfile
         import requests
@@ -652,8 +650,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         """
         Initialize parameter node with default settings.
         """
-        if not parameterNode.GetParameter("Task"):
-            parameterNode.SetParameter("Task", self.defaultTask)
+        if not parameterNode.GetParameter("Model"):
+            parameterNode.SetParameter("Model", self.defaultModel)
         if not parameterNode.GetParameter("UseStandardSegmentNames"):
             parameterNode.SetParameter("UseStandardSegmentNames", "true")
 
@@ -686,14 +684,14 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         return name + ".exe" if os.name == "nt" else name
 
 
-    def process(self, inputVolume, outputSegmentation, task=None, cpu=False):
+    def process(self, inputVolume, outputSegmentation, model=None, cpu=False):
 
         """
         Run the processing algorithm.
         Can be used without GUI widget.
         :param inputVolume: volume to be thresholded
         :param outputVolume: thresholding result
-        :param task: one of self.tasks
+        :param model: one of self.models
         :param subset: a list of structures (MONAIAuto3DSeg classe names https://github.com/wasserth/MONAIAuto3DSeg#class-detailsMONAIAuto3DSeg) to segment.
           Default is None, which means that all available structures will be segmented."
         """
@@ -704,11 +702,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if not outputSegmentation:
             raise ValueError("Output segmentation is invalid")
 
-        if task == None:
-            task = self.defaultTask
+        if model == None:
+            model = self.defaultModel
 
-        if not self.isModelDownloaded(task):
-            self.downloadModel(task)
+        if not self.isModelDownloaded(model):
+            self.downloadModel(model)
 
         import time
         startTime = time.time()
@@ -726,7 +724,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         import pathlib
         tempFolderPath = pathlib.Path(tempFolder)
-        modelPath = self.modelPath(task)
+        modelPath = self.modelPath(model)
 
         outputSegmentationFile = modelPath.joinpath("ensemble_output/input-volume_ensemble.nii.gz")
 
@@ -790,7 +788,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         # Load result
         self.log("Importing segmentation results...")
-        self.readSegmentation(outputSegmentation, outputSegmentationFile, task)
+        self.readSegmentation(outputSegmentation, outputSegmentationFile, model)
 
         # Set source volume - required for DICOM Segmentation export
         outputSegmentation.SetNodeReferenceID(outputSegmentation.GetReferenceImageGeometryReferenceRole(), inputVolume.GetID())
@@ -814,9 +812,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         self.log(f"Processing completed in {stopTime-startTime:.2f} seconds")
 
 
-    def readSegmentation(self, outputSegmentation, outputSegmentationFile, task):
+    def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
 
-        labelValueToDescription = self.labelDescriptions(task)
+        labelValueToDescription = self.labelDescriptions(model)
 
         # Get label descriptions
         maxLabelValue = max(labelValueToDescription.keys())
@@ -827,11 +825,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         randomColorsNode = slicer.mrmlScene.GetNodeByID("vtkMRMLColorTableNodeRandom")
         rgba = [0, 0, 0, 0]
 
-        # Create color table for this segmentation task
+        # Create color table for this segmentation model
         colorTableNode = slicer.vtkMRMLColorTableNode()
         colorTableNode.SetTypeToUser()
         colorTableNode.SetNumberOfColors(maxLabelValue+1)
-        colorTableNode.SetName(task)
+        colorTableNode.SetName(model)
         for labelValue in labelValueToDescription:
             randomColorsNode.GetColor(labelValue,rgba)
             colorTableNode.SetColor(labelValue, rgba[0], rgba[1], rgba[2], rgba[3])
