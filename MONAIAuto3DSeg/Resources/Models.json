@@ -1,61 +1,39 @@
 {
     "models": [
         {
-            "id": "17-segments-TotalSegmentator-V4",
-            "title": "TotalSegmentator 17 segments (V4)",
-            "description": "Segment abdominal organs in CT images",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V4.zip",
-            "deprecated": false
+            "title": "Abdominal organs",
+            "description": "Segment 17 abdominal organs. Trained on TotalSegmentator dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
+            ]
         },
         {
-            "id": "17-segments-TotalSegmentator-V3",
-            "title": "TotalSegmentator 17 segments (V3)",
-            "description": "Segment abdominal organs in CT images",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V3.zip",
-            "deprecated": true
+            "title": "Lungs",
+            "description": "Segment lung segments and trachea.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.1.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip" }
+            ]
         },
         {
-            "id": "17-segments-TotalSegmentator-v2",
-            "title": "TotalSegmentator 17 segments (V2)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-V2.zip",
-            "deprecated": true
-        },
-        {
-            "id": "17-segments-TotalSegmentator",
-            "title": "TotalSegmentator 17 segments (V1)",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator.zip",
-            "deprecated": true
-        },
-
-
-        {
-            "id": "lungs-V2",
-            "title": "Lungs (V2)",
-            "description": "Segment lungs in CT images",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-V2.zip",
-            "deprecated": false
-        },
-        {
-            "id": "lungs-V1",
-            "title": "Lungs (V1)",
-            "description": "Segment lungs in CT images",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-V1.zip",
-            "deprecated": true
-        },
-
-        {
-            "id": "hips-and-spine-segments-V2",
-            "title": "Hips and spine (V2)",
-            "description": "Segment hip and spine in CT images",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-segments-V2.zip",
-            "deprecated": false
-        },
-        {
-            "id": "hips-and-spine-segments-V1",
-            "title": "Hips and spine (V1)",
-            "description": "Segment hip and spine in CT images",
-            "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-segments-V1.zip",
-            "deprecated": true
+            "title": "Hips and spine",
+            "description": "Segment hip and spine.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.1.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.0.0.zip" }
+            ]
         }
     ]
 }

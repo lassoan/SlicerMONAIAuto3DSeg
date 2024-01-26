@@ -388,9 +388,36 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
     def loadModelsDescription(self):
         modelsJsonFilePath = os.path.join(self.moduleDir, "Resources", "Models.json")
         try:
+            models = []
             import json
+            import re
             with open(modelsJsonFilePath) as f:
-                return json.load(f)["models"]
+                modelsTree = json.load(f)["models"]
+                for model in modelsTree:
+                    deprecated = False
+                    for version in model["versions"]:
+                        url = version["url"]
+                        # URL format: <path>/<filename>-v<version>.zip
+                        # Example URL: https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-v1.0.3.zip
+                        match = re.search(r"(?P<filename>[^/]+)-v(?P<version>\d+\.\d+\.\d+)", url)
+                        if match:
+                            filename = match.group("filename")
+                            version = match.group("version")
+                        else:
+                            logging.error(f"Failed to extract model id and version from url: {url}")
+                        models.append({
+                            "id": filename,
+                            "title": f"{model['title']} (v{version})",
+                            "description":
+                                f"{model['description']}\n"
+                                f"Subject: {model['subject']}\n"
+                                f"Imaging modality: {model['imagingModality']}",
+                            "url": url,
+                            "deprecated": deprecated
+                            })
+                        # First version is not deprecated, all subsequent versions are deprecated
+                        deprecated = True
+                return models
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -407,21 +434,16 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
     def modelPath(self, modelName):
         import pathlib
-        return self.modelsPath().joinpath(modelName)
+        modelRoot = self.modelsPath().joinpath(modelName)
+        # find labels.csv file within the modelRoot folder and subfolders
+        for path in pathlib.Path(modelRoot).rglob("labels.csv"):
+            return path.parent
+        raise RuntimeError(f"Model {modelName} path not found")
 
     def deleteAllModels(self):
         if self.modelsPath().exists():
             import shutil
             shutil.rmtree(self.modelsPath())
-
-    def isModelDownloaded(self, modelName):
-        import pathlib
-        modelPath = self.modelPath(modelName)
-        if not modelPath.exists():
-            return False
-        if not modelPath.joinpath("labels.csv").exists():
-            return False
-        return True
 
     def downloadModel(self, modelName):
 
@@ -429,17 +451,19 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         import zipfile
         import requests
+        import pathlib
 
-        tempfile = self.fileCachePath.joinpath("tmp_download_file.zip")
-        modelsDir = self.modelsPath()
+        tempDir = pathlib.Path(slicer.util.tempDirectory())
+        modelDir = self.modelsPath().joinpath(modelName)
+        if not os.path.exists(modelDir):
+            os.makedirs(modelDir)
 
-        self.createModelsDir()
-
-        self.log(f"Downloading model {modelName} from {url}...")
-        logging.debug(f"Downloading from {url} to {tempfile}...")
+        modelZipFile = tempDir.joinpath("autoseg3d_model.zip")
+        self.log(f"Downloading model '{modelName}' from {url}...")
+        logging.debug(f"Downloading from {url} to {modelZipFile}...")
 
         try:
-            with open(tempfile, 'wb') as f:
+            with open(modelZipFile, 'wb') as f:
                 with requests.get(url, stream=True) as r:
                     r.raise_for_status()
                     total_size = int(r.headers.get('content-length', 0))
@@ -454,14 +478,19 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                             self.log(f"Downloading model: {downloaded_size/1024/1024:.1f}MB / {total_size/1024/1024:.1f}MB ({downloaded_percent:.1f}%)")
                             last_reported_download_percent = downloaded_percent
 
-            self.log(f"Download finished. Extracting to {modelsDir}...")
-            with zipfile.ZipFile(tempfile, 'r') as zip_f:
-                zip_f.extractall(modelsDir)
+            self.log(f"Download finished. Extracting to {modelDir}...")
+            with zipfile.ZipFile(modelZipFile, 'r') as zip_f:
+                zip_f.extractall(modelDir)
         except Exception as e:
             raise e
         finally:
-            if os.path.exists(tempfile):
-                os.remove(tempfile)
+            if self.clearOutputFolder:
+                self.log("Cleaning up temporary model download folder...")
+                if os.path.isdir(tempDir):
+                    import shutil
+                    shutil.rmtree(tempDir)
+            else:
+                self.log(f"Not cleaning up temporary model download folder: {tempDir}")
 
 
     def _MONAIAuto3DSegTerminologyPropertyTypes(self):
@@ -704,25 +733,27 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if model == None:
             model = self.defaultModel
 
-        if not self.isModelDownloaded(model):
+        try:
+            modelPath = self.modelPath(model)
+        except:
             self.downloadModel(model)
+            modelPath = self.modelPath(model)
 
         import time
         startTime = time.time()
         self.log("Processing started")
 
         # Create new empty folder
-        tempFolder = slicer.util.tempDirectory()
+        tempDir = slicer.util.tempDirectory()
 
         debugSkipInference = False  # TODO: enable for testing workflow without actually running inference
         if debugSkipInference:
-            tempFolder = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
+            tempDir = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
 
-        inputImageFile = tempFolder + "/input-volume.nrrd"
+        inputImageFile = tempDir + "/input-volume.nrrd"
 
         import pathlib
-        tempFolderPath = pathlib.Path(tempFolder)
-        modelPath = self.modelPath(model)
+        tempDirPath = pathlib.Path(tempDir)
 
         # Get Python executable path
         import shutil
@@ -752,12 +783,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             # Legacy
             inputConfigFile = modelPath.joinpath("input.yaml")
             outputSegmentationFile = modelPath.joinpath("ensemble_output/input-volume_ensemble.nii.gz")
-            workDir = modelPath  # tempFolderPath?
+            workDir = modelPath  # tempDirPath?
             auto3DSegCommand = [ pythonSlicerExecutablePath, "-m", "monai.apps.auto3dseg", "AutoRunner", "run",
                 "--input", str(inputConfigFile), "--work_dir", str(workDir),
                 "--algos", "segresnet", "--train=False", "--analyze=False", "--ensemble=True" ]
         else:
-            outputSegmentationFile = tempFolder + "/output-segmentation.nii.gz"
+            outputSegmentationFile = tempDir + "/output-segmentation.nii.gz"
             modelPtFile = modelPath.joinpath("model.pt")
             inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
             auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
@@ -794,10 +825,10 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         if self.clearOutputFolder and not debugSkipInference:
             self.log("Cleaning up temporary folder...")
-            if os.path.isdir(tempFolder):
-                shutil.rmtree(tempFolder)
+            if os.path.isdir(tempDir):
+                shutil.rmtree(tempDir)
         else:
-            self.log(f"Not cleaning up temporary folder: {tempFolder}")
+            self.log(f"Not cleaning up temporary folder: {tempDir}")
 
         stopTime = time.time()
         self.log(f"Processing completed in {stopTime-startTime:.2f} seconds")

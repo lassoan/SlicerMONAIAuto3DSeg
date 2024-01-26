@@ -34,9 +34,9 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 - Select `Input volume` -> `Panoramix-cropped`
 - Click `Apply`
   - When this module is used the first time:
-    - It needs to download and install PyTorch and TotalSegmentator Python packages and weights for the AI models. This can take 5-10 minutes and several GB disk space.
+    - It needs to download and install PyTorch and MONAI Python packages and weights for the AI models. This can take 5-10 minutes and several GB disk space.
   - Expected computation time:
-    - With CUDA-capable GPU: `TotalSegmentator 17 segments` task should be completed within one minute.
+    - With CUDA-capable GPU: `Abdominal organs` task should be completed within a few minutes.
     - Without GPU: tens of minutes.
 - To display the segmentation in 3D: click the `Show 3D` button
 
@@ -44,13 +44,13 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 
 - Inputs
   - Input volume: input CT image
-  - Segmentation task: currently, all models are experimental (slow, not high quality)
+  - Segmentation task: currently, all models are experimental (not very accurate)
 - Outputs
-  - Segmentation: it will contain a brain segment, which specifies the brain region
+  - Segmentation: the selected segmentation will store the computation result
   - Show 3D: show/hide segments in 3D views
 - Advanced:
   - Use standard segment names: use names defined in standard terminology files from [DCMQI](https://github.com/QIICR/dcmqi) (enabled by default). If disabled then internal names will be used as segment names.
-  - Force reinstall: force reinstallation of the AI engine - TotalSegmentator Python package. This may be needed if other modules compromise the installation.
+  - Force reinstall: force reinstallation of the AI engine - MONAI Python package. This may be needed if other modules compromise the installation.
   - Get Python package information: retrieve installed version of the AI engine.
 
 ## Troubleshooting
@@ -69,7 +69,7 @@ If your GPU has more than 7GB memory and you still get this error then the error
 
 ### GPU is not found
 
-Problem: Your computer has a CUDA-capable GPU but TotalSegmentator reports that GPU is not available.
+Problem: Your computer has a CUDA-capable GPU but MONAI reports that GPU is not available.
 
 Explanation: CUDA may not be installed on the system or CUDA version in PyTorch does not match the system CUDA version.
 
@@ -87,7 +87,37 @@ Currently, all models are experimental. It is expected that they are not accurat
 Model files are hosted on github.com and downloaded automatically when segmenting the first time. Institutional firewall or proxy servers may prevent access or the server may be temporarily overloaded. Potential solutions:
 - retry later when the server may be less overloaded
 - talk to IT administrators or use a VPN to access the server
-- download the file manually from https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ and unzip it in the `.MONAIAuto3DSeg\models` folder in the user's profile (for example in `c:\Users\(yourusername)\.MONAIAuto3DSeg\models\17-segments-TotalSegmentator`)
+- download the file manually from https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ and unzip it in the `.MONAIAuto3DSeg\models` folder in the user's profile (for example in `c:\Users\(yourusername)\.MONAIAuto3DSeg\models\abdominal-17`)
+
+## Developers
+
+### Model files
+
+Model files must be stored in a zip file.
+
+Filename is composed as: <modelname>-v<version>.zip
+- `modelName`: identifier of the model, preferably all lowercase, words separated by dashes. This string is used for storing the user's model selection in the Slicer scene (along with the version).
+- `version`: it must be in the format `<major>.<minor>.<patch>`, where each component is an integer.
+  - `major`: increment it if segments are added/removed or a major change is made in the model
+  - `minor`: increment it if model quality, speed, etc. is improved
+  - `patch`: increment if there are any other changes in the model files
+
+File content:
+- labels.csv: Contains maping from label value to internal name and standard terminology. The file may be in a subfolder within the zip achive, but it is recommended to be placed directly in the root folder in the zip archive (if the file is not found in the root folder then the whole archive content will be searched).
+- model.pt: Model weights. It must be in the same folder as labels.csv.
+
+In legacy model files, instead of a `model.pt` file a `main.py` script file is placed along with the labels.csv file and model weights are in various subfolders. These model files are deprecated.
+
+### Training models
+
+#### General guidelines
+
+These guidelines are recommended for creating models to provide good experience for a wide range of users:
+- Required GPU memory of all the provided models must not be more than 7GB (then we can run the models comfortably on a 8GB GPU that is fairly commonly available). It is just not worth the time to make models widely available that everyday users cannot run on their computers. Models can be split to smaller models or resolution can be reduced. If the model uses more memory then it is not ready yet, we should not release it.
+- There must be a low-resolution version of every model that can be executed on CPU under 3 minutes, without using more than 7GB CPU RAM (so that it can run on a computer with 8GB RAM).
+- Full-resolution model should not require more than 5 minutes to run on GPU (this is about the maximum time that is acceptable for intraoperative use; this is also an expectation that is set by TotalSegmentator's few-minute computation time).
+- The model should leave at least 1 CPU core unused to make sure the computer remains usable.
+- The model should work well on all relevant Slicer sample data sets (without specifically training the models for them), if no sample data available then make the extension register at least one relevant data set that can be used for testing.
 
 ## Contributing
 
