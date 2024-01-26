@@ -11,6 +11,7 @@ set(MODULE_PYTHON_RESOURCES
   Resources/SegmentationCategoryTypeModifier-MONAIAuto3DSeg.term.json
   Resources/Icons/${MODULE_NAME}.png
   Resources/UI/${MODULE_NAME}.ui
+  Scripts/auto3dseg_segresnet_inference.py
   )
 
 #-----------------------------------------------------------------------------

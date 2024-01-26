@@ -354,6 +354,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         import pathlib
         self.fileCachePath = pathlib.Path.home().joinpath(".MONAIAuto3DSeg")
 
+        self.moduleDir = os.path.dirname(slicer.util.getModule('MONAIAuto3DSeg').path)
+
         self.logCallback = None
         self.clearOutputFolder = True
         self.useStandardSegmentNames = True
@@ -384,8 +386,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         raise RuntimeError(f"Model {modelId} not found")
 
     def loadModelsDescription(self):
-        moduleDir = os.path.dirname(slicer.util.getModule('MONAIAuto3DSeg').path)
-        modelsJsonFilePath = os.path.join(moduleDir, "Resources", "Models.json")
+        modelsJsonFilePath = os.path.join(self.moduleDir, "Resources", "Models.json")
         try:
             import json
             with open(modelsJsonFilePath) as f:
@@ -467,8 +468,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
         Terminology entries are either in DICOM or MONAI Auto3DSeg "Segmentation category and type".
         """
-
-        moduleDir = os.path.dirname(slicer.util.getModule("MONAIAuto3DSeg").path)
 
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
         MONAIAuto3DSegTerminologyName = "Segmentation category and type - MONAI Auto3DSeg"
@@ -719,34 +718,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if debugSkipInference:
             tempFolder = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
 
-        inputFile = tempFolder + "/input-volume.nrrd"
-        outputSegmentationFolder = tempFolder + "/segmentation"
+        inputImageFile = tempFolder + "/input-volume.nrrd"
 
         import pathlib
         tempFolderPath = pathlib.Path(tempFolder)
         modelPath = self.modelPath(model)
-
-        outputSegmentationFile = modelPath.joinpath("ensemble_output/input-volume_ensemble.nii.gz")
-
-        # inputFilePath = tempFolderPath.joinpath("input.yaml")
-        # datalistFilePath = tempFolderPath.joinpath("singleInfer.json")
-
-        # inputConfig = {
-        #     "datalist": datalistFilePath,
-        #     "dataroot": tempFolderPath,
-        #     "modality": "CT"
-        # }
-        # import yaml
-        # with open(inputFilePath, 'w') as file:
-        #     yaml.safe_dump(inputConfig, file)
-
-        # datalistConfig = {
-        #     "testing": [ { "image": "s0031.nii.gz" } ],
-        #     "training": [ { "image": "", "label": "", "fold": 0 } ]
-        #     }
-        # import json
-        # with open(datalistFilePath, 'w') as file:
-        #     json.dump(datalistConfig, file)
 
         # Get Python executable path
         import shutil
@@ -754,25 +730,40 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if not pythonSlicerExecutablePath:
             raise RuntimeError("Python was not found")
 
-        prepareInputFilesCommand = [ pythonSlicerExecutablePath, modelPath.joinpath("main.py"), inputFile ]
-        proc = slicer.util.launchConsoleProcess(prepareInputFilesCommand)
-        self.logProcessOutput(proc)
+        modelMainPyFile = modelPath.joinpath("main.py")
+        # check if modelMainPyFile exists
+        prepareInputNeeded = os.path.isfile(modelMainPyFile)
+
+        if prepareInputNeeded:
+            # Legacy
+            prepareInputFilesCommand = [ pythonSlicerExecutablePath, modelMainPyFile, inputImageFile ]
+            proc = slicer.util.launchConsoleProcess(prepareInputFilesCommand)
+            self.logProcessOutput(proc)
 
         # Write input volume to file
-        # MONAIAuto3DSeg requires NIFTI
-        self.log(f"Writing input file to {inputFile}")
+        self.log(f"Writing input file to {inputImageFile}")
         volumeStorageNode = slicer.mrmlScene.CreateNodeByClass("vtkMRMLVolumeArchetypeStorageNode")
-        volumeStorageNode.SetFileName(inputFile)
+        volumeStorageNode.SetFileName(inputImageFile)
         volumeStorageNode.UseCompressionOff()
         volumeStorageNode.WriteData(inputVolume)
         volumeStorageNode.UnRegister(None)
 
-        inputFilePath = modelPath.joinpath("input.yaml")
-        workDir = modelPath  # tempFolderPath?
-
-        auto3DSegCommand = [ pythonSlicerExecutablePath, "-m", "monai.apps.auto3dseg", "AutoRunner", "run",
-            "--input", str(inputFilePath), "--work_dir", str(workDir),
-            "--algos", "segresnet", "--train=False", "--analyze=False", "--ensemble=True" ]
+        if prepareInputNeeded:
+            # Legacy
+            inputConfigFile = modelPath.joinpath("input.yaml")
+            outputSegmentationFile = modelPath.joinpath("ensemble_output/input-volume_ensemble.nii.gz")
+            workDir = modelPath  # tempFolderPath?
+            auto3DSegCommand = [ pythonSlicerExecutablePath, "-m", "monai.apps.auto3dseg", "AutoRunner", "run",
+                "--input", str(inputConfigFile), "--work_dir", str(workDir),
+                "--algos", "segresnet", "--train=False", "--analyze=False", "--ensemble=True" ]
+        else:
+            outputSegmentationFile = tempFolder + "/output-segmentation.nii.gz"
+            modelPtFile = modelPath.joinpath("model.pt")
+            inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
+            auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
+                "--model-file", str(modelPtFile),
+                "--image-file", str(inputImageFile),
+                "--result-file", str(outputSegmentationFile) ]
 
         self.log("Creating segmentations with MONAIAuto3DSeg AI...")
         self.log(f"Auto3DSeg command: {auto3DSegCommand}")
