@@ -138,7 +138,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     # sliding_inferrer
     roi_size = config["roi_size"]
     # roi_size = [224, 224, 144]
-    sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=0.625, mode="gaussian", cache_roi_weight_map=False, progress=False)
+    sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=0.625, mode="gaussian", cache_roi_weight_map=False, progress=True)
     
 
     # process DATA
@@ -148,12 +148,13 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     batch_data = list_data_collate([batch_data])
     data = batch_data["image"].as_subclass(torch.Tensor).to(memory_format=torch.channels_last_3d, device=device)
 
-
+    print('Running Inference ...')
     with autocast(enabled=True):
         logits = sliding_inferrer(inputs=data, network=model)
 
     print(f"Logits {logits.shape}")
     # logits -> preds
+    print('Converting logits into predictions')
     try:
         pred = logits2pred(logits, sigmoid=sigmoid)
     except RuntimeError as e:
@@ -213,7 +214,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     nib.save(nib.Nifti1Image(seg, affine = original_affine), result_file)
     print(f'ALL DONE, result saved in {result_file}')
 
-    return seg # ?
+    # return seg # ?
 
 if __name__ == '__main__':
   fire.Fire(main)
