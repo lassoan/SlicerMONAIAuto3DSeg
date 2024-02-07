@@ -113,11 +113,11 @@ In legacy model files, instead of a `model.pt` file a `main.py` script file is p
 #### General guidelines
 
 These guidelines are recommended for creating models to provide good experience for a wide range of users:
-- Required GPU memory of all the provided models must not be more than 7GB (then we can run the models comfortably on a 8GB GPU that is fairly commonly available). It is just not worth the time to make models widely available that everyday users cannot run on their computers. Models can be split to smaller models or resolution can be reduced. If the model uses more memory then it is not ready yet, we should not release it.
-- There must be a low-resolution version of every model that can be executed on CPU under 3 minutes, without using more than 7GB CPU RAM (so that it can run on a computer with 8GB RAM).
+- Required GPU memory of all the provided models must not be more than 7GB (then we can run the models comfortably on a 8GB GPU that is fairly commonly available). It is just not worth the time to make models widely available that everyday users cannot run on their computers. Models can be split to smaller models or resolution can be reduced. If the model uses more memory than this then the model is not ready yet, we should not release it.
+- There must be a low-resolution version of every model that can be executed on CPU under 3 minutes, without using more than 7GB RAM (so that it can run on a computer with 8GB RAM).
 - Full-resolution model should not require more than 5 minutes to run on GPU (this is about the maximum time that is acceptable for intraoperative use; this is also an expectation that is set by TotalSegmentator's few-minute computation time).
 - The model should leave at least 1 CPU core unused to make sure the computer remains usable.
-- The model should work well on all relevant Slicer sample data sets (without specifically training the models for them), if no sample data available then make the extension register at least one relevant data set that can be used for testing.
+- Make the model work on easily accessible test data sets. The model should work well on relevant Slicer sample data sets. If none of the current sample data sets are relevant then provide at least one new data set for testing (the extension can register custom data sets into the Sample Data module).
 
 ## Contributing
 
