@@ -214,7 +214,5 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     nib.save(nib.Nifti1Image(seg, affine = original_affine), result_file)
     print(f'ALL DONE, result saved in {result_file}')
 
-    # return seg # ?
-
 if __name__ == '__main__':
   fire.Fire(main)
