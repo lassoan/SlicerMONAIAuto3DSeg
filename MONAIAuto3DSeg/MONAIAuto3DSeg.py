@@ -24,7 +24,7 @@ class MONAIAuto3DSeg(ScriptedLoadableModule):
         self.parent.title = "MONAI Auto3DSeg"
         self.parent.categories = ["Segmentation"]
         self.parent.dependencies = []
-        self.parent.contributors = ["Andras Lasso (PerkLab, Queen's University)", "Andres Diaz Pinto (PerkLab, Queen's University)", "Rudolf Bumm (KSGR Switzerland)"]
+        self.parent.contributors = ["Andras Lasso (PerkLab, Queen's University)", "Andres Diaz-Pinto (NVIDIA & KCL)", "Rudolf Bumm (KSGR Switzerland)"]
         self.parent.helpText = """
 3D Slicer extension for segmentation using MONAI Auto3DSeg AI model.
 See more information in the <a href="https://github.com/lassoan/SlicerMONAIAuto3DSeg">extension documentation</a>.
