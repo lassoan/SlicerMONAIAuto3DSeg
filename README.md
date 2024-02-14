@@ -4,7 +4,7 @@ Extension for [3D Slicer](https://www.slicer.org) for fully automatic AI segment
 
 Models are automatically downloaded and stored in the user's home folder within `.MONAIAuto3DSeg` subfolder.
 
-![](Screenshots.jpg)
+![](Screenshot01.jpg)
 
 ## Setup
 
