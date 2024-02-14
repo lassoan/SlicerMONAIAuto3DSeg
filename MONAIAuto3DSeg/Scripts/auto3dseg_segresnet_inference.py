@@ -74,7 +74,6 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     model = ConfigParser(config["network"]).get_parsed_content()
     model.load_state_dict(state_dict, strict=True)
 
-    print(str(model))
     print(f'Model epoch {epoch} metric {best_metric}')
 
 
@@ -96,9 +95,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
         print('Using crop_foreground')
         ts.append(CropForegroundd(keys="image", source_key="image", margin=10, allow_smaller=True)) #subcrop
 
-    resample = False #resample (optionally)
-    if config.get("resample", False) and config.get("resample_resolution", None) is not None:
-        resample = True
+    if config.get("resample_resolution", None) is not None:
         pixdim = list(config["resample_resolution"])
         print(f'Using resample with  resample_resolution {pixdim}')
 
