@@ -9,7 +9,7 @@ set(EXTENSION_CATEGORY "Segmentation")
 set(EXTENSION_CONTRIBUTORS "Andras Lasso (PerkLab, Queen's University)" "Andres Diaz Pinto (PerkLab, Queen's University)" "Rudolf Bumm (KSGR Switzerland)")
 set(EXTENSION_DESCRIPTION "Run MONAI Auto3DSeg fully automatic AI segmentation in 3D Slicer.")
 set(EXTENSION_ICONURL "https://raw.githubusercontent.com/lassoan/SlicerMONAIAuto3DSeg/main/MONAIAuto3DSeg.png")
-set(EXTENSION_SCREENSHOTURLS "https://raw.githubusercontent.com/lassoan/SlicerMONAIAuto3DSeg/main/Screenshot01.jpg")
+set(EXTENSION_SCREENSHOTURLS "https://raw.githubusercontent.com/lassoan/SlicerMONAIAuto3DSeg/main/Screenshot01.jpg https://raw.githubusercontent.com/lassoan/SlicerMONAIAuto3DSeg/main/Screenshot02.jpg https://raw.githubusercontent.com/lassoan/SlicerMONAIAuto3DSeg/main/Screenshot03.jpg https://raw.githubusercontent.com/lassoan/SlicerMONAIAuto3DSeg/main/Screenshot04.jpg https://raw.githubusercontent.com/lassoan/SlicerMONAIAuto3DSeg/main/Screenshot05.jpg")
 set(EXTENSION_DEPENDS "PyTorch")
 
 #-----------------------------------------------------------------------------
