@@ -2,21 +2,23 @@
     "models": [
         {
             "title": "Aorta",
-            "description": "Aorta segmentation. Trained on TotalSegmentator dataset.",
+            "description": "Aorta segmentation. Trained on TotalSegmentatorV1 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip" }
             ]
         },
         {
             "title": "Abdominal organs",
-            "description": "Segment 17 abdominal organs. Trained on TotalSegmentator dataset.",
+            "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
@@ -25,25 +27,57 @@
         },
         {
             "title": "Lungs",
-            "description": "Segment lung segments and trachea.",
+            "description": "Segment 7 segments: lung segments, esophagus and trachea. Trained on TotalSegmentatorV1 dataset",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.2.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.1.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip" }
             ]
         },
         {
             "title": "Hips and spine",
-            "description": "Segment hip and spine.",
+            "description": "Segment 27 segments: hips, sacrum and vertebrae. Trained on TotalSegmentatorV1 dataset",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.2.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.1.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.0.0.zip" }
             ]
-        }
+        },
+        {
+            "title": "Cardiac",
+            "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-V2.0.0.zip" }
+            ]
+        },   
+        {
+            "title": "Organs",
+            "description": "class_map_part_organs: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/organs-V2.0.0.zip" }
+            ]
+        },  
+        {
+            "title": "Vertebrae",
+            "description": "class_map_part_vertebrae: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-V2.0.0.zip" }
+            ]
+        },         
     ]
 }
