@@ -60,7 +60,7 @@
             ]
         },   
         {
-            "title": "Organs",
+            "title": "Abdominal organs TS2",
             "description": "class_map_part_organs: Trained on TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
