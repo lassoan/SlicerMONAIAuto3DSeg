@@ -78,6 +78,26 @@
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
             ]
+        },  
+        {
+            "title": "Muscles TS2",
+            "description": "class_map_part_muscles: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip" }
+            ]
+        },      
+        {
+            "title": "Ribs TS2",
+            "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip" }
+            ]
         },         
     ]
 }
