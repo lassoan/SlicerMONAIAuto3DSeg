@@ -50,13 +50,13 @@
             ]
         },
         {
-            "title": "Cardiac",
+            "title": "Cardiac TS2",
             "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-V2.0.0.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip" }
             ]
         },   
         {
@@ -70,13 +70,13 @@
             ]
         },  
         {
-            "title": "Vertebrae",
+            "title": "Vertebrae TS2",
             "description": "class_map_part_vertebrae: Trained on TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-V2.0.0.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
             ]
         },         
     ]
