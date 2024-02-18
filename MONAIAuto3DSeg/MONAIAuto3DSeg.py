@@ -298,9 +298,15 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             self.logic.useStandardSegmentNames = self.ui.useStandardSegmentNamesCheckBox.checked
 
-            # Compute output
-            self.logic.process(self.ui.inputVolumeSelector.currentNode(), self.ui.outputSegmentationSelector.currentNode(),
-                self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked)
+            if not self.ui.pathToLocalModel.currentPath and self.ui.pathToLocalModel.visible:
+                slicer.util.errorDisplay("Please specify the path to an Auto3DSeg model")
+            else:
+                # Compute output
+                self.logic.process(self.ui.inputVolumeSelector.currentNode(),
+                                   self.ui.outputSegmentationSelector.currentNode(),
+                                   self.ui.modelComboBox.currentData,
+                                   self.ui.pathToLocalModel.currentPath,
+                                   self.ui.cpuCheckBox.checked)
 
         self.ui.statusLabel.appendPlainText("\nProcessing finished.")
 
@@ -333,9 +339,19 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         slicer.util.messageBox("Downloaded models are deleted.")
 
     def onToggleLocalCheckModel(self):
-        self.ui.pathToLocalModel.visible = False if self.ui.pathToLocalModel.isVisible() else True
-        self.ui.modelComboBox.visible = False if self.ui.pathToLocalModel.isVisible() else True
-        self.ui.label_3.visible = False if self.ui.pathToLocalModel.isVisible() else True
+        if self.ui.pathToLocalModel.isVisible():
+            self.ui.pathToLocalModel.visible = False
+            self.ui.pathToLocalModel.setCurrentPath('')
+            self.ui.modelComboBox.visible = True
+            self.ui.label_3.visible = True
+            # if self.ui.pathToLocalModel.currentPath:
+            #     self.ui.applyButton.setEnabled(True)
+        else:
+            self.ui.pathToLocalModel.visible = True
+            self.ui.modelComboBox.visible = False
+            self.ui.label_3.visible = False
+            # if not self.ui.pathToLocalModel.currentPath:
+            #     self.ui.applyButton.setEnabled(False)
 
 #
 # MONAIAuto3DSegLogic
@@ -715,7 +731,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
     def executableName(name):
         return name + ".exe" if os.name == "nt" else name
 
-    def process(self, inputVolume, outputSegmentation, model=None, cpu=False):
+    def process(self, inputVolume, outputSegmentation, model=None, localPath=None, cpu=False):
 
         """
         Run the processing algorithm.
@@ -723,6 +739,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         :param inputVolume: volume to be thresholded
         :param outputVolume: thresholding result
         :param model: one of self.models
+        :param localPath: Path to a local model
         :param subset: a list of structures (MONAIAuto3DSeg classe names https://github.com/wasserth/MONAIAuto3DSeg#class-detailsMONAIAuto3DSeg) to segment.
           Default is None, which means that all available structures will be segmented."
         """
@@ -736,9 +753,10 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if model == None:
             model = self.defaultModel
 
-        # GET the status from UI?
-        if self.ui.pathToLocalModel.isVisible():
-            modelPath = self.ui.pathToLocalModel.absolutePath()
+        if localPath:
+            import pathlib
+            head, _ = os.path.split(localPath)
+            modelPath = pathlib.Path(head)
         else:
             try:
                 modelPath = self.modelPath(model)
