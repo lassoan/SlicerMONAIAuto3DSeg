@@ -101,6 +101,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Buttons
         self.ui.packageInfoUpdateButton.connect("clicked(bool)", self.onPackageInfoUpdate)
+        self.ui.pathToLocalModel.visible = False
+        self.ui.checkLocalModel.connect("toggled(bool)", self.onToggleLocalCheckModel)
+        self.ui.pathToLocalModel.nameFilters = ['*.pt']
         self.ui.packageUpgradeButton.connect("clicked(bool)", self.onPackageUpgrade)
         self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
         self.ui.browseToModelsFolderButton.connect("clicked(bool)", self.onBrowseModelsFolder)
@@ -329,6 +332,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic.deleteAllModels()
         slicer.util.messageBox("Downloaded models are deleted.")
 
+    def onToggleLocalCheckModel(self):
+        self.ui.pathToLocalModel.visible = False if self.ui.pathToLocalModel.isVisible() else True
+        self.ui.modelComboBox.visible = False if self.ui.pathToLocalModel.isVisible() else True
+        self.ui.label_3.visible = False if self.ui.pathToLocalModel.isVisible() else True
+
 #
 # MONAIAuto3DSegLogic
 #
@@ -492,7 +500,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             else:
                 self.log(f"Not cleaning up temporary model download folder: {tempDir}")
 
-
     def _MONAIAuto3DSegTerminologyPropertyTypes(self):
         """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
         Terminology entries are either in DICOM or MONAI Auto3DSeg "Segmentation category and type".
@@ -585,7 +592,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         return labelDescriptions
 
-
     def getSegmentLabelColor(self, terminologyEntryStr):
         """Get segment label and color from terminology"""
 
@@ -673,7 +679,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         self.log("Dependencies are set up successfully.")
 
-
     def setDefaultParameters(self, parameterNode):
         """
         Initialize parameter node with default settings.
@@ -706,11 +711,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             raise CalledProcessError(retcode, proc.args, output=proc.stdout, stderr=proc.stderr)
         return output if returnOutput else None
 
-
     @staticmethod
     def executableName(name):
         return name + ".exe" if os.name == "nt" else name
-
 
     def process(self, inputVolume, outputSegmentation, model=None, cpu=False):
 
@@ -733,11 +736,15 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if model == None:
             model = self.defaultModel
 
-        try:
-            modelPath = self.modelPath(model)
-        except:
-            self.downloadModel(model)
-            modelPath = self.modelPath(model)
+        # GET the status from UI?
+        if self.ui.pathToLocalModel.isVisible():
+            modelPath = self.ui.pathToLocalModel.absolutePath()
+        else:
+            try:
+                modelPath = self.modelPath(model)
+            except:
+                self.downloadModel(model)
+                modelPath = self.modelPath(model)
 
         import time
         startTime = time.time()
@@ -832,7 +839,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         stopTime = time.time()
         self.log(f"Processing completed in {stopTime-startTime:.2f} seconds")
-
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
 
