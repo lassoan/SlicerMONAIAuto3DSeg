@@ -118,7 +118,17 @@
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip" }
             ]
-        },      
+        },  
+        {
+            "title": "Low Res Muscles TS2 - 3mm",
+            "description": "class_map_part_muscles 3mm: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip" }
+            ]
+        },
         {
             "title": "Ribs TS2",
             "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset.",
@@ -127,6 +137,16 @@
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip" }
+            ]
+        },      
+        {
+            "title": "Low Res Ribs TS2 - 3mm",
+            "description": "class_map_part_ribs 3mm: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip" }
             ]
         }         
     ]
