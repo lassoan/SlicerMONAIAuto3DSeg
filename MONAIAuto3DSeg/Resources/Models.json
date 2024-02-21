@@ -58,7 +58,17 @@
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip" }
             ]
-        },   
+        }, 
+        {
+            "title": "Low Res Cardiac TS2 - 3mm",
+            "description": "class_map_part_cardiac 3mm: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip" }
+            ]
+        },
         {
             "title": "Abdominal organs TS2",
             "description": "class_map_part_organs: Trained on TotalSegmentatorV2 dataset.",
@@ -70,6 +80,16 @@
             ]
         },  
         {
+            "title": "Low Res Abdominal organs TS2 - 3mm",
+            "description": "class_map_part_organs 3mm: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip" }
+            ]
+        },
+        {
             "title": "Vertebrae TS2",
             "description": "class_map_part_vertebrae: Trained on TotalSegmentatorV2 dataset.",
             "subject": "human",
@@ -79,6 +99,16 @@
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
             ]
         },  
+        {
+            "title": "Low Res Vertebrae TS2 - 3mm",
+            "description": "class_map_part_vertebrae 3mm: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip" }
+            ]
+        },
         {
             "title": "Muscles TS2",
             "description": "class_map_part_muscles: Trained on TotalSegmentatorV2 dataset.",
