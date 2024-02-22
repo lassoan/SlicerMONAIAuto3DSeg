@@ -42,7 +42,7 @@ def logits2pred(logits, sigmoid=False, dim=1):
         pred = torch.sigmoid(logits)
         pred = (pred >= 0.5)
     else:
-        pred = torch.softmax(logits, dim=dim, dtype=torch.double).float()
+        pred = torch.softmax(logits, dim=dim)
         pred = torch.argmax(pred, dim=dim, keepdim=True).to(dtype=torch.uint8)            
 
     return pred
