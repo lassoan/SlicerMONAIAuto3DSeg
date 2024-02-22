@@ -40,8 +40,10 @@ def logits2pred(logits, sigmoid=False, dim=1):
 
     if sigmoid:
         pred = torch.sigmoid(logits)
+        pred = (pred >= 0.5)
     else:
         pred = torch.softmax(logits, dim=dim, dtype=torch.double).float()
+        pred = torch.argmax(pred, dim=dim, keepdim=True).to(dtype=torch.uint8)            
 
     return pred
 
@@ -165,22 +167,13 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
 
     # pred = pred.cpu() # convert to CPU if the next step (reverse interpolation) is OOM on GPU
     # invert loading transforms (uncrop, reverse-resample, etc)
-    post_transforms = Compose([Invertd(keys="pred", orig_keys="image", transform=inf_transform, nearest_interp=False)])
+    post_transforms = Compose([Invertd(keys="pred", orig_keys="image", transform=inf_transform, nearest_interp=True)])
 
     batch_data["pred"] = convert_to_dst_type(pred, batch_data["image"], dtype=pred.dtype, device=pred.device)[0]  # make Meta tensor
     pred = [post_transforms(x)["pred"] for x in decollate_batch(batch_data)]
-    pred = pred[0]
-    print(f"preds inverted {pred.shape}")
-
-
-
-    # convert to segmentation (integers)
-    if sigmoid:
-        seg = (pred >= 0.5)
-    else:
-        seg = torch.argmax(pred, dim=0).to(dtype=torch.uint8)
-
-    print(f"seg ints {seg.shape}")
+    seg = pred[0][0]
+    print(f"preds inverted {seg.shape}")
+    
 
 
     # special for kits and brats
