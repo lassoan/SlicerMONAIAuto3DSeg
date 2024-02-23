@@ -1,28 +1,103 @@
 {
     "models": [
         {
-            "title": "Aorta",
-            "description": "Aorta segmentation. Trained on TotalSegmentatorV1 dataset.",
+            "title": "Abdominal organs TS2 - quick",
+            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_organs of TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip" }
             ]
         },
         {
-            "title": "Abdominal organs",
-            "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset.",
+            "title": "Abdominal organs TS2",
+            "description": "Trained on class_map_part_organs of TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip" }
+            ]
+        },  
+        {
+            "title": "Vertebrae TS2 - quick",
+            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Vertebrae TS2",
+            "description": "Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
+            ]
+        },  
+        {
+            "title": "Ribs TS2 - quick",
+            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_ribs of TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Ribs TS2",
+            "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Muscles TS2 - quick",
+            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_muscles of TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Muscles TS2",
+            "description": "Trained on class_map_part_muscles of TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Cardiac TS2 - quick",
+            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_cardiac of TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Cardiac TS2",
+            "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip" }
             ]
         },
         {
@@ -50,104 +125,29 @@
             ]
         },
         {
-            "title": "Cardiac TS2",
-            "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
+            "title": "Aorta",
+            "description": "Aorta segmentation. Trained on TotalSegmentatorV1 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip" }
-            ]
-        }, 
-        {
-            "title": "Low Res Cardiac TS2 - 3mm",
-            "description": "class_map_part_cardiac 3mm: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip" }
             ]
         },
         {
-            "title": "Abdominal organs TS2",
-            "description": "class_map_part_organs: Trained on TotalSegmentatorV2 dataset.",
+            "title": "Abdominal organs",
+            "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
             ]
-        },  
-        {
-            "title": "Low Res Abdominal organs TS2 - 3mm",
-            "description": "class_map_part_organs 3mm: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Vertebrae TS2",
-            "description": "class_map_part_vertebrae: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
-            ]
-        },  
-        {
-            "title": "Low Res Vertebrae TS2 - 3mm",
-            "description": "class_map_part_vertebrae 3mm: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Muscles TS2",
-            "description": "class_map_part_muscles: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip" }
-            ]
-        },  
-        {
-            "title": "Low Res Muscles TS2 - 3mm",
-            "description": "class_map_part_muscles 3mm: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Ribs TS2",
-            "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip" }
-            ]
-        },      
-        {
-            "title": "Low Res Ribs TS2 - 3mm",
-            "description": "class_map_part_ribs 3mm: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip" }
-            ]
-        }         
+        }
     ]
 }
