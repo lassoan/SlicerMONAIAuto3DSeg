@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import fire
+import time
 import torch
 
 import nibabel as nib
@@ -43,7 +44,7 @@ def logits2pred(logits, sigmoid=False, dim=1):
         pred = (pred >= 0.5)
     else:
         pred = torch.softmax(logits, dim=dim)
-        pred = torch.argmax(pred, dim=dim, keepdim=True).to(dtype=torch.uint8)            
+        pred = torch.argmax(pred, dim=dim, keepdim=True).to(dtype=torch.uint8)
 
     return pred
 
@@ -51,6 +52,8 @@ def logits2pred(logits, sigmoid=False, dim=1):
 @torch.no_grad()
 def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz', save_mode = None, **kwargs):
 
+    start_time = time.time()
+    timing_checkpoints = []  # list of (operation, time) tuples
 
     if image_file is None or not os.path.exists(image_file):
         raise ValueError('Incorrect image filename:'+str(image_file))
@@ -85,7 +88,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
 
 
     # make input Transform chain
-    ts = [ 
+    ts = [
             LoadImaged(keys="image", ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False),
             EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True),
     ]
@@ -111,7 +114,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
                 max_pixdim=np.array(pixdim) * 1.25,
                 allow_missing_keys=True,
             )
-        )    
+        )
 
     normalize_mode = config["normalize_mode"]
     intensity_bounds = config["intensity_bounds"]
@@ -131,14 +134,14 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     else:
         raise ValueError("Unsupported normalize_mode" + str(normalize_mode))
 
- 
+
     inf_transform = Compose(ts)
 
     # sliding_inferrer
     roi_size = config["roi_size"]
     # roi_size = [224, 224, 144]
     sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=0.625, mode="gaussian", cache_roi_weight_map=False, progress=True)
-    
+
 
     # process DATA
     batch_data = inf_transform([{"image" : image_file}])
@@ -146,10 +149,12 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     original_affine = batch_data[0]["image"].meta[MetaKeys.ORIGINAL_AFFINE]
     batch_data = list_data_collate([batch_data])
     data = batch_data["image"].as_subclass(torch.Tensor).to(memory_format=torch.channels_last_3d, device=device)
+    timing_checkpoints.append(("Preprocessing", time.time()))
 
     print('Running Inference ...')
     with autocast(enabled=True):
         logits = sliding_inferrer(inputs=data, network=model)
+    timing_checkpoints.append(("Inference", time.time()))
 
     print(f"Logits {logits.shape}")
     # logits -> preds
@@ -163,6 +168,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
         logits = logits.cpu()
         pred = logits2pred(logits, sigmoid=sigmoid)
     print(f"preds {pred.shape}")
+    timing_checkpoints.append(("Logits", time.time()))
     logits = None
 
     # pred = pred.cpu() # convert to CPU if the next step (reverse interpolation) is OOM on GPU
@@ -173,7 +179,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     pred = [post_transforms(x)["pred"] for x in decollate_batch(batch_data)]
     seg = pred[0][0]
     print(f"preds inverted {seg.shape}")
-    
+    timing_checkpoints.append(("Preds", time.time()))
 
 
     # special for kits and brats
@@ -200,8 +206,17 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
         print(f"Updated seg for brats23 {seg.shape}")
 
     seg = seg.cpu().numpy().astype(np.uint8)
+    timing_checkpoints.append(("Convert to array", time.time()))
 
     nib.save(nib.Nifti1Image(seg, affine = original_affine), result_file)
+    timing_checkpoints.append(("Save", time.time()))
+
+    print("Computation time log:")
+    previous_start_time = start_time
+    for timing_checkpoint in timing_checkpoints:
+        print(f"  {timing_checkpoint[0]}: {timing_checkpoint[1] - previous_start_time:.2f} seconds")
+        previous_start_time = timing_checkpoint[1]
+
     print(f'ALL DONE, result saved in {result_file}')
 
 if __name__ == '__main__':
