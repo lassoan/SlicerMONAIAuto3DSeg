@@ -50,6 +50,12 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
+    PROCESSING_IDLE = 0
+    PROCESSING_STARTING = 1
+    PROCESSING_IN_PROGRESS = 2
+    PROCESSING_IMPORT_RESULTS = 3
+    PROCESSING_CANCEL_REQUESTED = 4
+
     def __init__(self, parent=None):
         """
         Called when the user opens the module the first time and the widget is initialized.
@@ -59,6 +65,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic = None
         self._parameterNode = None
         self._updatingGUIFromParameterNode = False
+        self._processingState = MONAIAuto3DSegWidget.PROCESSING_IDLE
+        self._segmentationProcessInfo = None
 
     def setup(self):
         """
@@ -81,6 +89,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # in batch mode, without a graphical user interface.
         self.logic = MONAIAuto3DSegLogic()
         self.logic.logCallback = self.addLog
+        self.logic.processingCompletedCallback = self.onProcessingCompleted
+        self.logic.startResultImportCallback = self.onProcessImportStarted
+        self.logic.endResultImportCallback = self.onProcessImportEnded
 
         # Connections
 
@@ -219,13 +230,32 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
         self.ui.outputSegmentationSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputSegmentation"))
 
-        # Update buttons states and tooltips
         inputVolume = self._parameterNode.GetNodeReference("InputVolume")
-        if inputVolume:
-            self.ui.applyButton.toolTip = "Start segmentation"
+
+        state = self._processingState
+        if state == MONAIAuto3DSegWidget.PROCESSING_IDLE:
+            self.ui.applyButton.text = "Apply"
+            if inputVolume:
+                self.ui.applyButton.toolTip = "Start segmentation"
+                self.ui.applyButton.enabled = True
+            else:
+                self.ui.applyButton.toolTip = "Select input volume"
+                self.ui.applyButton.enabled = False
+        elif state == MONAIAuto3DSegWidget.PROCESSING_STARTING:
+            self.ui.applyButton.text = "Starting..."
+            self.ui.applyButton.toolTip = "Please wait while the segmentation is being initialized"
+            self.ui.applyButton.enabled = False
+        elif state == MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS:
+            self.ui.applyButton.text = "Cancel"
+            self.ui.applyButton.toolTip = "Cancel in-progress segmentation"
             self.ui.applyButton.enabled = True
-        else:
-            self.ui.applyButton.toolTip = "Select input volume"
+        elif state == MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS:
+            self.ui.applyButton.text = "Importing results..."
+            self.ui.applyButton.toolTip = "Please wait while the segmentation result is being imported"
+            self.ui.applyButton.enabled = False
+        elif state == MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED:
+            self.ui.applyButton.text = "Cancelling..."
+            self.ui.applyButton.toolTip = "Please wait for the segmentation to be cancelled"
             self.ui.applyButton.enabled = False
 
         if inputVolume:
@@ -259,33 +289,30 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         self.ui.statusLabel.appendPlainText(text)
         slicer.app.processEvents()  # force update
+ 
+    def setProcessingState(self, state):
+        self._processingState = state
+        self.updateGUIFromParameterNode()
+        slicer.app.processEvents()
 
     def onApplyButton(self):
         """
         Run processing when user clicks "Apply" button.
         """
+
+        if self._processingState == MONAIAuto3DSegWidget.PROCESSING_IDLE:
+            self.onApply()
+        else:
+            self.onCancel()
+    
+    def onApply(self):
         self.ui.statusLabel.plainText = ""
 
-        import qt
-        with slicer.util.tryWithErrorDisplay("Failed to install required dependencies.", waitCursor=True):
-            self.logic.setupPythonRequirements()
+        self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_STARTING)
 
-        # try:
-        #     slicer.app.setOverrideCursor(qt.Qt.WaitCursor)
-        #     self.logic.setupPythonRequirements()
-        #     slicer.app.restoreOverrideCursor()
-        # except Exception as e:
-        #     slicer.app.restoreOverrideCursor()
-        #     import traceback
-        #     traceback.print_exc()
-        #     self.ui.statusLabel.appendPlainText("\nApplication restart required.")
-        #     if slicer.util.confirmOkCancelDisplay(
-        #         "Application restart is required to complete installation of required Python packages.\nPress OK to restart.",
-        #         "Confirm application restart"
-        #         ):
-        #         slicer.util.restart()
-        #     else:
-        #         return
+        if not self.logic.dependenciesInstalled:
+            with slicer.util.tryWithErrorDisplay("Failed to install required dependencies.", waitCursor=True):
+                self.logic.setupPythonRequirements()
 
         with slicer.util.tryWithErrorDisplay("Failed to compute results.", waitCursor=True):
 
@@ -296,10 +323,31 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.logic.useStandardSegmentNames = self.ui.useStandardSegmentNamesCheckBox.checked
 
             # Compute output
-            self.logic.process(self.ui.inputVolumeSelector.currentNode(), self.ui.outputSegmentationSelector.currentNode(),
-                self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked)
+            self._segmentationProcessInfo = self.logic.process(self.ui.inputVolumeSelector.currentNode(), self.ui.outputSegmentationSelector.currentNode(),
+                self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked, waitForCompletion=False)
+            
+            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
 
+    def onCancel(self):
+        with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
+            self.logic.cancelProcessing(self._segmentationProcessInfo)
+            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED)
+
+    def onProcessImportStarted(self, customProcessData):
+        self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS)
+        import qt
+        qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+        slicer.app.processEvents()
+
+    def onProcessImportEnded(self, customProcessData):
+        import qt
+        qt.QApplication.restoreOverrideCursor()
+        slicer.app.processEvents()
+
+    def onProcessingCompleted(self, returnCode, customProcessData):
         self.ui.statusLabel.appendPlainText("\nProcessing finished.")
+        self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
+        self._segmentationProcessInfo = None
 
     def onPackageInfoUpdate(self):
         self.ui.packageInfoTextBrowser.plainText = ""
@@ -343,6 +391,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
+    EXIT_CODE_USER_CANCELLED = 1001
+    EXIT_CODE_DID_NOT_RUN = 1002
+
     def __init__(self):
         """
         Called when the logic class is instantiated. Can be used for initializing member variables.
@@ -354,9 +405,14 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         import pathlib
         self.fileCachePath = pathlib.Path.home().joinpath(".MONAIAuto3DSeg")
 
+        self.dependenciesInstalled = False  # we don't know yet if dependencies have been installed
+
         self.moduleDir = os.path.dirname(slicer.util.getModule('MONAIAuto3DSeg').path)
 
         self.logCallback = None
+        self.processingCompletedCallback = None
+        self.startResultImportCallback = None
+        self.endResultImportCallback = None
         self.clearOutputFolder = True
         self.useStandardSegmentNames = True
 
@@ -378,6 +434,15 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         # Main
         self.models = self.loadModelsDescription()
         self.defaultModel = self.models[0]["id"]
+
+        # Timer for checking the output of the segmentation process that is running in the background
+        self.processOutputCheckTimerIntervalMsec = 1000
+
+        # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
+        # where inference result is stored and set self.debugSkipInference to True.
+        self.debugSkipInference = False
+        self.debugSkipInferenceTempDir = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
+
 
     def model(self, modelId):
         for model in self.models:
@@ -671,6 +736,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             monaiInstallString += " --upgrade"
         slicer.util.pip_install(monaiInstallString)
 
+        self.dependenciesInstalled = True
         self.log("Dependencies are set up successfully.")
 
 
@@ -712,7 +778,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         return name + ".exe" if os.name == "nt" else name
 
 
-    def process(self, inputVolume, outputSegmentation, model=None, cpu=False):
+    def process(self, inputVolume, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customProcessData=None):
 
         """
         Run the processing algorithm.
@@ -720,8 +786,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         :param inputVolume: volume to be thresholded
         :param outputVolume: thresholding result
         :param model: one of self.models
-        :param subset: a list of structures (MONAIAuto3DSeg classe names https://github.com/wasserth/MONAIAuto3DSeg#class-detailsMONAIAuto3DSeg) to segment.
-          Default is None, which means that all available structures will be segmented."
+        :param cpu: use CPU instead of GPU
+        :param waitForCompletion: if True then the method waits for the processing to finish
+        :param customProcessData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
         """
 
         if not inputVolume:
@@ -739,16 +806,18 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             self.downloadModel(model)
             modelPath = self.modelPath(model)
 
+        segmentationProcessInfo = {}
+
         import time
         startTime = time.time()
         self.log("Processing started")
 
-        # Create new empty folder
-        tempDir = slicer.util.tempDirectory()
-
-        debugSkipInference = False  # TODO: enable for testing workflow without actually running inference
-        if debugSkipInference:
-            tempDir = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
+        if self.debugSkipInference:
+            # For debugging, use a fixed temporary folder
+            tempDir = self.debugSkipInferenceTempDir
+        else:
+            # Create new empty folder
+            tempDir = slicer.util.tempDirectory()
 
         inputImageFile = tempDir + "/input-volume.nrrd"
 
@@ -804,34 +873,173 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             additionalEnvironmentVariables = {"CUDA_VISIBLE_DEVICES": "-1"}
             self.log(f"Additional environment variables: {additionalEnvironmentVariables}")
 
-        if not debugSkipInference:
+        if self.debugSkipInference:
+            proc = None
+        else:
             proc = slicer.util.launchConsoleProcess(auto3DSegCommand, updateEnvironment=additionalEnvironmentVariables)
-            self.logProcessOutput(proc)
 
-        # Load result
-        self.log("Importing segmentation results...")
-        self.readSegmentation(outputSegmentation, outputSegmentationFile, model)
+        segmentationProcessInfo["proc"] = proc
+        segmentationProcessInfo["procReturnCode"] = MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN
+        segmentationProcessInfo["cancelRequested"] = False
+        segmentationProcessInfo["startTime"] = startTime
+        segmentationProcessInfo["tempDir"] = tempDir
+        segmentationProcessInfo["segmentationProcess"] = proc
+        segmentationProcessInfo["inputVolume"] = inputVolume
+        segmentationProcessInfo["outputSegmentation"] = outputSegmentation
+        segmentationProcessInfo["outputSegmentationFile"] = outputSegmentationFile
+        segmentationProcessInfo["model"] = model
+        segmentationProcessInfo["customProcessData"] = customProcessData
 
-        # Set source volume - required for DICOM Segmentation export
-        outputSegmentation.SetNodeReferenceID(outputSegmentation.GetReferenceImageGeometryReferenceRole(), inputVolume.GetID())
-        outputSegmentation.SetReferenceImageGeometryParameterFromVolumeNode(inputVolume)
+        if proc:
+            if waitForCompletion:
+                # Wait for the process to end before returning
+                self.logProcessOutput(proc)
+                self.onSegmentationProcessCompleted(segmentationProcessInfo)
+            else:
+                # Run the process in the background
+                self.startSegmentationProcessMonitoring(segmentationProcessInfo)
+        else:
+            # Debugging
+            self.onSegmentationProcessCompleted(segmentationProcessInfo)
 
-        # Place segmentation node in the same place as the input volume
-        shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        inputVolumeShItem = shNode.GetItemByDataNode(inputVolume)
-        studyShItem = shNode.GetItemParent(inputVolumeShItem)
-        segmentationShItem = shNode.GetItemByDataNode(outputSegmentation)
-        shNode.SetItemParent(segmentationShItem, studyShItem)
+        return segmentationProcessInfo
 
-        if self.clearOutputFolder and not debugSkipInference:
-            self.log("Cleaning up temporary folder...")
+    def cancelProcessing(self, segmentationProcessInfo):
+        self.log("Cancel is requested.")
+        segmentationProcessInfo["cancelRequested"] = True
+        proc = segmentationProcessInfo.get("proc")
+        if proc:
+            # Simple proc.kill() would not work, that would only stop the launcher
+            import psutil
+            psProcess = psutil.Process(proc.pid)
+            for psChildProcess in psProcess.children(recursive=True):
+                psChildProcess.kill()
+            if psProcess.is_running():
+                psProcess.kill()
+        else:
+            self.onSegmentationProcessCompleted(segmentationProcessInfo)
+
+    @staticmethod
+    def _handleProcessOutputThreadProcess(segmentationProcessInfo):
+        # Wait for the process to end and forward output to the log
+        proc = segmentationProcessInfo["proc"]
+        from subprocess import CalledProcessError
+        while True:
+            try:
+                line = proc.stdout.readline()
+                if not line:
+                    break
+                segmentationProcessInfo["procOutputQueue"].put(line.rstrip())
+            except UnicodeDecodeError as e:
+                # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
+                # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
+                # as we only guarantee correct behavior if an UTF8 locale is used.
+                pass
+        proc.wait()
+        retcode = proc.returncode  # non-zero return code means error
+        segmentationProcessInfo["procReturnCode"] = retcode
+
+
+    def startSegmentationProcessMonitoring(self, segmentationProcessInfo):
+        import queue
+        import sys
+        import threading 
+
+        segmentationProcessInfo["procOutputQueue"] = queue.Queue()
+        segmentationProcessInfo["procThread"] = threading.Thread(target=MONAIAuto3DSegLogic._handleProcessOutputThreadProcess, args=[segmentationProcessInfo])
+        segmentationProcessInfo["procThread"].start()
+
+        self.checkSegmentationProcessOutput(segmentationProcessInfo)
+
+
+    def checkSegmentationProcessOutput(self, segmentationProcessInfo):
+
+        import queue
+        outputQueue = segmentationProcessInfo["procOutputQueue"]
+        while outputQueue:
+            if segmentationProcessInfo.get("procReturnCode") != MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN:
+                self.onSegmentationProcessCompleted(segmentationProcessInfo)
+                return
+            try:
+                line = outputQueue.get_nowait()
+                self.log(line)
+            except queue.Empty:
+                break
+
+        # No more outputs to process now, check again later
+        import qt
+        qt.QTimer.singleShot(self.processOutputCheckTimerIntervalMsec, lambda segmentationProcessInfo=segmentationProcessInfo: self.checkSegmentationProcessOutput(segmentationProcessInfo))
+
+
+    def onSegmentationProcessCompleted(self, segmentationProcessInfo):
+
+        startTime = segmentationProcessInfo["startTime"]
+        tempDir = segmentationProcessInfo["tempDir"]
+        inputVolume = segmentationProcessInfo["inputVolume"]
+        outputSegmentation = segmentationProcessInfo["outputSegmentation"]
+        outputSegmentationFile = segmentationProcessInfo["outputSegmentationFile"]
+        model = segmentationProcessInfo["model"]
+        customProcessData = segmentationProcessInfo["customProcessData"]
+        procReturnCode = segmentationProcessInfo["procReturnCode"]
+        cancelRequested = segmentationProcessInfo["cancelRequested"]
+
+        if cancelRequested:
+            procReturnCode = MONAIAuto3DSegLogic.EXIT_CODE_USER_CANCELLED
+            self.log(f"Processing was cancelled.")
+        else:
+            if procReturnCode == 0:
+
+                if self.startResultImportCallback:
+                    self.startResultImportCallback(customProcessData)
+
+                try:
+
+                    # Load result
+                    self.log("Importing segmentation results...")
+                    self.readSegmentation(outputSegmentation, outputSegmentationFile, model)
+
+                    # Set source volume - required for DICOM Segmentation export
+                    outputSegmentation.SetNodeReferenceID(outputSegmentation.GetReferenceImageGeometryReferenceRole(), inputVolume.GetID())
+                    outputSegmentation.SetReferenceImageGeometryParameterFromVolumeNode(inputVolume)
+
+                    # Place segmentation node in the same place as the input volume
+                    shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+                    inputVolumeShItem = shNode.GetItemByDataNode(inputVolume)
+                    studyShItem = shNode.GetItemParent(inputVolumeShItem)
+                    segmentationShItem = shNode.GetItemByDataNode(outputSegmentation)
+                    shNode.SetItemParent(segmentationShItem, studyShItem)
+
+                finally:
+
+                    if self.endResultImportCallback:
+                        self.endResultImportCallback(customProcessData)
+
+            else:
+                self.log(f"Processing failed with return code {procReturnCode}")
+
+        if self.clearOutputFolder:
+            self.log("Cleaning up temporary folder.")
             if os.path.isdir(tempDir):
+                import shutil
                 shutil.rmtree(tempDir)
         else:
             self.log(f"Not cleaning up temporary folder: {tempDir}")
 
+        # Report total elapsed time
+        import time
         stopTime = time.time()
-        self.log(f"Processing completed in {stopTime-startTime:.2f} seconds")
+        segmentationProcessInfo["stopTime"] = stopTime
+        elapsedTime = stopTime - startTime
+        if cancelRequested:
+            self.log(f"Processing was cancelled after {elapsedTime:.2f} seconds.")
+        else:
+            if procReturnCode == 0:
+                self.log(f"Processing was completed in {elapsedTime:.2f} seconds.")
+            else:
+                self.log(f"Processing failed after {elapsedTime:.2f} seconds.")
+
+        if self.processingCompletedCallback:
+            self.processingCompletedCallback(procReturnCode, customProcessData)
 
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
