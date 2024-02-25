@@ -21,6 +21,16 @@
             ]
         },  
         {
+            "title": "Body TS2",
+            "description": "Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-v2.0.0.zip" }
+            ]
+        },
+        {
             "title": "Vertebrae TS2 - quick",
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset.",
             "subject": "human",
@@ -40,6 +50,16 @@
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
             ]
         },  
+        {
+            "title": "Mediastinal anatomy TS2",
+            "description": "Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip" }
+            ]
+        },
         {
             "title": "Ribs TS2 - quick",
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_ribs of TotalSegmentatorV2 dataset.",
@@ -101,7 +121,7 @@
             ]
         },
         {
-            "title": "Lungs",
+            "title": "Lungs TS1",
             "description": "Segment 7 segments: lung segments, esophagus and trachea. Trained on TotalSegmentatorV1 dataset",
             "subject": "human",
             "imagingModality": "CT",
@@ -110,6 +130,16 @@
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.2.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.1.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Lungs TS2",
+            "description": "Segment 7 segments: lung segments, pulmonary vein and trachea. Trained on TotalSegmentatorV2 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.0.zip" }
             ]
         },
         {
