@@ -289,7 +289,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         self.ui.statusLabel.appendPlainText(text)
         slicer.app.processEvents()  # force update
- 
+
     def setProcessingState(self, state):
         self._processingState = state
         self.updateGUIFromParameterNode()
@@ -304,7 +304,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.onApply()
         else:
             self.onCancel()
-    
+
     def onApply(self):
         self.ui.statusLabel.plainText = ""
 
@@ -325,7 +325,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # Compute output
             self._segmentationProcessInfo = self.logic.process(self.ui.inputVolumeSelector.currentNode(), self.ui.outputSegmentationSelector.currentNode(),
                 self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked, waitForCompletion=False)
-            
+
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
 
     def onCancel(self):
@@ -413,7 +413,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         self.processingCompletedCallback = None
         self.startResultImportCallback = None
         self.endResultImportCallback = None
-        self.clearOutputFolder = True
         self.useStandardSegmentNames = True
 
         # List of property type codes that are specified by in the MONAIAuto3DSeg terminology.
@@ -437,6 +436,10 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         # Timer for checking the output of the segmentation process that is running in the background
         self.processOutputCheckTimerIntervalMsec = 1000
+
+        # Disabling this flag preserves input and output data after execution is completed,
+        # which can be useful for troubleshooting.
+        self.clearOutputFolder = True
 
         # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
         # where inference result is stored and set self.debugSkipInference to True.
@@ -851,13 +854,13 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if prepareInputNeeded:
             # Legacy
             inputConfigFile = modelPath.joinpath("input.yaml")
-            outputSegmentationFile = modelPath.joinpath("ensemble_output/input-volume_ensemble.nii.gz")
+            outputSegmentationFile = modelPath.joinpath("ensemble_output/input-volume_ensemble.nrrd")
             workDir = modelPath  # tempDirPath?
             auto3DSegCommand = [ pythonSlicerExecutablePath, "-m", "monai.apps.auto3dseg", "AutoRunner", "run",
                 "--input", str(inputConfigFile), "--work_dir", str(workDir),
                 "--algos", "segresnet", "--train=False", "--analyze=False", "--ensemble=True" ]
         else:
-            outputSegmentationFile = tempDir + "/output-segmentation.nii.gz"
+            outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
             modelPtFile = modelPath.joinpath("model.pt")
             inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
             auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
@@ -943,7 +946,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
     def startSegmentationProcessMonitoring(self, segmentationProcessInfo):
         import queue
         import sys
-        import threading 
+        import threading
 
         segmentationProcessInfo["procOutputQueue"] = queue.Queue()
         segmentationProcessInfo["procThread"] = threading.Thread(target=MONAIAuto3DSegLogic._handleProcessOutputThreadProcess, args=[segmentationProcessInfo])

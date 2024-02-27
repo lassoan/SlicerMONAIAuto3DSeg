@@ -4,7 +4,7 @@ import fire
 import time
 import torch
 
-import nibabel as nib
+import nrrd
 from monai.bundle import ConfigParser
 from monai.data import decollate_batch, list_data_collate
 from monai.utils import ImageMetaKey, convert_to_dst_type, optional_import, set_determinism
@@ -145,8 +145,6 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
 
     # process DATA
     batch_data = inf_transform([{"image" : image_file}])
-    #original_affine = batch_data[0]['image_meta_dict']['original_affine']
-    original_affine = batch_data[0]["image"].meta[MetaKeys.ORIGINAL_AFFINE]
     batch_data = list_data_collate([batch_data])
     data = batch_data["image"].as_subclass(torch.Tensor).to(memory_format=torch.channels_last_3d, device=device)
     timing_checkpoints.append(("Preprocessing", time.time()))
@@ -208,7 +206,10 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     seg = seg.cpu().numpy().astype(np.uint8)
     timing_checkpoints.append(("Convert to array", time.time()))
 
-    nib.save(nib.Nifti1Image(seg, affine = original_affine), result_file)
+    # save result by copying all image metadata from the input, just replacing the voxel data
+    nrrd_header = nrrd.read_header(image_file)
+    nrrd.write(result_file, seg, nrrd_header)
+
     timing_checkpoints.append(("Save", time.time()))
 
     print("Computation time log:")
