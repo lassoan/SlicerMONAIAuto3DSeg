@@ -474,7 +474,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                         else:
                             logging.error(f"Failed to extract model id and version from url: {url}")
                         models.append({
-                            "id": filename,
+                            "id": f"{filename}-v{version}",
                             "title": f"{model['title']} (v{version})",
                             "description":
                                 f"{model['description']}\n"
