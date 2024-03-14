@@ -4,7 +4,7 @@ import fire
 import time
 import torch
 
-import nibabel as nib
+import nrrd
 from monai.bundle import ConfigParser
 from monai.data import decollate_batch, list_data_collate
 from monai.utils import ImageMetaKey, convert_to_dst_type, optional_import, set_determinism
@@ -221,6 +221,7 @@ def main(model_file='/path_to_model/model.pt',
     # save result by copying all image metadata from the input, just replacing the voxel data
     nrrd_header = nrrd.read_header(image_file)
     nrrd.write(result_file, seg, nrrd_header)
+    timing_checkpoints.append(("Save", time.time()))
 
     print("Computation time log:")
     previous_start_time = start_time
