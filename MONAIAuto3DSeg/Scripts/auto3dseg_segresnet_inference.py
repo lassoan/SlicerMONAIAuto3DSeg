@@ -4,7 +4,7 @@ import fire
 import time
 import torch
 
-import nrrd
+import nibabel as nib
 from monai.bundle import ConfigParser
 from monai.data import decollate_batch, list_data_collate
 from monai.utils import ImageMetaKey, convert_to_dst_type, optional_import, set_determinism
@@ -32,6 +32,7 @@ from monai.transforms import (
     SpatialPadd,
     ToDeviced,
     Orientationd,
+    ConcatItemsd,
 )
 
 
@@ -50,13 +51,22 @@ def logits2pred(logits, sigmoid=False, dim=1):
 
 
 @torch.no_grad()
-def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz', save_mode = None, **kwargs):
+def main(model_file='/path_to_model/model.pt',
+         image_file={'image1': "/path_to_image1/image.nii.gz", 'image2': "/path_to_image2/image.nii.gz"},
+         result_file = '/workspace/result_mask.nii.gz',
+         save_mode = None, **kwargs):
 
     start_time = time.time()
     timing_checkpoints = []  # list of (operation, time) tuples
 
-    if image_file is None or not os.path.exists(image_file):
-        raise ValueError('Incorrect image filename:'+str(image_file))
+    if not isinstance(image_file, dict):
+        raise ValueError('Incorrect variable type - image_file has to be a dictionary')
+
+    keys = list(image_file.keys())
+
+    for img in image_file.keys():
+        if image_file[img] is None or not os.path.exists(image_file[img]):
+            raise ValueError('Incorrect image filename:'+str(image_file))
 
     if not os.path.exists(model_file):
         raise ValueError('Cannot find model file:'+str(model_file))
@@ -67,7 +77,6 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
         raise ValueError('Config not found in checkpoint (not a auto3dseg/segresnet model):'+str(model_file))
 
     config = checkpoint["config"]
-    print(config)
 
     state_dict = checkpoint["state_dict"]
 
@@ -89,7 +98,8 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
 
     # make input Transform chain
     ts = [
-            LoadImaged(keys="image", ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False),
+            LoadImaged(keys=keys, ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False),
+            ConcatItemsd(keys=keys, name="image", dim=0),
             EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True),
     ]
 
@@ -98,7 +108,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
         ts.append(Orientationd(keys="image", axcodes="RAS")) #reorient
     if config.get("crop_foreground", True):
         print('Using crop_foreground')
-        ts.append(CropForegroundd(keys="image", source_key="image", margin=10, allow_smaller=True)) #subcrop
+        ts.append(CropForegroundd(keys="image", source_key="image1", margin=10, allow_smaller=True)) #subcrop
 
     if config.get("resample_resolution", None) is not None:
         pixdim = list(config["resample_resolution"])
@@ -144,7 +154,9 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
 
 
     # process DATA
-    batch_data = inf_transform([{"image" : image_file}])
+    batch_data = inf_transform([image_file])
+    #original_affine = batch_data[0]['image_meta_dict']['original_affine']
+    original_affine = batch_data[0]['image'].meta[MetaKeys.ORIGINAL_AFFINE]
     batch_data = list_data_collate([batch_data])
     data = batch_data["image"].as_subclass(torch.Tensor).to(memory_format=torch.channels_last_3d, device=device)
     timing_checkpoints.append(("Preprocessing", time.time()))
@@ -210,8 +222,6 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     nrrd_header = nrrd.read_header(image_file)
     nrrd.write(result_file, seg, nrrd_header)
 
-    timing_checkpoints.append(("Save", time.time()))
-
     print("Computation time log:")
     previous_start_time = start_time
     for timing_checkpoint in timing_checkpoints:
@@ -221,4 +231,7 @@ def main(model_file='model.pt',  image_file=None,  result_file = 'result.nii.gz'
     print(f'ALL DONE, result saved in {result_file}')
 
 if __name__ == '__main__':
-  fire.Fire(main)
+    fire.Fire(main(model_file='/workspace/model.pt',
+                   image_file={'image1': "/workspace/T2/prostate_00_T2.nii.gz",
+                               'image2': "/workspace/ADC/prostate_00_ADC.nii.gz"}
+                   ))
