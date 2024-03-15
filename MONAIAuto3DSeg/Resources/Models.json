@@ -85,7 +85,8 @@
             "title": "Prostate - Multisequence",
             "description": "Segments peripheral (PZ) and transition zone (TZ) on T2 and ADC sequences. Trained on Medical Segmentation Decathlon dataset",
             "subject": "human",
-            "imagingModality": "MRI",
+            "imagingModality": "MR",
+            "inputs": [{"title": "Input T2 volume"}, {"title": "Input ADC volume"}],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip" }
@@ -210,17 +211,6 @@
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Prostate",
-            "description": "Segment prostate from T2 and ADC MR images.",
-            "subject": "human",
-            "imagingModality": "MR",
-            "inputs": [{"title": "Input T2 volume"}, {"title": "Input ADC volume"}],
-            "versions":
-            [
-                { "url": "https://example.com/prostate-v1.0.0.zip" }
             ]
         }
     ]
