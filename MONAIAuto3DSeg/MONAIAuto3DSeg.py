@@ -80,6 +80,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
+        self.inputNodeSelectors = [self.ui.inputNodeSelector0, self.ui.inputNodeSelector1, self.ui.inputNodeSelector2, self.ui.inputNodeSelector3]
+        self.inputNodeLabels = [self.ui.inputNodeLabel0, self.ui.inputNodeLabel1, self.ui.inputNodeLabel2, self.ui.inputNodeLabel3]
+
         # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
         # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
         # "setMRMLScene(vtkMRMLScene*)" slot.
@@ -101,7 +104,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # These connections ensure that whenever user changes some settings on the GUI, that is saved in the MRML scene
         # (in the selected parameter node).
-        self.ui.inputVolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+        for inputNodeSelector in self.inputNodeSelectors:
+            inputNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.cpuCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.showAllModelsCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.useStandardSegmentNamesCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
@@ -167,10 +171,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.setParameterNode(self.logic.getParameterNode())
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        if not self._parameterNode.GetNodeReference("InputVolume"):
+        if not self._parameterNode.GetNodeReference("InputNode0"):
             firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
             if firstVolumeNode:
-                self._parameterNode.SetNodeReferenceID("InputVolume", firstVolumeNode.GetID())
+                self._parameterNode.SetNodeReferenceID("InputNode0", firstVolumeNode.GetID())
 
     def setParameterNode(self, inputParameterNode):
         """
@@ -221,26 +225,49 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.modelComboBox.addItem(modelTitle, model["id"])
             self.ui.modelComboBox.setItemData(itemIndex, model.get("description"), qt.Qt.ToolTipRole)
 
-        # Update node selectors and sliders
-        self.ui.inputVolumeSelector.setCurrentNode(self._parameterNode.GetNodeReference("InputVolume"))
-        model = self._parameterNode.GetParameter("Model")
-        self.ui.modelComboBox.setCurrentIndex(self.ui.modelComboBox.findData(model))
+        modelId = self._parameterNode.GetParameter("Model")
+        self.ui.modelComboBox.setCurrentIndex(self.ui.modelComboBox.findData(modelId))
         self.ui.cpuCheckBox.checked = self._parameterNode.GetParameter("CPU") == "true"
         self.ui.showAllModelsCheckBox.checked = showAllModels
         self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
         self.ui.outputSegmentationSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputSegmentation"))
 
-        inputVolume = self._parameterNode.GetNodeReference("InputVolume")
-
         state = self._processingState
         if state == MONAIAuto3DSegWidget.PROCESSING_IDLE:
             self.ui.applyButton.text = "Apply"
-            if inputVolume:
+            model = self.logic.model(modelId)
+            modelInputs = model["inputs"]
+            inputErrorMessages = []  # it will contain text if the inputs are not valid
+            inputNodes = []  # list of output nodes so far, for checking for duplicates
+            for inputIndex in range(len(self.inputNodeSelectors)):
+                inputNodeSelector = self.inputNodeSelectors[inputIndex]
+                inputNodeLabel = self.inputNodeLabels[inputIndex]
+                if inputIndex < len(modelInputs):
+                    inputNodeLabel.visible = True
+                    inputTitle = modelInputs[inputIndex]["title"]
+                    inputNodeLabel.text = f"{inputTitle}:"
+                    inputNodeSelector.visible = True
+                    inputNode = self._parameterNode.GetNodeReference("InputNode" + str(inputIndex))
+                    inputNodeSelector.setCurrentNode(inputNode)
+                    if inputIndex == 0 and inputNode:
+                        self.ui.outputSegmentationSelector.baseName = inputNode.GetName() + " segmentation"
+                    if not inputNode:
+                        inputErrorMessages.append(f"Select {inputTitle}.")
+                    else:
+                        if inputNode in inputNodes:
+                            inputErrorMessages.append(f"'{inputTitle}' does not have a unique input ('{inputNode.GetName()}' is already used as another input).")
+                        inputNodes.append(inputNode)
+                else:
+                    inputNodeLabel.visible = False
+                    inputNodeSelector.visible = False
+
+            if inputErrorMessages:
+                self.ui.applyButton.toolTip = "\n".join(inputErrorMessages)
+                self.ui.applyButton.enabled = False
+            else:
                 self.ui.applyButton.toolTip = "Start segmentation"
                 self.ui.applyButton.enabled = True
-            else:
-                self.ui.applyButton.toolTip = "Select input volume"
-                self.ui.applyButton.enabled = False
+
         elif state == MONAIAuto3DSegWidget.PROCESSING_STARTING:
             self.ui.applyButton.text = "Starting..."
             self.ui.applyButton.toolTip = "Please wait while the segmentation is being initialized"
@@ -258,9 +285,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.applyButton.toolTip = "Please wait for the segmentation to be cancelled"
             self.ui.applyButton.enabled = False
 
-        if inputVolume:
-            self.ui.outputSegmentationSelector.baseName = inputVolume.GetName() + " segmentation"
-
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
 
@@ -275,7 +299,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
-        self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.inputVolumeSelector.currentNodeID)
+        for inputIndex in range(len(self.inputNodeSelectors)):
+            inputNodeSelector = self.inputNodeSelectors[inputIndex]
+            self._parameterNode.SetNodeReferenceID("InputNode" + str(inputIndex), inputNodeSelector.currentNodeID)
         self._parameterNode.SetParameter("Model", self.ui.modelComboBox.currentData)
         self._parameterNode.SetParameter("CPU", "true" if self.ui.cpuCheckBox.checked else "false")
         self._parameterNode.SetParameter("showAllModels", "true" if self.ui.showAllModelsCheckBox.checked else "false")
@@ -314,19 +340,27 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             with slicer.util.tryWithErrorDisplay("Failed to install required dependencies.", waitCursor=True):
                 self.logic.setupPythonRequirements()
 
-        with slicer.util.tryWithErrorDisplay("Failed to compute results.", waitCursor=True):
+        try:
+            with slicer.util.tryWithErrorDisplay("Failed to start processing.", waitCursor=True):
 
-            # Create new segmentation node, if not selected yet
-            if not self.ui.outputSegmentationSelector.currentNode():
-                self.ui.outputSegmentationSelector.addNode()
+                # Create new segmentation node, if not selected yet
+                if not self.ui.outputSegmentationSelector.currentNode():
+                    self.ui.outputSegmentationSelector.addNode()
 
-            self.logic.useStandardSegmentNames = self.ui.useStandardSegmentNamesCheckBox.checked
+                self.logic.useStandardSegmentNames = self.ui.useStandardSegmentNamesCheckBox.checked
 
-            # Compute output
-            self._segmentationProcessInfo = self.logic.process(self.ui.inputVolumeSelector.currentNode(), self.ui.outputSegmentationSelector.currentNode(),
-                self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked, waitForCompletion=False)
+                # Compute output
+                inputNodes = []
+                for inputNodeSelector in self.inputNodeSelectors:
+                    if inputNodeSelector.visible:
+                        inputNodes.append(inputNodeSelector.currentNode())
+                self._segmentationProcessInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
+                    self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked, waitForCompletion=False)
 
-            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
+                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
+
+        except Exception as e:
+            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
 
     def onCancel(self):
         with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
@@ -473,9 +507,18 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                             version = match.group("version")
                         else:
                             logging.error(f"Failed to extract model id and version from url: {url}")
+                        if "inputs" in model:
+                            # Contains a list of dict. One dict for each input.
+                            # Currently, only "title" (user-displayable name) of the input is specified.
+                            # In the future, inputs could have additional properties, such as name, type, optional, ...
+                            inputs = model["inputs"]
+                        else:
+                            # Inputs are not defined, use default (single input volume)
+                            inputs = [{"title": "Input volume"}]
                         models.append({
                             "id": f"{filename}-v{version}",
                             "title": f"{model['title']} (v{version})",
+                            "inputs": inputs,
                             "description":
                                 f"{model['description']}\n"
                                 f"Subject: {model['subject']}\n"
@@ -781,12 +824,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         return name + ".exe" if os.name == "nt" else name
 
 
-    def process(self, inputVolume, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customProcessData=None):
+    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customProcessData=None):
 
         """
         Run the processing algorithm.
         Can be used without GUI widget.
-        :param inputVolume: volume to be thresholded
+        :param inputNodes: input nodes in a list
         :param outputVolume: thresholding result
         :param model: one of self.models
         :param cpu: use CPU instead of GPU
@@ -794,8 +837,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         :param customProcessData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
         """
 
-        if not inputVolume:
-            raise ValueError("Input volume is invalid")
+        if not inputNodes:
+            raise ValueError("Input nodes are invalid")
 
         if not outputSegmentation:
             raise ValueError("Output segmentation is invalid")
@@ -822,8 +865,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             # Create new empty folder
             tempDir = slicer.util.tempDirectory()
 
-        inputImageFile = tempDir + "/input-volume.nrrd"
-
         import pathlib
         tempDirPath = pathlib.Path(tempDir)
 
@@ -833,40 +874,31 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if not pythonSlicerExecutablePath:
             raise RuntimeError("Python was not found")
 
-        modelMainPyFile = modelPath.joinpath("main.py")
-        # check if modelMainPyFile exists
-        prepareInputNeeded = os.path.isfile(modelMainPyFile)
-
-        if prepareInputNeeded:
-            # Legacy
-            prepareInputFilesCommand = [ pythonSlicerExecutablePath, modelMainPyFile, inputImageFile ]
-            proc = slicer.util.launchConsoleProcess(prepareInputFilesCommand)
-            self.logProcessOutput(proc)
-
         # Write input volume to file
-        self.log(f"Writing input file to {inputImageFile}")
-        volumeStorageNode = slicer.mrmlScene.CreateNodeByClass("vtkMRMLVolumeArchetypeStorageNode")
-        volumeStorageNode.SetFileName(inputImageFile)
-        volumeStorageNode.UseCompressionOff()
-        volumeStorageNode.WriteData(inputVolume)
-        volumeStorageNode.UnRegister(None)
+        inputFiles = []
+        for inputIndex, inputNode in enumerate(inputNodes):
+            if inputNode.IsA('vtkMRMLScalarVolumeNode'):
+                inputImageFile = tempDir + f"/input-volume{inputIndex}.nrrd"
+                self.log(f"Writing input file to {inputImageFile}")
+                volumeStorageNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLVolumeArchetypeStorageNode")
+                volumeStorageNode.SetFileName(inputImageFile)
+                volumeStorageNode.UseCompressionOff()
+                volumeStorageNode.WriteData(inputNode)
+                slicer.mrmlScene.RemoveNode(volumeStorageNode)
+                inputFiles.append(inputImageFile)
+            else:
+                raise ValueError(f"Input node type {inputNode.GetClassName()} is not supported")
 
-        if prepareInputNeeded:
-            # Legacy
-            inputConfigFile = modelPath.joinpath("input.yaml")
-            outputSegmentationFile = modelPath.joinpath("ensemble_output/input-volume_ensemble.nrrd")
-            workDir = modelPath  # tempDirPath?
-            auto3DSegCommand = [ pythonSlicerExecutablePath, "-m", "monai.apps.auto3dseg", "AutoRunner", "run",
-                "--input", str(inputConfigFile), "--work_dir", str(workDir),
-                "--algos", "segresnet", "--train=False", "--analyze=False", "--ensemble=True" ]
-        else:
-            outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
-            modelPtFile = modelPath.joinpath("model.pt")
-            inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
-            auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
-                "--model-file", str(modelPtFile),
-                "--image-file", str(inputImageFile),
-                "--result-file", str(outputSegmentationFile) ]
+        outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
+        modelPtFile = modelPath.joinpath("model.pt")
+        inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
+        auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
+            "--model-file", str(modelPtFile),
+            "--image-file", inputFiles[0],
+            "--result-file", str(outputSegmentationFile) ]
+        for inputIndex in range(1, len(inputFiles)):
+            auto3DSegCommand.append(f"--image-file-{inputIndex+1}")
+            auto3DSegCommand.append(inputFiles[inputIndex])
 
         self.log("Creating segmentations with MONAIAuto3DSeg AI...")
         self.log(f"Auto3DSeg command: {auto3DSegCommand}")
@@ -887,7 +919,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         segmentationProcessInfo["startTime"] = startTime
         segmentationProcessInfo["tempDir"] = tempDir
         segmentationProcessInfo["segmentationProcess"] = proc
-        segmentationProcessInfo["inputVolume"] = inputVolume
+        segmentationProcessInfo["inputNodes"] = inputNodes
         segmentationProcessInfo["outputSegmentation"] = outputSegmentation
         segmentationProcessInfo["outputSegmentationFile"] = outputSegmentationFile
         segmentationProcessInfo["model"] = model
@@ -978,7 +1010,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         startTime = segmentationProcessInfo["startTime"]
         tempDir = segmentationProcessInfo["tempDir"]
-        inputVolume = segmentationProcessInfo["inputVolume"]
+        inputNodes = segmentationProcessInfo["inputNodes"]
         outputSegmentation = segmentationProcessInfo["outputSegmentation"]
         outputSegmentationFile = segmentationProcessInfo["outputSegmentationFile"]
         model = segmentationProcessInfo["model"]
@@ -1002,6 +1034,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                     self.readSegmentation(outputSegmentation, outputSegmentationFile, model)
 
                     # Set source volume - required for DICOM Segmentation export
+                    inputVolume = inputNodes[0]
+                    if not inputVolume.IsA('vtkMRMLScalarVolumeNode'):
+                        raise ValueError("First input node must be a scalar volume")
                     outputSegmentation.SetNodeReferenceID(outputSegmentation.GetReferenceImageGeometryReferenceRole(), inputVolume.GetID())
                     outputSegmentation.SetReferenceImageGeometryParameterFromVolumeNode(inputVolume)
 
@@ -1158,7 +1193,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
             logic.setupPythonRequirements()
 
             self.delayDisplay("Compute output")
-            logic.process(inputVolume, outputSegmentation)
+            logic.process([inputVolume], outputSegmentation)
 
         else:
             logging.warning("test_MONAIAuto3DSeg1 logic testing was skipped")

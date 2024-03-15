@@ -51,22 +51,28 @@ def logits2pred(logits, sigmoid=False, dim=1):
 
 
 @torch.no_grad()
-def main(model_file='/path_to_model/model.pt',
-         image_file={'image1': "/path_to_image1/image.nii.gz", 'image2': "/path_to_image2/image.nii.gz"},
-         result_file = '/workspace/result_mask.nii.gz',
-         save_mode = None, **kwargs):
+def main(model_file,
+         image_file,
+         result_file,
+         save_mode = None,
+         image_file_2 = None,
+         image_file_3 = None,
+         image_file_4 = None,
+         **kwargs):
 
     start_time = time.time()
     timing_checkpoints = []  # list of (operation, time) tuples
 
-    if not isinstance(image_file, dict):
-        raise ValueError('Incorrect variable type - image_file has to be a dictionary')
+    image_files = {}
+    for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
+        if img is not None:
+            image_files[f"image{index+1}"] = img
 
-    keys = list(image_file.keys())
+    keys = list(image_files.keys())
 
-    for img in image_file.keys():
-        if image_file[img] is None or not os.path.exists(image_file[img]):
-            raise ValueError('Incorrect image filename:'+str(image_file))
+    for img in image_files.keys():
+        if image_files[img] is None or not os.path.exists(image_files[img]):
+            raise ValueError(f'Incorrect image filename for {img}: "{image_files[img]}"')
 
     if not os.path.exists(model_file):
         raise ValueError('Cannot find model file:'+str(model_file))
@@ -154,7 +160,7 @@ def main(model_file='/path_to_model/model.pt',
 
 
     # process DATA
-    batch_data = inf_transform([image_file])
+    batch_data = inf_transform([image_files])
     #original_affine = batch_data[0]['image_meta_dict']['original_affine']
     original_affine = batch_data[0]['image'].meta[MetaKeys.ORIGINAL_AFFINE]
     batch_data = list_data_collate([batch_data])
@@ -232,7 +238,4 @@ def main(model_file='/path_to_model/model.pt',
     print(f'ALL DONE, result saved in {result_file}')
 
 if __name__ == '__main__':
-    fire.Fire(main(model_file='/workspace/model.pt',
-                   image_file={'image1': "/workspace/T2/prostate_00_T2.nii.gz",
-                               'image2': "/workspace/ADC/prostate_00_ADC.nii.gz"}
-                   ))
+    fire.Fire(main)
