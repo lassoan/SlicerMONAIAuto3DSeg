@@ -82,6 +82,16 @@
             ]
         },
         {
+            "title": "Prostate - Multisequence",
+            "description": "Segments peripheral (PZ) and transition zone (TZ) on T2 and ADC sequences. Trained on Medical Segmentation Decathlon dataset",
+            "subject": "human",
+            "imagingModality": "MRI",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip" }
+            ]
+        },
+        {
             "title": "Ribs TS2 - quick",
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_ribs of TotalSegmentatorV2 dataset.",
             "subject": "human",
