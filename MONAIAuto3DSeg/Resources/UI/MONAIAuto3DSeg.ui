@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>410</width>
-    <height>520</height>
+    <height>484</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -18,14 +18,28 @@
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Input volume:</string>
+         <string>Segmentation model:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputVolumeSelector">
+       <widget class="QComboBox" name="modelComboBox">
+        <property name="toolTip">
+         <string>Select what structures will be segmented on what kind of images.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="inputNodeLabel0">
+        <property name="text">
+         <string>Input volume 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector0">
         <property name="toolTip">
          <string>Input abdominal, chest, or whole body CT.</string>
         </property>
@@ -45,17 +59,87 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
+      <item row="2" column="0">
+       <widget class="QLabel" name="inputNodeLabel1">
         <property name="text">
-         <string>Segmentation model:</string>
+         <string>Input volume 2:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="modelComboBox">
+      <item row="2" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector1">
         <property name="toolTip">
-         <string>Select what structures will be segmented on what kind of images.</string>
+         <string>Input abdominal, chest, or whole body CT.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="inputNodeLabel2">
+        <property name="text">
+         <string>Input volume 3:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector2">
+        <property name="toolTip">
+         <string>Input abdominal, chest, or whole body CT.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="inputNodeLabel3">
+        <property name="text">
+         <string>Input volume 4:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector3">
+        <property name="toolTip">
+         <string>Input abdominal, chest, or whole body CT.</string>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -324,7 +408,7 @@
   <connection>
    <sender>MONAIAuto3DSeg</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>inputVolumeSelector</receiver>
+   <receiver>inputNodeSelector0</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -332,8 +416,8 @@
      <y>132</y>
     </hint>
     <hint type="destinationlabel">
-     <x>260</x>
-     <y>60</y>
+     <x>388</x>
+     <y>87</y>
     </hint>
    </hints>
   </connection>
@@ -348,8 +432,56 @@
      <y>8</y>
     </hint>
     <hint type="destinationlabel">
-     <x>260</x>
-     <y>175</y>
+     <x>355</x>
+     <y>233</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MONAIAuto3DSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>inputNodeSelector1</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>405</x>
+     <y>74</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>323</x>
+     <y>104</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MONAIAuto3DSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>inputNodeSelector2</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>405</x>
+     <y>133</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>383</x>
+     <y>132</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MONAIAuto3DSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>inputNodeSelector3</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>408</x>
+     <y>179</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>370</x>
+     <y>154</y>
     </hint>
    </hints>
   </connection>
