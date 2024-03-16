@@ -367,18 +367,18 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.logic.cancelProcessing(self._segmentationProcessInfo)
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED)
 
-    def onProcessImportStarted(self, customProcessData):
+    def onProcessImportStarted(self, customData):
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS)
         import qt
         qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
         slicer.app.processEvents()
 
-    def onProcessImportEnded(self, customProcessData):
+    def onProcessImportEnded(self, customData):
         import qt
         qt.QApplication.restoreOverrideCursor()
         slicer.app.processEvents()
 
-    def onProcessingCompleted(self, returnCode, customProcessData):
+    def onProcessingCompleted(self, returnCode, customData):
         self.ui.statusLabel.appendPlainText("\nProcessing finished.")
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
         self._segmentationProcessInfo = None
@@ -795,17 +795,15 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if not parameterNode.GetParameter("UseStandardSegmentNames"):
             parameterNode.SetParameter("UseStandardSegmentNames", "true")
 
-    def logProcessOutput(self, proc, returnOutput=False):
+    def logProcessOutputUntilCompleted(self, segmentationProcessInfo):
         # Wait for the process to end and forward output to the log
-        output = ""
         from subprocess import CalledProcessError
+        proc = segmentationProcessInfo["proc"]
         while True:
             try:
                 line = proc.stdout.readline()
                 if not line:
                     break
-                if returnOutput:
-                    output += line
                 self.log(line.rstrip())
             except UnicodeDecodeError as e:
                 # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
@@ -814,9 +812,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                 pass
         proc.wait()
         retcode = proc.returncode
+        segmentationProcessInfo["procReturnCode"] = retcode
         if retcode != 0:
             raise CalledProcessError(retcode, proc.args, output=proc.stdout, stderr=proc.stderr)
-        return output if returnOutput else None
 
 
     @staticmethod
@@ -824,7 +822,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         return name + ".exe" if os.name == "nt" else name
 
 
-    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customProcessData=None):
+    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None):
 
         """
         Run the processing algorithm.
@@ -834,7 +832,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         :param model: one of self.models
         :param cpu: use CPU instead of GPU
         :param waitForCompletion: if True then the method waits for the processing to finish
-        :param customProcessData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
+        :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
         """
 
         if not inputNodes:
@@ -923,12 +921,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         segmentationProcessInfo["outputSegmentation"] = outputSegmentation
         segmentationProcessInfo["outputSegmentationFile"] = outputSegmentationFile
         segmentationProcessInfo["model"] = model
-        segmentationProcessInfo["customProcessData"] = customProcessData
+        segmentationProcessInfo["customData"] = customData
 
         if proc:
             if waitForCompletion:
                 # Wait for the process to end before returning
-                self.logProcessOutput(proc)
+                self.logProcessOutputUntilCompleted(segmentationProcessInfo)
                 self.onSegmentationProcessCompleted(segmentationProcessInfo)
             else:
                 # Run the process in the background
@@ -1014,7 +1012,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         outputSegmentation = segmentationProcessInfo["outputSegmentation"]
         outputSegmentationFile = segmentationProcessInfo["outputSegmentationFile"]
         model = segmentationProcessInfo["model"]
-        customProcessData = segmentationProcessInfo["customProcessData"]
+        customData = segmentationProcessInfo["customData"]
         procReturnCode = segmentationProcessInfo["procReturnCode"]
         cancelRequested = segmentationProcessInfo["cancelRequested"]
 
@@ -1025,7 +1023,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             if procReturnCode == 0:
 
                 if self.startResultImportCallback:
-                    self.startResultImportCallback(customProcessData)
+                    self.startResultImportCallback(customData)
 
                 try:
 
@@ -1050,7 +1048,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                 finally:
 
                     if self.endResultImportCallback:
-                        self.endResultImportCallback(customProcessData)
+                        self.endResultImportCallback(customData)
 
             else:
                 self.log(f"Processing failed with return code {procReturnCode}")
@@ -1077,7 +1075,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                 self.log(f"Processing failed after {elapsedTime:.2f} seconds.")
 
         if self.processingCompletedCallback:
-            self.processingCompletedCallback(procReturnCode, customProcessData)
+            self.processingCompletedCallback(procReturnCode, customData)
 
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
@@ -1193,8 +1191,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
             logic.setupPythonRequirements()
 
             self.delayDisplay("Compute output")
-            logic.process([inputVolume], outputSegmentation)
-
+            logic.process([inputVolume], outputSegmentation, "abdominal-organs-3mm-v2.0.0")
         else:
             logging.warning("test_MONAIAuto3DSeg1 logic testing was skipped")
 
