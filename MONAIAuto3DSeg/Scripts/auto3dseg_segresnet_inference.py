@@ -90,7 +90,7 @@ def main(model_file,
                 print(f'Volumes do not have the same size - Resizing volume {img}')
                 resizer = Resized(keys=img, spatial_size=image1_shape, mode='bilinear')
                 images_loaded = resizer(images_loaded)
-                timing_checkpoints.append(("Resizing volumes", time.time()))
+                timing_checkpoints.append((f"Resizing volume {img}", time.time()))
 
 
     if not os.path.exists(model_file):
