@@ -26,6 +26,7 @@ from monai.transforms import (
     Lambdad,
     LoadImaged,
     NormalizeIntensityd,
+    Resized,
     SaveImaged,
     ScaleIntensityRanged,
     Spacingd,
@@ -74,6 +75,24 @@ def main(model_file,
         if image_files[img] is None or not os.path.exists(image_files[img]):
             raise ValueError(f'Incorrect image filename for {img}: "{image_files[img]}"')
 
+    # Loading volumes
+    loader = LoadImaged(keys=keys, ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False)
+    images_loaded = loader(image_files)
+    timing_checkpoints.append(("Loading volumes", time.time()))
+
+    if len(keys) > 1:
+        # Loading size of image 1
+        image1_shape = images_loaded[keys[0]].shape[1:]
+        # Resizing the other volumes if needed
+        for idx, img in enumerate(keys[1:]):
+            temp_shape = images_loaded[img].shape[-len(image1_shape) :]
+            if np.any(np.not_equal(image1_shape, temp_shape)):
+                print(f'Volumes do not have the same size - Resizing volume {img}')
+                resizer = Resized(keys=img, spatial_size=image1_shape, mode='bilinear')
+                images_loaded = resizer(images_loaded)
+                timing_checkpoints.append(("Resizing volumes", time.time()))
+
+
     if not os.path.exists(model_file):
         raise ValueError('Cannot find model file:'+str(model_file))
 
@@ -104,7 +123,6 @@ def main(model_file,
 
     # make input Transform chain
     ts = [
-            LoadImaged(keys=keys, ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False),
             ConcatItemsd(keys=keys, name="image", dim=0),
             EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True),
     ]
@@ -160,7 +178,7 @@ def main(model_file,
 
 
     # process DATA
-    batch_data = inf_transform([image_files])
+    batch_data = inf_transform([images_loaded])
     #original_affine = batch_data[0]['image_meta_dict']['original_affine']
     original_affine = batch_data[0]['image'].meta[MetaKeys.ORIGINAL_AFFINE]
     batch_data = list_data_collate([batch_data])
