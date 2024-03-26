@@ -3,35 +3,28 @@ import numpy as np
 import fire
 import time
 import torch
+from collections import OrderedDict
 
 import nrrd
 from monai.bundle import ConfigParser
 from monai.data import decollate_batch, list_data_collate
-from monai.utils import ImageMetaKey, convert_to_dst_type, optional_import, set_determinism
+from monai.utils import convert_to_dst_type
 from monai.utils import MetaKeys
 
-from torch.cuda.amp import GradScaler, autocast
+from torch.cuda.amp import autocast
 from monai.inferers import SlidingWindowInfererAdapt
 
-
 from monai.transforms import (
-    AsDiscreted,
-    CastToTyped,
-    ClassesToIndicesd,
     Compose,
     CropForegroundd,
     EnsureTyped,
-    Identityd,
     Invertd,
     Lambdad,
     LoadImaged,
     NormalizeIntensityd,
     Resized,
-    SaveImaged,
     ScaleIntensityRanged,
     Spacingd,
-    SpatialPadd,
-    ToDeviced,
     Orientationd,
     ConcatItemsd,
 )
@@ -55,19 +48,18 @@ def logits2pred(logits, sigmoid=False, dim=1):
 def main(model_file,
          image_file,
          result_file,
-         save_mode = None,
-         image_file_2 = None,
-         image_file_3 = None,
-         image_file_4 = None,
+         save_mode=None,
+         image_file_2=None,
+         image_file_3=None,
+         image_file_4=None,
          **kwargs):
-
     start_time = time.time()
     timing_checkpoints = []  # list of (operation, time) tuples
 
     image_files = {}
     for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
         if img is not None:
-            image_files[f"image{index+1}"] = img
+            image_files[f"image{index + 1}"] = img
 
     keys = list(image_files.keys())
 
@@ -85,21 +77,20 @@ def main(model_file,
         image1_shape = images_loaded[keys[0]].shape[1:]
         # Resizing the other volumes if needed
         for idx, img in enumerate(keys[1:]):
-            temp_shape = images_loaded[img].shape[-len(image1_shape) :]
+            temp_shape = images_loaded[img].shape[-len(image1_shape):]
             if np.any(np.not_equal(image1_shape, temp_shape)):
                 print(f'Volumes do not have the same size - Resizing volume {img}')
                 resizer = Resized(keys=img, spatial_size=image1_shape, mode='bilinear')
                 images_loaded = resizer(images_loaded)
                 timing_checkpoints.append((f"Resizing volume {img}", time.time()))
 
-
     if not os.path.exists(model_file):
-        raise ValueError('Cannot find model file:'+str(model_file))
+        raise ValueError('Cannot find model file:' + str(model_file))
 
     checkpoint = torch.load(model_file, map_location="cpu")
 
     if 'config' not in checkpoint:
-        raise ValueError('Config not found in checkpoint (not a auto3dseg/segresnet model):'+str(model_file))
+        raise ValueError('Config not found in checkpoint (not a auto3dseg/segresnet model):' + str(model_file))
 
     config = checkpoint["config"]
 
@@ -109,30 +100,43 @@ def main(model_file,
     best_metric = checkpoint.get("best_metric", 0)
     sigmoid = config.get("sigmoid", False)
 
-
     model = ConfigParser(config["network"]).get_parsed_content()
     model.load_state_dict(state_dict, strict=True)
 
     print(f'Model epoch {epoch} metric {best_metric}')
 
-
-    device=torch.device("cpu") if torch.cuda.device_count() == 0 else torch.device(0)
-    model = model.to(device=device, memory_format = torch.channels_last_3d) #gpu
+    device = torch.device("cpu") if torch.cuda.device_count() == 0 else torch.device(0)
+    model = model.to(device=device, memory_format=torch.channels_last_3d)  # gpu
     model.eval()
 
-
     # make input Transform chain
-    ts = [
+    main_normalize_mode = config["normalize_mode"]
+    intensity_bounds = config["intensity_bounds"]
+    if len(keys) == 1:  # only one input image
+        ts = [
             ConcatItemsd(keys=keys, name="image", dim=0),
-            EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True),
-    ]
+            EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
+        ]
+        _add_normalization_transforms(ts, "image", main_normalize_mode, intensity_bounds)
+    else:  # multiple input images
+        ts = [
+        ]
+
+        extra_modalities = OrderedDict(config['extra_modalities'])
+        normalize_modes = [main_normalize_mode] + list(extra_modalities.values())
+        for key, normalize_mode in zip(keys, normalize_modes):
+            _add_normalization_transforms(ts, key, normalize_mode, intensity_bounds)
+        ts.extend([
+            ConcatItemsd(keys=keys, name="image", dim=0),
+            EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
+        ])
 
     if config.get("orientation_ras", False):
         print('Using orientation_ras')
-        ts.append(Orientationd(keys="image", axcodes="RAS")) #reorient
+        ts.append(Orientationd(keys="image", axcodes="RAS"))  # reorient
     if config.get("crop_foreground", True):
         print('Using crop_foreground')
-        ts.append(CropForegroundd(keys="image", source_key="image1", margin=10, allow_smaller=True)) #subcrop
+        ts.append(CropForegroundd(keys="image", source_key="image1", margin=10, allow_smaller=True))  # subcrop
 
     if config.get("resample_resolution", None) is not None:
         pixdim = list(config["resample_resolution"])
@@ -150,36 +154,17 @@ def main(model_file,
             )
         )
 
-    normalize_mode = config["normalize_mode"]
-    intensity_bounds = config["intensity_bounds"]
-
-    if normalize_mode == "none":
-        pass
-    elif normalize_mode in ["range", "ct"]:
-        ts.append( ScaleIntensityRanged(keys="image", a_min=intensity_bounds[0], a_max=intensity_bounds[1], b_min=-1, b_max=1, clip=False))
-        ts.append(Lambdad(keys="image", func=lambda x: torch.sigmoid(x)))
-    elif normalize_mode in ["meanstd", "mri"]:
-        ts.append(NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True))
-    elif normalize_mode in ["meanstdtanh"]:
-        ts.append(NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True))
-        ts.append(Lambdad(keys="image", func=lambda x: 3*torch.tanh(x/3)))
-    elif normalize_mode in ["pet"]:
-        ts.append(Lambdad(keys="image", func=lambda x: torch.sigmoid((x - x.min()) / x.std())))
-    else:
-        raise ValueError("Unsupported normalize_mode" + str(normalize_mode))
-
-
     inf_transform = Compose(ts)
 
     # sliding_inferrer
     roi_size = config["roi_size"]
     # roi_size = [224, 224, 144]
-    sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=0.625, mode="gaussian", cache_roi_weight_map=False, progress=True)
-
+    sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=0.625, mode="gaussian",
+                                                 cache_roi_weight_map=False, progress=True)
 
     # process DATA
     batch_data = inf_transform([images_loaded])
-    #original_affine = batch_data[0]['image_meta_dict']['original_affine']
+    # original_affine = batch_data[0]['image_meta_dict']['original_affine']
     original_affine = batch_data[0]['image'].meta[MetaKeys.ORIGINAL_AFFINE]
     batch_data = list_data_collate([batch_data])
     data = batch_data["image"].as_subclass(torch.Tensor).to(memory_format=torch.channels_last_3d, device=device)
@@ -209,15 +194,15 @@ def main(model_file,
     # invert loading transforms (uncrop, reverse-resample, etc)
     post_transforms = Compose([Invertd(keys="pred", orig_keys="image", transform=inf_transform, nearest_interp=True)])
 
-    batch_data["pred"] = convert_to_dst_type(pred, batch_data["image"], dtype=pred.dtype, device=pred.device)[0]  # make Meta tensor
+    batch_data["pred"] = convert_to_dst_type(pred, batch_data["image"], dtype=pred.dtype, device=pred.device)[
+        0]  # make Meta tensor
     pred = [post_transforms(x)["pred"] for x in decollate_batch(batch_data)]
     seg = pred[0][0]
     print(f"preds inverted {seg.shape}")
     timing_checkpoints.append(("Preds", time.time()))
 
-
     # special for kits and brats
-    if save_mode == 'kits23' or 'kits23' in config['bundle_root']: #special case
+    if save_mode == 'kits23' or 'kits23' in config['bundle_root']:  # special case
         # convert 3 channel into 1 channel ints
         p2 = seg.any(0).to(dtype=torch.uint8)
         print(f'p2 step1 {p2.shape} {p2.dtype}')
@@ -230,8 +215,7 @@ def main(model_file,
         seg = p2
         print(f"Updated seg for kits23 {seg.shape}")
 
-
-    elif save_mode == 'brats23' or 'brats23' in config['bundle_root']: #special case brats
+    elif save_mode == 'brats23' or 'brats23' in config['bundle_root']:  # special case brats
         # convert 3 channel into 1 channel ints
         p2 = 2 * seg.any(0).to(dtype=torch.uint8)
         p2[seg[1:].any(0)] = 1
@@ -254,6 +238,25 @@ def main(model_file,
         previous_start_time = timing_checkpoint[1]
 
     print(f'ALL DONE, result saved in {result_file}')
+
+
+def _add_normalization_transforms(ts, key, normalize_mode, intensity_bounds):
+    if normalize_mode == "none":
+        pass
+    elif normalize_mode in ["range", "ct"]:
+        ts.append(ScaleIntensityRanged(keys=key, a_min=intensity_bounds[0], a_max=intensity_bounds[1],
+                                       b_min=-1, b_max=1, clip=False))
+        ts.append(Lambdad(keys=key, func=lambda x: torch.sigmoid(x)))
+    elif normalize_mode in ["meanstd", "mri"]:
+        ts.append(NormalizeIntensityd(keys=key, nonzero=True, channel_wise=True))
+    elif normalize_mode in ["meanstdtanh"]:
+        ts.append(NormalizeIntensityd(keys=key, nonzero=True, channel_wise=True))
+        ts.append(Lambdad(keys=key, func=lambda x: 3 * torch.tanh(x / 3)))
+    elif normalize_mode in ["pet"]:
+        ts.append(Lambdad(keys=key, func=lambda x: torch.sigmoid((x - x.min()) / x.std())))
+    else:
+        raise ValueError("Unsupported normalize_mode" + str(normalize_mode))
+
 
 if __name__ == '__main__':
     fire.Fire(main)
