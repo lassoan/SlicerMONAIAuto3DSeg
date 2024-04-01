@@ -113,8 +113,8 @@ def main(model_file,
     main_normalize_mode = config["normalize_mode"]
     intensity_bounds = config["intensity_bounds"]
     if len(keys) == 1:  # only one input image
+        images_loaded['image'] = images_loaded['image1']
         ts = [
-            ConcatItemsd(keys=keys, name="image", dim=0),
             EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
         ]
         _add_normalization_transforms(ts, "image", main_normalize_mode, intensity_bounds)
