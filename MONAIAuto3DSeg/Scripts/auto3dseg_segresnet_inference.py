@@ -56,33 +56,15 @@ def main(model_file,
     start_time = time.time()
     timing_checkpoints = []  # list of (operation, time) tuples
 
-    image_files = {}
+    image_files = []
     for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
         if img is not None:
-            image_files[f"image{index + 1}"] = img
+            image_files.append(img)
 
-    keys = list(image_files.keys())
+    for img in image_files:
+        if img is None or not os.path.exists(img):
+            raise ValueError(f'Incorrect image filename for {img}: "{img}"')
 
-    for img in image_files.keys():
-        if image_files[img] is None or not os.path.exists(image_files[img]):
-            raise ValueError(f'Incorrect image filename for {img}: "{image_files[img]}"')
-
-    # Loading volumes
-    loader = LoadImaged(keys=keys, ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False)
-    images_loaded = loader(image_files)
-    timing_checkpoints.append(("Loading volumes", time.time()))
-
-    if len(keys) > 1:
-        # Loading size of image 1
-        image1_shape = images_loaded[keys[0]].shape[1:]
-        # Resizing the other volumes if needed
-        for idx, img in enumerate(keys[1:]):
-            temp_shape = images_loaded[img].shape[-len(image1_shape):]
-            if np.any(np.not_equal(image1_shape, temp_shape)):
-                print(f'Volumes do not have the same size - Resizing volume {img}')
-                resizer = Resized(keys=img, spatial_size=image1_shape, mode='bilinear')
-                images_loaded = resizer(images_loaded)
-                timing_checkpoints.append((f"Resizing volume {img}", time.time()))
 
     if not os.path.exists(model_file):
         raise ValueError('Cannot find model file:' + str(model_file))
@@ -109,34 +91,17 @@ def main(model_file,
     model = model.to(device=device, memory_format=torch.channels_last_3d)  # gpu
     model.eval()
 
-    # make input Transform chain
-    main_normalize_mode = config["normalize_mode"]
-    intensity_bounds = config["intensity_bounds"]
-    if len(keys) == 1:  # only one input image
-        images_loaded['image'] = images_loaded['image1']
-        ts = [
-            EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
-        ]
-        _add_normalization_transforms(ts, "image", main_normalize_mode, intensity_bounds)
-    else:  # multiple input images
-        ts = [
-        ]
-
-        extra_modalities = OrderedDict(config['extra_modalities'])
-        normalize_modes = [main_normalize_mode] + list(extra_modalities.values())
-        for key, normalize_mode in zip(keys, normalize_modes):
-            _add_normalization_transforms(ts, key, normalize_mode, intensity_bounds)
-        ts.extend([
-            ConcatItemsd(keys=keys, name="image", dim=0),
-            EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
-        ])
+    ts = [
+        LoadImaged(keys="image", ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False),
+        EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
+    ]
 
     if config.get("orientation_ras", False):
         print('Using orientation_ras')
         ts.append(Orientationd(keys="image", axcodes="RAS"))  # reorient
     if config.get("crop_foreground", True):
         print('Using crop_foreground')
-        ts.append(CropForegroundd(keys="image", source_key="image1", margin=10, allow_smaller=True))  # subcrop
+        ts.append(CropForegroundd(keys="image", source_key="image", margin=10, allow_smaller=True))  # subcrop
 
     if config.get("resample_resolution", None) is not None:
         pixdim = list(config["resample_resolution"])
@@ -154,6 +119,11 @@ def main(model_file,
             )
         )
 
+    # make input Transform chain
+    main_normalize_mode = config["normalize_mode"]
+    intensity_bounds = config["intensity_bounds"]
+    _add_normalization_transforms(ts, 'image', main_normalize_mode, intensity_bounds)
+
     inf_transform = Compose(ts)
 
     # sliding_inferrer
@@ -163,7 +133,7 @@ def main(model_file,
                                                  cache_roi_weight_map=False, progress=True)
 
     # process DATA
-    batch_data = inf_transform([images_loaded])
+    batch_data = inf_transform([{"image" : image_files}])
     # original_affine = batch_data[0]['image_meta_dict']['original_affine']
     original_affine = batch_data[0]['image'].meta[MetaKeys.ORIGINAL_AFFINE]
     batch_data = list_data_collate([batch_data])
@@ -197,7 +167,10 @@ def main(model_file,
     batch_data["pred"] = convert_to_dst_type(pred, batch_data["image"], dtype=pred.dtype, device=pred.device)[
         0]  # make Meta tensor
     pred = [post_transforms(x)["pred"] for x in decollate_batch(batch_data)]
-    seg = pred[0][0]
+    if save_mode == 'kits23' or 'kits23' in config['bundle_root'] or save_mode == 'brats23' or 'brats23' in config['bundle_root']:
+        seg = pred[0]
+    else:
+        seg = pred[0][0]
     print(f"preds inverted {seg.shape}")
     timing_checkpoints.append(("Preds", time.time()))
 
@@ -209,7 +182,7 @@ def main(model_file,
         p2[seg[1:].any(0)] = 3
         print(f'p2 step2 {p2.shape} {p2.dtype}')
 
-        p2[seg[2]] = 2
+        p2[seg[2:].any(0)] = 2
         print(f'p2 step3 {p2.shape} {p2.dtype}')
 
         seg = p2
@@ -219,7 +192,7 @@ def main(model_file,
         # convert 3 channel into 1 channel ints
         p2 = 2 * seg.any(0).to(dtype=torch.uint8)
         p2[seg[1:].any(0)] = 1
-        p2[seg[2]] = 3
+        p2[seg[2:].any(0)] = 3
         seg = p2
         print(f"Updated seg for brats23 {seg.shape}")
 
