@@ -83,16 +83,13 @@ def main(model_file,
     model = model.to(device=device, memory_format=torch.channels_last_3d)  # gpu
     model.eval()
 
-    # Checking for volumes
-
-    image_files = {}
-    for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
-        if img is not None:
-            image_files[f"image{index + 1}"] = img
-
-
     # If BRATS
     if save_mode == 'brats23' or 'brats23' in config['bundle_root']:  # special case brats
+
+        image_files = []
+        for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
+            if img is not None:
+                image_files.append(img)
 
         for img in image_files:
             if img is None or not os.path.exists(img):
@@ -188,6 +185,11 @@ def main(model_file,
 
     # Other cases
     else:
+
+        image_files = {}
+        for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
+            if img is not None:
+                image_files[f"image{index + 1}"] = img
 
         keys = list(image_files.keys())
 
