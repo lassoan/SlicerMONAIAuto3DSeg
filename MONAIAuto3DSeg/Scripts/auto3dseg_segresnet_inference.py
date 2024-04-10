@@ -133,7 +133,7 @@ def main(model_file,
 
     if config.get("orientation_ras", False):
         print('Using orientation_ras')
-        ts.append(Orientationd(keys="image", axcodes="RAS"))  # reorient
+        ts.append(Orientationd(keys="image", axcodes="RAS", labels=(("R", "L"), ("A", "P"), ("I", "S"))))  # reorient
     if config.get("crop_foreground", True):
         print('Using crop_foreground')
         ts.append(CropForegroundd(keys="image", source_key="image1", margin=10, allow_smaller=True))  # subcrop
