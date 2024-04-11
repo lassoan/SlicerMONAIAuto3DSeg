@@ -212,6 +212,26 @@
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
             ]
+        },
+        {
+            "title": "ICrH Segmentation",
+            "description": "Intracranial Hemorrhage (ICrH) segmentation using CT images",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/icrh-v1.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Brain and ICrH Segmentation",
+            "description": "Brain Anatomy and Intracranial Hemorrhage (ICrH) segmentation using CT images",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip" }
+            ]
         }
     ]
 }
