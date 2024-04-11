@@ -33,13 +33,19 @@ See more information in the <a href="https://github.com/lassoan/SlicerMONAIAuto3
 This file was originally developed by Andras Lasso (PerkLab, Queen's University).
 The module uses <a href="https://github.com/Project-MONAI/tutorials/blob/main/MONAIAuto3DSeg/README.md">MONAI Auto3DSeg model</a>.
 """
+
+        self.terminologyName = None
+        self.anatomicContextName = None
+
         slicer.app.connect("startupCompleted()", self.configureDefaultTerminology)
 
     def configureDefaultTerminology(self):
         moduleDir = os.path.dirname(self.parent.path)
         terminologyFilePath = os.path.join(moduleDir, "Resources", "SegmentationCategoryTypeModifier-MONAIAuto3DSeg.term.json")
+        anatomicContextFilePath = os.path.join(moduleDir, "Resources", "AnatomicRegionAndModifier-MONAIAuto3DSeg.term.json")
         tlogic = slicer.modules.terminologies.logic()
         self.terminologyName = tlogic.LoadTerminologyFromFile(terminologyFilePath)
+        self.anatomicContextName = tlogic.LoadAnatomicContextFromFile(anatomicContextFilePath)
 
 #
 # MONAIAuto3DSegWidget
@@ -451,7 +457,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         # List of property type codes that are specified by in the MONAIAuto3DSeg terminology.
         #
-        # # Codes are stored as a list of strings containing coding scheme designator and code value of the property type,
+        # Codes are stored as a list of strings containing coding scheme designator and code value of the property type,
         # separated by "^" character. For example "SCT^123456".
         #
         # If property the code is found in this list then the MONAIAuto3DSeg terminology will be used,
@@ -459,6 +465,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         # does not contain all the necessary items and some items are incomplete (e.g., don't have color or 3D Slicer label).
         #
         self.MONAIAuto3DSegTerminologyPropertyTypes = self._MONAIAuto3DSegTerminologyPropertyTypes()
+
+        # List of anatomic regions that are specified by MONAIAuto3DSeg.
+        self.MONAIAuto3DSegAnatomicRegions = self._MONAIAuto3DSegAnatomicRegions()
 
         # Segmentation models specified by MONAIAuto3DSeg
         # Ideally, this information should be provided by MONAIAuto3DSeg itself.
@@ -610,7 +619,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         """
 
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
-        MONAIAuto3DSegTerminologyName = "Segmentation category and type - MONAI Auto3DSeg"
+        MONAIAuto3DSegTerminologyName = slicer.modules.MONAIAuto3DSegInstance.terminologyName
 
         # Get anatomicalStructureCategory from the MONAI Auto3DSeg terminology
         anatomicalStructureCategory = slicer.vtkSlicerTerminologyCategory()
@@ -630,6 +639,31 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                 terminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
 
         return terminologyPropertyTypes
+
+    def _MONAIAuto3DSegAnatomicRegions(self):
+        """Get anatomic regions defined in from MONAI Auto3DSeg terminology.
+        Terminology entries are either in DICOM or MONAI Auto3DSeg "Anatomic codes".
+        """
+        anatomicRegions = []
+
+        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
+        if not hasattr(terminologiesLogic, "GetNumberOfRegionsInAnatomicContext"):
+            # This Slicer version does not have GetNumberOfRegionsInAnatomicContext method,
+            # do not add the region modifier (the only impact is that the modifier will not be selectable
+            # when editing the terminology on the GUI)
+            return anatomicRegions
+
+        MONAIAuto3DSegAnatomicContextName = slicer.modules.MONAIAuto3DSegInstance.anatomicContextName
+
+        # Retrieve all anatomical region codes
+
+        regionObject = slicer.vtkSlicerTerminologyType()
+        numberOfRegions = terminologiesLogic.GetNumberOfRegionsInAnatomicContext(MONAIAuto3DSegAnatomicContextName)
+        for i in range(numberOfRegions):
+            if terminologiesLogic.GetNthRegionInAnatomicContext(MONAIAuto3DSegAnatomicContextName, i, regionObject):
+                anatomicRegions.append(regionObject.GetCodingSchemeDesignator() + "^" + regionObject.GetCodeValue())
+
+        return anatomicRegions
 
     def labelDescriptions(self, modelName):
         """Return mapping from label value to label description.
@@ -662,8 +696,26 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             for row in reader:
 
                 # Determine segmentation category (DICOM or MONAIAuto3DSeg)
-                terminologyEntryStrWithoutCategoryName = (
-                    "~"
+                terminologyPropertyTypeStr = (  # Example: SCT^23451007
+                    row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator")]
+                    + "^" + row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodeValue")])
+                if terminologyPropertyTypeStr in self.MONAIAuto3DSegTerminologyPropertyTypes:
+                    terminologyName = slicer.modules.MONAIAuto3DSegInstance.terminologyName
+                else:
+                    terminologyName = "Segmentation category and type - DICOM master list"
+
+                # Determine the anatomic context name (DICOM or MONAIAuto3DSeg)
+                anatomicRegionStr = (  # Example: SCT^279245009
+                    row[columnNames.index("AnatomicRegionSequence.CodingSchemeDesignator")]
+                    + "^" + row[columnNames.index("AnatomicRegionSequence.CodeValue")])
+                if anatomicRegionStr in self.MONAIAuto3DSegAnatomicRegions:
+                    anatomicContextName = slicer.modules.MONAIAuto3DSegInstance.anatomicContextName
+                else:
+                    anatomicContextName = "Anatomic codes - DICOM master list"
+
+                terminologyEntryStr = (
+                    terminologyName
+                    +"~"
                     # Property category: "SCT^123037004^Anatomical Structure" or "SCT^49755003^Morphologically Altered Structure"
                     + "^".join(getCodeString("SegmentedPropertyCategoryCodeSequence", columnNames, row))
                     + "~"
@@ -672,7 +724,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                     + "~"
                     # Property type modifier: "SCT^7771000^Left", ...
                     + "^".join(getCodeString("SegmentedPropertyTypeModifierCodeSequence", columnNames, row))
-                    + "~Anatomic codes - DICOM master list"
+                    + "~"
+                    + anatomicContextName
                     + "~"
                     # Anatomic region (set if category is not anatomical structure): "SCT^64033007^Kidney", ...
                     + "^".join(getCodeString("AnatomicRegionSequence", columnNames, row))
@@ -680,14 +733,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                     # Anatomic region modifier: "SCT^7771000^Left", ...
                     + "^".join(getCodeString("AnatomicRegionModifierSequence", columnNames, row))
                     + "|")
-                terminologyEntry = slicer.vtkSlicerTerminologyEntry()
-                terminologyPropertyTypeStr = (  # Example: SCT^23451007
-                    row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator")]
-                    + "^" + row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodeValue")])
-                if terminologyPropertyTypeStr in self.MONAIAuto3DSegTerminologyPropertyTypes:
-                    terminologyEntryStr = "Segmentation category and type - MONAI Auto3DSeg" + terminologyEntryStrWithoutCategoryName
-                else:
-                    terminologyEntryStr = "Segmentation category and type - DICOM master list" + terminologyEntryStrWithoutCategoryName
 
                 # Store the terminology string for this structure
                 labelValue = int(row[columnNames.index("LabelValue")])

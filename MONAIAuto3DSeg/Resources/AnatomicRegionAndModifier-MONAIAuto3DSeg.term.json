@@ -1,0 +1,18 @@
+{
+  "AnatomicContextName": "Anatomic codes - MONAI Auto3DSeg",
+  "@schema": "https://raw.githubusercontent.com/qiicr/dcmqi/master/doc/anatomic-context-schema.json#",
+  "AnatomicCodes": {
+    "AnatomicRegion": [
+      {
+        "CodingSchemeDesignator": "SCT",
+        "CodeValue": "279245009",
+        "CodeMeaning": "Ventricular system of brain"
+      },
+      {
+        "CodingSchemeDesignator": "SCT",
+        "CodeValue": "54214006",
+        "CodeMeaning": "Subdural space"
+      }
+    ]
+  }
+}
