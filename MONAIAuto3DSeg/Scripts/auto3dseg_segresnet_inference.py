@@ -176,7 +176,10 @@ def main(model_file,
         print(f"preds inverted {seg.shape}")
         timing_checkpoints.append(("Preds", time.time()))
 
-        # convert 3 channel into 1 channel ints
+        # BRATS model outputs 3 channels for the three overlapping tumour segments:
+        # enhancing tumour (ET), the tumour core (ED) and the whole tumour
+        # Here we merge these 3 channels into 1 channel of integers
+
         p2 = 2 * seg.any(0).to(dtype=torch.uint8)
         p2[seg[1:].any(0)] = 1
         p2[seg[2:].any(0)] = 3
