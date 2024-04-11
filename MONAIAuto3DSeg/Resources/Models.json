@@ -232,6 +232,61 @@
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip" }
             ]
+        },
+        {
+            "title": "Brain Tumor Segmentation (BRATS) GLI",
+            "description": "Brain Tumor Segmentation (BRATS) GLI",
+            "subject": "human",
+            "imagingModality": "MR",
+            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-gli-v1.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Brain Tumor Segmentation (BRATS) MEN",
+            "description": "Brain Tumor Segmentation (BRATS) MEN",
+            "subject": "human",
+            "imagingModality": "MR",
+            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-men-v1.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Brain Tumor Segmentation (BRATS) MET",
+            "description": "Brain Tumor Segmentation (BRATS) MET",
+            "subject": "human",
+            "imagingModality": "MR",
+            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-met-v1.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Brain Tumor Segmentation (BRATS) PET",
+            "description": "Brain Tumor Segmentation (BRATS) PET",
+            "subject": "human",
+            "imagingModality": "MR",
+            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-pet-v1.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Brain Tumor Segmentation (BRATS) SSA",
+            "description": "Brain Tumor Segmentation (BRATS) SSA",
+            "subject": "human",
+            "imagingModality": "MR",
+            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip" }
+            ]
         }
     ]
 }
