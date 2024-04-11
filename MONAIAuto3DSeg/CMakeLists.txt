@@ -8,6 +8,7 @@ set(MODULE_PYTHON_SCRIPTS
 
 set(MODULE_PYTHON_RESOURCES
   Resources/Models.json
+  Resources/AnatomicRegionAndModifier-MONAIAuto3DSeg.term.json
   Resources/SegmentationCategoryTypeModifier-MONAIAuto3DSeg.term.json
   Resources/Icons/${MODULE_NAME}.png
   Resources/UI/${MODULE_NAME}.ui

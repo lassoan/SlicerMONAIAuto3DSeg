@@ -2095,6 +2095,61 @@
               30
             ],
             "3dSlicerLabel": "thyroid"
+          },
+          {
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "836432005",
+            "CodeMeaning": "Parenchyma of brain",
+            "recommendedDisplayRGBValue": [
+              220,
+              120,
+              90
+            ],
+            "3dSlicerLabel": "brain parenchyma"
+          },
+          {
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "41648007",
+            "CodeMeaning": "Lentiform nucleus",
+            "recommendedDisplayRGBValue": [
+              120,
+              150,
+              180
+            ],
+            "3dSlicerLabel": "lentiform nucleus"
+          },
+          {
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "85637007",
+            "CodeMeaning": "Internal capsule",
+            "recommendedDisplayRGBValue": [
+              120,
+              190,
+              140
+            ],
+            "3dSlicerLabel": "internal capsule"
+          },
+          {
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "279245009",
+            "CodeMeaning": "Ventricular system of brain",
+            "recommendedDisplayRGBValue": [
+              120,
+              190,
+              140
+            ],
+            "3dSlicerLabel": "ventricular system"
+          },
+          {
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "90597002",
+            "CodeMeaning": "Lobe of brain",
+            "recommendedDisplayRGBValue": [
+              90,
+              100,
+              110
+            ],
+            "3dSlicerLabel": "brain lobe"
           }
         ]
       }
