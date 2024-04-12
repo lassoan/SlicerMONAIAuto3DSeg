@@ -894,7 +894,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             "--model-file", str(modelPtFile),
             "--image-file", inputFiles[0],
             "--result-file", str(outputSegmentationFile),
-            "--save_mode", "brats23" if 'brats' in str(modelPath) else "None"]
+            "--save_mode", "brats" if 'brats' in str(modelPath) else "None"]
         for inputIndex in range(1, len(inputFiles)):
             auto3DSegCommand.append(f"--image-file-{inputIndex+1}")
             auto3DSegCommand.append(inputFiles[inputIndex])
