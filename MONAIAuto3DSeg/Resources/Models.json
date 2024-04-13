@@ -214,8 +214,8 @@
             ]
         },
         {
-            "title": "ICrH Segmentation",
-            "description": "Intracranial Hemorrhage (ICrH) segmentation using CT images",
+            "title": "Intracranial hemorrhage (ICrH) Segmentation",
+            "description": "Intracranial Hemorrhage segmentation using CT images.",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
@@ -224,8 +224,8 @@
             ]
         },
         {
-            "title": "Brain and ICrH Segmentation",
-            "description": "Brain Anatomy and Intracranial Hemorrhage (ICrH) segmentation using CT images",
+            "title": "Brain and intracranial hemorrhage (ICrH) Segmentation",
+            "description": "Brain Anatomy and Intracranial Hemorrhage segmentation using CT images",
             "subject": "human",
             "imagingModality": "CT",
             "versions":
