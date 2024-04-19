@@ -84,7 +84,7 @@ def main(model_file,
     model.eval()
 
     # If BRATS
-    if save_mode == 'brats':  # special case brats
+    if save_mode == 'brats' or 'brats' in model_file:  # for brats case
 
         image_files = []
         for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
@@ -102,6 +102,8 @@ def main(model_file,
 
         if config.get("orientation_ras", False):
             print('Using orientation_ras')
+            # we assume LPS physical coordinate system orientation
+            # This code is only tested with NRRD files that use LPS space
             ts.append(Orientationd(keys="image", axcodes="RAS", labels=(("R", "L"), ("A", "P"), ("I", "S"))))  # reorient
         if config.get("crop_foreground", True):
             print('Using crop_foreground')
@@ -184,7 +186,7 @@ def main(model_file,
         p2[seg[1:].any(0)] = 1
         p2[seg[2:].any(0)] = 3
         seg = p2
-        print(f"Updated seg for brats {seg.shape}")
+        print(f"Updated seg for BRATS {seg.shape}")
 
     # Other cases
     else:
@@ -241,6 +243,8 @@ def main(model_file,
 
         if config.get("orientation_ras", False):
             print('Using orientation_ras')
+            # we assume LPS physical coordinate system orientation
+            # This code is only tested with NRRD files that use LPS space
             ts.append(Orientationd(keys="image", axcodes="RAS", labels=(("R", "L"), ("A", "P"), ("I", "S"))))  # reorient #
         if config.get("crop_foreground", True):
             print('Using crop_foreground')
