@@ -314,6 +314,16 @@
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip" }
             ]
+        },
+        {
+            "title": "Whole Body Segmentation TS1",
+            "description": "Trained on TotalSegmentatorV1 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip" }
+            ]
         }
     ]
 }
