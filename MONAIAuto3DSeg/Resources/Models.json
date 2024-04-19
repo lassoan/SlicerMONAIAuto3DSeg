@@ -5,6 +5,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip" }
@@ -15,6 +16,7 @@
             "description": "Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip" }
@@ -25,6 +27,7 @@
             "description": "Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-v2.0.0.zip" }
@@ -35,6 +38,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-3mm-v2.0.0.zip" }
@@ -45,6 +49,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip" }
@@ -55,6 +60,7 @@
             "description": "Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
@@ -65,6 +71,7 @@
             "description": "Trained on TotalSegmentatorV2, ATM and PARSE dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip" },
@@ -76,6 +83,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-3mm-v2.0.0.zip" }
@@ -86,7 +94,8 @@
             "description": "Segments peripheral (PZ) and transition zone (TZ) on T2 and ADC sequences. Trained on Medical Segmentation Decathlon dataset.",
             "subject": "human",
             "imagingModality": "MR",
-            "inputs": [{"title": "Input T2 volume"}, {"title": "Input ADC volume"}],
+            "inputs": [{"title": "Input T2 volume", "namePattern": "*t2*"}, {"title": "Input ADC volume", "namePattern": "*adc*"}],
+            "sampleData": "msd-prostate-01",
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip" }
@@ -97,6 +106,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_ribs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip" }
@@ -107,6 +117,7 @@
             "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip" }
@@ -117,6 +128,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip" }
@@ -127,6 +139,7 @@
             "description": "Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip" }
@@ -137,6 +150,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_cardiac of TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip" }
@@ -147,6 +161,7 @@
             "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip" }
@@ -157,6 +172,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTChest"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-3mm-v2.0.0.zip" }
@@ -167,6 +183,7 @@
             "description": "Segment 9 segments: lung segments, pulmonary vein, pulmonary artery, lung vessels and trachea. Trained on TotalSegmentatorV2, ATM and PARSE datasets. In v1.x there are no pulmonary vein and artery segments but there is esophagus.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTChest"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.1.zip" },
@@ -181,6 +198,7 @@
             "description": "Segment 27 segments: hips, sacrum and vertebrae. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTLiver"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.2.0.zip" },
@@ -193,6 +211,7 @@
             "description": "Aorta segmentation. Trained on TotalSegmentatorV1 dataset.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip" },
@@ -204,6 +223,7 @@
             "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip" },
@@ -218,6 +238,7 @@
             "description": "Intracranial Hemorrhage segmentation using CT images.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["ICH-ADAPT2"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/icrh-v1.0.0.zip" }
@@ -228,6 +249,7 @@
             "description": "Brain Anatomy and Intracranial Hemorrhage segmentation using CT images.",
             "subject": "human",
             "imagingModality": "CT",
+            "sampleData": ["ICH-ADAPT2"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip" }
@@ -238,7 +260,8 @@
             "description": "Brain Tumor Segmentation (BRATS) GLI",
             "subject": "human",
             "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
+            "sampleData": ["BraTS-GLI-00001-000"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-gli-v1.0.0.zip" }
@@ -249,7 +272,8 @@
             "description": "Brain Tumor Segmentation (BRATS) MEN",
             "subject": "human",
             "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
+            "sampleData": ["BraTS-MEN-00000-000"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-men-v1.0.0.zip" }
@@ -260,18 +284,20 @@
             "description": "Brain Tumor Segmentation (BRATS) MET",
             "subject": "human",
             "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
+            "sampleData": ["BraTS-MET-00002-000"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-met-v1.0.0.zip" }
             ]
         },
         {
-            "title": "Brain Tumor Segmentation (BRATS) PET",
-            "description": "Brain Tumor Segmentation (BRATS) PET",
+            "title": "Brain Tumor Segmentation (BRATS) PED",
+            "description": "Brain Tumor Segmentation (BRATS) PED",
             "subject": "human",
             "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
+            "sampleData": ["BraTS-PED-00030-000"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-pet-v1.0.0.zip" }
@@ -282,7 +308,8 @@
             "description": "Brain Tumor Segmentation (BRATS) SSA",
             "subject": "human",
             "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume"}, {"title": "Input T1C volume"}, {"title": "Input T1N volume"}, {"title": "Input T2W volume"}],
+            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
+            "sampleData": ["BraTS-SSA-00002-000"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip" }

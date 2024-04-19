@@ -38,6 +38,7 @@ The module uses <a href="https://github.com/Project-MONAI/tutorials/blob/main/MO
         self.anatomicContextName = None
 
         slicer.app.connect("startupCompleted()", self.configureDefaultTerminology)
+        slicer.app.connect("startupCompleted()", self.registerSampleData)
 
     def configureDefaultTerminology(self):
         moduleDir = os.path.dirname(self.parent.path)
@@ -47,6 +48,113 @@ The module uses <a href="https://github.com/Project-MONAI/tutorials/blob/main/MO
         self.terminologyName = tlogic.LoadTerminologyFromFile(terminologyFilePath)
         self.anatomicContextName = tlogic.LoadAnatomicContextFromFile(anatomicContextFilePath)
 
+    def registerSampleData(self):
+        """
+        Add data sets to Sample Data module.
+        """
+
+        # For each sample data set: specify data set name and sha256 file content
+        sampleDataSets = [
+            [
+                "ProstateX-0000", """
+                3940564b147b7bcda52b6b305be3d39f7c9fb901b81caa9863c72ef6ff113dfb *ProstateX-0000-t2-tse-tra.nrrd
+                774a3891a506f534b5d60ab9831587803e18da0f2daa343997d09221942bf329 *ProstateX-0000-t2-tse-sag.nrrd
+                628b928f818350acdb95952daa107d089a6c9101cf74d51fb129ab9b5d490e59 *ProstateX-0000-t2-tse-cor.nrrd
+                62a00ffa4fab7a3d53e8cc17409cb0a6c7e6ebdaea694ecab78c7d8c55b6d4d3 *ProstateX-0000-adc.nrrd
+                """
+            ],
+            [
+                "msd-prostate-01", """
+                3745533b4bddd6f713d651ae54085fc91f00baab0860f279c8de1960b364ab88 *msd-prostate-01-adc.nrrd
+                b85b2e145168ea5d4265b3a9f17ec1fbe6de81b23bf833181021fcdbf6816723 *msd-prostate-01-t2.nrrd
+                """
+            ],
+            [
+                "ProstateX-0000", """
+                3940564b147b7bcda52b6b305be3d39f7c9fb901b81caa9863c72ef6ff113dfb *ProstateX-0000-t2-tse-tra.nrrd
+                774a3891a506f534b5d60ab9831587803e18da0f2daa343997d09221942bf329 *ProstateX-0000-t2-tse-sag.nrrd
+                628b928f818350acdb95952daa107d089a6c9101cf74d51fb129ab9b5d490e59 *ProstateX-0000-t2-tse-cor.nrrd
+                62a00ffa4fab7a3d53e8cc17409cb0a6c7e6ebdaea694ecab78c7d8c55b6d4d3 *ProstateX-0000-adc.nrrd
+                """
+            ],
+            [
+                "ICH-ADAPT2", """
+                40e9f1cb82dd68e8bd19dccf0ad116c8cb2eb67a8cfadf3ad9155642e4851d89 *ICH-ADAPT2.nii.gz
+                """
+            ],
+            [
+                "BraTS-GLI-00001-000", """
+                4399faadcc45c8a4541313cdf88aced7d835ed59ac3078d950e0eac293d603f5 *BraTS-GLI-00001-000-t1c.nii.gz
+                e860924b936e301ddeba20409fbb59dde322475cb49328f1b46a9235c792e73e *BraTS-GLI-00001-000-t1n.nii.gz
+                82aed8546af5e6d8d94fd91c56227abdcf6120130390d1556c4342a208980604 *BraTS-GLI-00001-000-t2f.nii.gz
+                4cd389cc57d12134a30a898c66532228126b9a7d0600ee578e82a32144528b51 *BraTS-GLI-00001-000-t2w.nii.gz
+                """
+            ],
+            [
+                "BraTS-MEN-00000-000", """
+                4cb970e92edcec52c5c4d72568a17c41006a663391ab76cb871a5054f76c4e37 *BraTS-MEN-00000-000-t1c.nii.gz
+                794d184402972c78a8a4be2b889f3683c80878f748912704fd23edc3ce6fa9dd *BraTS-MEN-00000-000-t1n.nii.gz
+                e82bf0f3e1870e61500de40d834d92da64021c634e146d225597c2ff3a682cbd *BraTS-MEN-00000-000-t2f.nii.gz
+                4d6d7aa361be09cb2b8d2e411fa26499301b5edf454acae1cd442f5c53904f75 *BraTS-MEN-00000-000-t2w.nii.gz
+                """
+            ],
+            [
+                "BraTS-MET-00002-000", """
+                360b294b428d335c90f340ca727d8fbce4a7ae3aaac9fc61929f4cd71a0aa90b *BraTS-MET-00002-000-t1c.nii.gz
+                bc8dcc7e2ae37b1ef6a231c1ee9e1fc355a21322f95572a78b59773c18459654 *BraTS-MET-00002-000-t1n.nii.gz
+                863838bfc13259ee9de1cf31e9cb6db1a3a6489863bbe7efd1238f630dce08bf *BraTS-MET-00002-000-t2f.nii.gz
+                3076031451a334c29242cbab9b65017c6acd89d5dda9a7566bb79d2325c51df9 *BraTS-MET-00002-000-t2w.nii.gz
+                """
+            ],
+            [
+                "BraTS-PED-00030-000", """
+                9fd304f9a7c691266b22efeb2610b879c454e0e31df758c32ec039ad2c1acde7 *BraTS-PED-00030-000-t1c.nii.gz
+                8c801c464b548b9acd49244db3e31895945c7a26abc1c7bbb34aac72706b7b9d *BraTS-PED-00030-000-t1n.nii.gz
+                7c69f8a39b722f3bdd8ed943f5c6aa2aa20aec011727bc237d074aef01c774ff *BraTS-PED-00030-000-t2f.nii.gz
+                88914c9e4aafacb21c642132a46c7f12096af958d8b915a80e023d5924fff8d8 *BraTS-PED-00030-000-t2w.nii.gz
+                """
+            ],
+            [
+                "BraTS-SSA-00002-000", """
+                b980aab6d6fb2e95f01e6f6c964d94a89ef32e717448e1b1c101e163219042b1 *BraTS-SSA-00002-000-t1c.nii.gz
+                cd78460e4225a1f145756c7fcda12a517ab3d13f62c52d8b287d78310e520cf7 *BraTS-SSA-00002-000-t1n.nii.gz
+                b7067abe232daafbf5c46c9707462edc961cdb30cb5eb445e5d4407e0da70c08 *BraTS-SSA-00002-000-t2f.nii.gz
+                4d9810cd217a9504f8aa4313a0edec4a091ecb145bad09dab5b7955688639420 *BraTS-SSA-00002-000-t2w.nii.gz
+                """
+            ]
+        ]
+                
+        import SampleData
+        iconsPath = os.path.join(os.path.dirname(__file__), 'Resources/Icons')
+        for sampleDataSet in sampleDataSets:
+            sampleName = sampleDataSet[0]
+            filenamesWithChecksums = sampleDataSet[1].split("\n")
+            uris = []
+            filenames = []
+            nodeNames = []
+            checksums = []
+            for filenamesWithChecksum in filenamesWithChecksums:
+                # filenamesWithChecksum = '                b980aab6d6fb2e95f01e6f6c964d94a89ef32e717448e1b1c101e163219042b1 *BraTS-SSA-00002-000-t1c.nii.gz'
+                filenamesWithChecksum = filenamesWithChecksum.strip()
+                if not filenamesWithChecksum:
+                    continue
+                checksum, filename = filenamesWithChecksum.split(" *")
+                uris.append(f"https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/TestingData/{filename}")
+                filenames.append(filename)
+                nodeNames.append(filename.split(".")[0])
+                checksums.append(f"SHA256:{checksum}")
+
+            SampleData.SampleDataLogic.registerCustomSampleDataSource(
+                category="MONAIAuto3DSeg",
+                sampleName=sampleName,
+                uris=uris,
+                fileNames=filenames,
+                nodeNames=nodeNames,
+                thumbnailFileName=os.path.join(iconsPath, f"{sampleName}.jpg"),
+                checksums=checksums
+            )
+
+        
 #
 # MONAIAuto3DSegWidget
 #
@@ -86,6 +194,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
+        import qt
+        self.ui.downloadSampleDataToolButton.setIcon(qt.QIcon(self.resourcePath("Icons/radiology.svg")))
+
         self.inputNodeSelectors = [self.ui.inputNodeSelector0, self.ui.inputNodeSelector1, self.ui.inputNodeSelector2, self.ui.inputNodeSelector3]
         self.inputNodeLabels = [self.ui.inputNodeLabel0, self.ui.inputNodeLabel1, self.ui.inputNodeLabel2, self.ui.inputNodeLabel3]
 
@@ -121,6 +232,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.outputSegmentationSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.ui.segmentationShow3DButton.setSegmentationNode)
 
         # Buttons
+        self.ui.downloadSampleDataToolButton.connect("clicked(bool)", self.onDownloadSampleData)
         self.ui.packageInfoUpdateButton.connect("clicked(bool)", self.onPackageInfoUpdate)
         self.ui.packageUpgradeButton.connect("clicked(bool)", self.onPackageUpgrade)
         self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
@@ -230,6 +342,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             itemIndex = self.ui.modelComboBox.count
             self.ui.modelComboBox.addItem(modelTitle, model["id"])
             self.ui.modelComboBox.setItemData(itemIndex, model.get("description"), qt.Qt.ToolTipRole)
+            self.ui.downloadSampleDataToolButton.visible = model["inputs"]               
 
         modelId = self._parameterNode.GetParameter("Model")
         self.ui.modelComboBox.setCurrentIndex(self.ui.modelComboBox.findData(modelId))
@@ -390,6 +503,37 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
         self._segmentationProcessInfo = None
 
+    def onDownloadSampleData(self):
+        sampleDataName = self.logic.model(self.ui.modelComboBox.currentData).get("sampleData")
+        if not sampleDataName:
+            slicer.util.messageBox("No sample data is available for this model.")
+            return
+        
+        # For now, always just use the first data set
+        sampleDataName = sampleDataName[0]
+
+        with slicer.util.tryWithErrorDisplay("Failed to download sample data", waitCursor=True):
+            import SampleData
+            loadedSampleNodes = SampleData.SampleDataLogic().downloadSamples(sampleDataName)
+            inputs = self.logic.model(self.ui.modelComboBox.currentData).get("inputs")
+
+        for inputIndex, input in enumerate(inputs):
+            namePattern = input.get("namePattern")
+            if namePattern:
+                matchingNode = self._findFirstNodeBynamePattern(namePattern, loadedSampleNodes)
+            else:
+                matchingNode = loadedSampleNodes[inputIndex] if inputIndex < len(loadedSampleNodes) else loadedSampleNodes[0]
+            if not matchingNode:
+                continue
+            self.inputNodeSelectors[inputIndex].setCurrentNode(matchingNode)
+
+    def _findFirstNodeBynamePattern(self, namePattern, nodes):
+        import fnmatch
+        for node in nodes:
+            if fnmatch.fnmatchcase(node.GetName(), namePattern):
+                return node
+        return None
+
     def onPackageInfoUpdate(self):
         self.ui.packageInfoTextBrowser.plainText = ""
         with slicer.util.tryWithErrorDisplay("Failed to get MONAI package version information", waitCursor=True):
@@ -519,7 +663,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                             logging.error(f"Failed to extract model id and version from url: {url}")
                         if "inputs" in model:
                             # Contains a list of dict. One dict for each input.
-                            # Currently, only "title" (user-displayable name) of the input is specified.
+                            # Currently, only "title" (user-displayable name) and "namePattern" of the input are specified.
                             # In the future, inputs could have additional properties, such as name, type, optional, ...
                             inputs = model["inputs"]
                         else:
@@ -529,6 +673,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                             "id": f"{filename}-v{version}",
                             "title": f"{model['title']} (v{version})",
                             "inputs": inputs,
+                            "sampleData": model.get("sampleData"),
                             "description":
                                 f"{model['description']}\n"
                                 f"Subject: {model['subject']}\n"
