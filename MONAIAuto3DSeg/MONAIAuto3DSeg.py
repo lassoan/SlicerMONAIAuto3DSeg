@@ -893,7 +893,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
             "--model-file", str(modelPtFile),
             "--image-file", inputFiles[0],
-            "--result-file", str(outputSegmentationFile),
+            "--result-file", str(outputSegmentationFile) ]
         for inputIndex in range(1, len(inputFiles)):
             auto3DSegCommand.append(f"--image-file-{inputIndex+1}")
             auto3DSegCommand.append(inputFiles[inputIndex])
