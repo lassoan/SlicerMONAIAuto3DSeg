@@ -233,6 +233,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         modelId = self._parameterNode.GetParameter("Model")
         self.ui.modelComboBox.setCurrentIndex(self.ui.modelComboBox.findData(modelId))
+        self.ui.modelComboBox.setToolTip(self.logic.model(modelId).get("description"))
         self.ui.cpuCheckBox.checked = self._parameterNode.GetParameter("CPU") == "true"
         self.ui.showAllModelsCheckBox.checked = showAllModels
         self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
