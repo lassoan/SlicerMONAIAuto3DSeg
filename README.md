@@ -2,6 +2,14 @@
 
 Extension for [3D Slicer](https://www.slicer.org) for fully automatic AI segmentation of images using [MONAI Auto3DSeg models](https://docs.monai.io/en/stable/auto3dseg.html).
 
+Highlights:
+- models are available for multiple imaging modalities: CT (various abdominal organs, bones, vessels, heart, lungs), MR (brain, prostate)
+- segmentation is provided for both healthy anatomy and lesions: tumor, edema, hemorrhage, etc.
+- fast segmentation: all segmentations are performed within a few minutes on GPU
+- low hardware requirements: most models do not require GPU (runs on any laptop), GPU does not need to have more than 8GB RAM
+- multiple input volumes can be used: used for prostate or brain tumor segmentation
+- sample data set is provided for each model for easy testing
+
 Models are automatically downloaded and stored in the user's home folder within `.MONAIAuto3DSeg` subfolder.
 
 ![](Screenshot01.jpg)
@@ -29,9 +37,9 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 ## Tutorial
 
 - Start 3D Slicer
-- Go to `Sample Data` module and load `CTA Abdomen (Panoramix)` data set
 - Go to `MONAI Auto3DSeg` module
-- Select `Input volume` -> `Panoramix-cropped`
+- Select model: `Abdominal Organs TS2 - quick`
+- Select input volume: either choose an image that is already loaded or click the `Download sample data set for this model` icon button (next to the model selector) to download a sample data set
 - Click `Apply`
   - When this module is used the first time:
     - It needs to download and install PyTorch and MONAI Python packages and weights for the AI models. This can take 5-10 minutes and several GB disk space.
@@ -42,14 +50,19 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 
 ## User interface
 
+- Segmentation model: select the model that determines what is segmented from the input image(s). Hover the mouse over the model name to get more information about the model.
+- Download sample data: small icon next to the model selector, clicking it downloads a sample data set that can be used for testing the model
 - Inputs
-  - Input volume: input CT image
+  - Input volume: input image; for certain models multiple input volumes must be selected
   - Segmentation task: currently, all models are experimental (not very accurate)
 - Outputs
   - Segmentation: the selected segmentation will store the computation result
   - Show 3D: show/hide segments in 3D views
 - Advanced:
   - Use standard segment names: use names defined in standard terminology files from [DCMQI](https://github.com/QIICR/dcmqi) (enabled by default). If disabled then internal names will be used as segment names.
+  - Force to use CPU: useful if the computer has a GPU but not powerful enough to run the model
+  - Show all models: if unchecked (default) then only the latest version of the models are displayed
+  - Manage models: allow cleaning up downloaded models (each model may take up a few hundred MB disk space)
   - Force reinstall: force reinstallation of the AI engine - MONAI Python package. This may be needed if other modules compromise the installation.
   - Get Python package information: retrieve installed version of the AI engine.
 
