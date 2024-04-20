@@ -227,6 +227,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.showAllModelsCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.useStandardSegmentNamesCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
 
+        self.ui.modelSearchBox.connect("textChanged(QString)", self.updateParameterNodeFromGUI)
         self.ui.modelComboBox.currentTextChanged.connect(self.updateParameterNodeFromGUI)
         self.ui.outputSegmentationSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.outputSegmentationSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.ui.segmentationShow3DButton.setSegmentationNode)
@@ -327,108 +328,140 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Make sure GUI changes do not call updateParameterNodeFromGUI (it could cause infinite loop)
         self._updatingGUIFromParameterNode = True
+        try:
 
-        showAllModels = self._parameterNode.GetParameter("showAllModels") == "true"
-        self.ui.modelComboBox.clear()
-        for model in self.logic.models:
-            deprecated = model.get("deprecated")
-            modelTitle = model["title"]
-            if deprecated:
-                if showAllModels:
-                    modelTitle += " -- deprecated"
-                else:
-                    # Do not show deprecated models
-                    continue
-            itemIndex = self.ui.modelComboBox.count
-            self.ui.modelComboBox.addItem(modelTitle, model["id"])
-            self.ui.modelComboBox.setItemData(itemIndex, model.get("description"), qt.Qt.ToolTipRole)
-            self.ui.downloadSampleDataToolButton.visible = model["inputs"]               
+            self.ui.modelSearchBox.text = self._parameterNode.GetParameter("ModelSearchText")
 
-        modelId = self._parameterNode.GetParameter("Model")
-        self.ui.modelComboBox.setCurrentIndex(self.ui.modelComboBox.findData(modelId))
-        self.ui.modelComboBox.setToolTip(self.logic.model(modelId).get("description"))
-        self.ui.cpuCheckBox.checked = self._parameterNode.GetParameter("CPU") == "true"
-        self.ui.showAllModelsCheckBox.checked = showAllModels
-        self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
-        self.ui.outputSegmentationSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputSegmentation"))
+            searchWords = self._parameterNode.GetParameter("ModelSearchText").lower().split()
 
-        state = self._processingState
-        if state == MONAIAuto3DSegWidget.PROCESSING_IDLE:
-            self.ui.applyButton.text = "Apply"
-            model = self.logic.model(modelId)
-            modelInputs = model["inputs"]
-            inputErrorMessages = []  # it will contain text if the inputs are not valid
-            inputNodes = []  # list of output nodes so far, for checking for duplicates
-            for inputIndex in range(len(self.inputNodeSelectors)):
-                inputNodeSelector = self.inputNodeSelectors[inputIndex]
-                inputNodeLabel = self.inputNodeLabels[inputIndex]
-                if inputIndex < len(modelInputs):
-                    inputNodeLabel.visible = True
-                    inputTitle = modelInputs[inputIndex]["title"]
-                    inputNodeLabel.text = f"{inputTitle}:"
-                    inputNodeSelector.visible = True
-                    inputNode = self._parameterNode.GetNodeReference("InputNode" + str(inputIndex))
-                    inputNodeSelector.setCurrentNode(inputNode)
-                    if inputIndex == 0 and inputNode:
-                        self.ui.outputSegmentationSelector.baseName = inputNode.GetName() + " segmentation"
-                    if not inputNode:
-                        inputErrorMessages.append(f"Select {inputTitle}.")
+            showAllModels = self._parameterNode.GetParameter("ShowAllModels") == "true"
+            self.ui.modelComboBox.clear()
+            for model in self.logic.models:
+
+                if model.get("deprecated"):
+                    if showAllModels:
+                        modelTitle = f"{model['title']} (v{model['version']}) -- deprecated"
                     else:
-                        if inputNode in inputNodes:
-                            inputErrorMessages.append(f"'{inputTitle}' does not have a unique input ('{inputNode.GetName()}' is already used as another input).")
-                        inputNodes.append(inputNode)
+                        # Do not show deprecated models
+                        continue
                 else:
-                    inputNodeLabel.visible = False
-                    inputNodeSelector.visible = False
+                    if showAllModels:
+                        modelTitle = f"{model['title']} (v{model['version']})"
+                    else:
+                        modelTitle = model['title']
 
-            if inputErrorMessages:
-                self.ui.applyButton.toolTip = "\n".join(inputErrorMessages)
+                if searchWords:
+                    textToSearchIn = modelTitle.lower() + " " + model.get("description").lower() + " " + model.get("imagingModality").lower()
+                    print(textToSearchIn)
+                    if not all(word in textToSearchIn for word in searchWords):
+                        continue
+                   
+                itemIndex = self.ui.modelComboBox.count
+                self.ui.modelComboBox.addItem(modelTitle)
+                item = self.ui.modelComboBox.item(itemIndex)
+                item.setData(qt.Qt.UserRole, model["id"])
+                item.setData(qt.Qt.ToolTipRole, model.get("details"))
+
+            modelId = self._parameterNode.GetParameter("Model")
+            currentModelSelectable = self._setCurrentModelId(modelId)
+            if not currentModelSelectable:
+                modelId = ""
+            sampleDataAvailable = self.logic.model(modelId).get("inputs") if modelId else False
+            self.ui.downloadSampleDataToolButton.visible = sampleDataAvailable
+
+            self.ui.cpuCheckBox.checked = self._parameterNode.GetParameter("CPU") == "true"
+            self.ui.showAllModelsCheckBox.checked = showAllModels
+            self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
+            self.ui.outputSegmentationSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputSegmentation"))
+
+            state = self._processingState
+            if state == MONAIAuto3DSegWidget.PROCESSING_IDLE:
+                self.ui.applyButton.text = "Apply"
+                inputErrorMessages = []  # it will contain text if the inputs are not valid
+                if modelId:
+                    modelInputs = self.logic.model(modelId)["inputs"]
+                else:
+                    modelInputs = []
+                    inputErrorMessages.append("Select a model.")
+                inputNodes = []  # list of output nodes so far, for checking for duplicates
+                for inputIndex in range(len(self.inputNodeSelectors)):
+                    inputNodeSelector = self.inputNodeSelectors[inputIndex]
+                    inputNodeLabel = self.inputNodeLabels[inputIndex]
+                    if inputIndex < len(modelInputs):
+                        inputNodeLabel.visible = True
+                        inputTitle = modelInputs[inputIndex]["title"]
+                        inputNodeLabel.text = f"{inputTitle}:"
+                        inputNodeSelector.visible = True
+                        inputNode = self._parameterNode.GetNodeReference("InputNode" + str(inputIndex))
+                        inputNodeSelector.setCurrentNode(inputNode)
+                        if inputIndex == 0 and inputNode:
+                            self.ui.outputSegmentationSelector.baseName = inputNode.GetName() + " segmentation"
+                        if not inputNode:
+                            inputErrorMessages.append(f"Select {inputTitle}.")
+                        else:
+                            if inputNode in inputNodes:
+                                inputErrorMessages.append(f"'{inputTitle}' does not have a unique input ('{inputNode.GetName()}' is already used as another input).")
+                            inputNodes.append(inputNode)
+                    else:
+                        inputNodeLabel.visible = False
+                        inputNodeSelector.visible = False
+
+                if inputErrorMessages:
+                    self.ui.applyButton.toolTip = "\n".join(inputErrorMessages)
+                    self.ui.applyButton.enabled = False
+                else:
+                    self.ui.applyButton.toolTip = "Start segmentation"
+                    self.ui.applyButton.enabled = True
+
+            elif state == MONAIAuto3DSegWidget.PROCESSING_STARTING:
+                self.ui.applyButton.text = "Starting..."
+                self.ui.applyButton.toolTip = "Please wait while the segmentation is being initialized"
                 self.ui.applyButton.enabled = False
-            else:
-                self.ui.applyButton.toolTip = "Start segmentation"
+            elif state == MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS:
+                self.ui.applyButton.text = "Cancel"
+                self.ui.applyButton.toolTip = "Cancel in-progress segmentation"
                 self.ui.applyButton.enabled = True
+            elif state == MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS:
+                self.ui.applyButton.text = "Importing results..."
+                self.ui.applyButton.toolTip = "Please wait while the segmentation result is being imported"
+                self.ui.applyButton.enabled = False
+            elif state == MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED:
+                self.ui.applyButton.text = "Cancelling..."
+                self.ui.applyButton.toolTip = "Please wait for the segmentation to be cancelled"
+                self.ui.applyButton.enabled = False
 
-        elif state == MONAIAuto3DSegWidget.PROCESSING_STARTING:
-            self.ui.applyButton.text = "Starting..."
-            self.ui.applyButton.toolTip = "Please wait while the segmentation is being initialized"
-            self.ui.applyButton.enabled = False
-        elif state == MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS:
-            self.ui.applyButton.text = "Cancel"
-            self.ui.applyButton.toolTip = "Cancel in-progress segmentation"
-            self.ui.applyButton.enabled = True
-        elif state == MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS:
-            self.ui.applyButton.text = "Importing results..."
-            self.ui.applyButton.toolTip = "Please wait while the segmentation result is being imported"
-            self.ui.applyButton.enabled = False
-        elif state == MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED:
-            self.ui.applyButton.text = "Cancelling..."
-            self.ui.applyButton.toolTip = "Please wait for the segmentation to be cancelled"
-            self.ui.applyButton.enabled = False
-
-        # All the GUI updates are done
-        self._updatingGUIFromParameterNode = False
+        finally:
+            # All the GUI updates are done
+            self._updatingGUIFromParameterNode = False
 
     def updateParameterNodeFromGUI(self, caller=None, event=None):
         """
         This method is called when the user makes any change in the GUI.
         The changes are saved into the parameter node (so that they are restored when the scene is saved and loaded).
         """
-
         if self._parameterNode is None or self._updatingGUIFromParameterNode:
             return
 
         wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
-        for inputIndex in range(len(self.inputNodeSelectors)):
-            inputNodeSelector = self.inputNodeSelectors[inputIndex]
-            self._parameterNode.SetNodeReferenceID("InputNode" + str(inputIndex), inputNodeSelector.currentNodeID)
-        self._parameterNode.SetParameter("Model", self.ui.modelComboBox.currentData)
-        self._parameterNode.SetParameter("CPU", "true" if self.ui.cpuCheckBox.checked else "false")
-        self._parameterNode.SetParameter("showAllModels", "true" if self.ui.showAllModelsCheckBox.checked else "false")
-        self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.useStandardSegmentNamesCheckBox.checked else "false")
-        self._parameterNode.SetNodeReferenceID("OutputSegmentation", self.ui.outputSegmentationSelector.currentNodeID)
+        try:
 
-        self._parameterNode.EndModify(wasModified)
+            for inputIndex in range(len(self.inputNodeSelectors)):
+                inputNodeSelector = self.inputNodeSelectors[inputIndex]
+                self._parameterNode.SetNodeReferenceID("InputNode" + str(inputIndex), inputNodeSelector.currentNodeID)
+
+            self._parameterNode.SetParameter("ModelSearchText", self.ui.modelSearchBox.text)
+            modelId = self._currentModelId()
+            if modelId:
+                # Only save model ID if valid, otherwise it is temporarily filtered out in the selector
+                self._parameterNode.SetParameter("Model", modelId)
+            self._parameterNode.SetParameter("CPU", "true" if self.ui.cpuCheckBox.checked else "false")
+            self._parameterNode.SetParameter("ShowAllModels", "true" if self.ui.showAllModelsCheckBox.checked else "false")
+            self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.useStandardSegmentNamesCheckBox.checked else "false")
+            self._parameterNode.SetNodeReferenceID("OutputSegmentation", self.ui.outputSegmentationSelector.currentNodeID)
+
+        finally:
+            self._parameterNode.EndModify(wasModified)
 
     def addLog(self, text):
         """Append text to log window
@@ -475,7 +508,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     if inputNodeSelector.visible:
                         inputNodes.append(inputNodeSelector.currentNode())
                 self._segmentationProcessInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
-                    self.ui.modelComboBox.currentData, self.ui.cpuCheckBox.checked, waitForCompletion=False)
+                    self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=False)
 
                 self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
 
@@ -503,8 +536,26 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
         self._segmentationProcessInfo = None
 
+    def _currentModelId(self):
+        import qt
+        itemIndex = self.ui.modelComboBox.currentRow
+        item = self.ui.modelComboBox.item(itemIndex)
+        if not item:
+            return ""
+        return item.data(qt.Qt.UserRole)
+    
+    def _setCurrentModelId(self, modelId):
+        import qt
+        for itemIndex in range(self.ui.modelComboBox.count):
+            item = self.ui.modelComboBox.item(itemIndex)
+            if item.data(qt.Qt.UserRole) == modelId:
+                self.ui.modelComboBox.setCurrentRow(itemIndex)
+                return True
+        return False
+
     def onDownloadSampleData(self):
-        sampleDataName = self.logic.model(self.ui.modelComboBox.currentData).get("sampleData")
+        model = self.logic.model(self._currentModelId())
+        sampleDataName = model.get("sampleData")
         if not sampleDataName:
             slicer.util.messageBox("No sample data is available for this model.")
             return
@@ -515,7 +566,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         with slicer.util.tryWithErrorDisplay("Failed to download sample data", waitCursor=True):
             import SampleData
             loadedSampleNodes = SampleData.SampleDataLogic().downloadSamples(sampleDataName)
-            inputs = self.logic.model(self.ui.modelComboBox.currentData).get("inputs")
+            inputs = model.get("inputs")
 
         for inputIndex, input in enumerate(inputs):
             namePattern = input.get("namePattern")
@@ -641,6 +692,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                 return model
         raise RuntimeError(f"Model {modelId} not found")
 
+
     def loadModelsDescription(self):
         modelsJsonFilePath = os.path.join(self.moduleDir, "Resources", "Models.json")
         try:
@@ -671,11 +723,15 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                             inputs = [{"title": "Input volume"}]
                         models.append({
                             "id": f"{filename}-v{version}",
-                            "title": f"{model['title']} (v{version})",
+                            "title": model['title'],
+                            "version": version,
                             "inputs": inputs,
+                            "imagingModality": model["imagingModality"],
+                            "description": model["description"],
                             "sampleData": model.get("sampleData"),
-                            "description":
-                                f"{model['description']}\n"
+                            "details":
+                                f"Model: {model['title']} (v{version})\n"
+                                f"Description: {model['description']}\n"
                                 f"Subject: {model['subject']}\n"
                                 f"Imaging modality: {model['imagingModality']}",
                             "url": url,

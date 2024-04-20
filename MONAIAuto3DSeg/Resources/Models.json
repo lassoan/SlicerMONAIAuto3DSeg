@@ -74,8 +74,8 @@
             "sampleData": ["CTACardio"],
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.1.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.1.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip" }
             ]
         },
         {
@@ -87,6 +87,17 @@
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-3mm-v2.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Whole Body Segmentation TS1",
+            "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "sampleData": ["CTACardio"],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip" }
             ]
         },
         {
@@ -313,16 +324,6 @@
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Whole Body Segmentation TS1",
-            "description": "Trained on TotalSegmentatorV1 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip" }
             ]
         }
     ]

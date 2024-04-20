@@ -11,6 +11,16 @@ set(MODULE_PYTHON_RESOURCES
   Resources/AnatomicRegionAndModifier-MONAIAuto3DSeg.term.json
   Resources/SegmentationCategoryTypeModifier-MONAIAuto3DSeg.term.json
   Resources/Icons/${MODULE_NAME}.png
+  Resources/Icons/BraTS-GLI-00001-000.jpg
+  Resources/Icons/BraTS-MEN-00000-000.jpg
+  Resources/Icons/BraTS-MET-00002-000.jpg
+  Resources/Icons/BraTS-PED-00030-000.jpg
+  Resources/Icons/BraTS-SSA-00002-000.jpg
+  Resources/Icons/filter.svg
+  Resources/Icons/ICH-ADAPT2.jpg
+  Resources/Icons/msd-prostate-01.jpg
+  Resources/Icons/ProstateX-0000.jpg
+  Resources/Icons/radiology.svg
   Resources/UI/${MODULE_NAME}.ui
   Scripts/auto3dseg_segresnet_inference.py
   )

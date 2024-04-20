@@ -39,7 +39,7 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 - Start 3D Slicer
 - Go to `MONAI Auto3DSeg` module
 - Select model: `Abdominal Organs TS2 - quick`
-- Select input volume: either choose an image that is already loaded or click the `Download sample data set for this model` icon button (next to the model selector) to download a sample data set
+- Select input volume: either choose an image that is already loaded or click the `Download sample data set...` icon button (next to the model selector) to download a sample data set for the selected model.
 - Click `Apply`
   - When this module is used the first time:
     - It needs to download and install PyTorch and MONAI Python packages and weights for the AI models. This can take 5-10 minutes and several GB disk space.
@@ -51,6 +51,7 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 ## User interface
 
 - Segmentation model: select the model that determines what is segmented from the input image(s). Hover the mouse over the model name to get more information about the model.
+- Search model: multiple words can be typed here; only those models will be listed that contain all those words in their name, description, or imaging modality. For example, enter `quick ct` to get all quick models for CT images.
 - Download sample data: small icon next to the model selector, clicking it downloads a sample data set that can be used for testing the model
 - Inputs
   - Input volume: input image; for certain models multiple input volumes must be selected
