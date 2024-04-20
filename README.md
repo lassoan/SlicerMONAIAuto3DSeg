@@ -23,7 +23,7 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 - If a strong GPU with 7GB or more memory is available:
   - On Windows:
     - If using NVIDIA GPU: Make sure CUDA is installed. [CUDA version must be one of those listed on pytorch website as "Compute platform" for your system](https://pytorch.org/get-started/locally/). You can download CUDA from [here](https://developer.nvidia.com/cuda-downloads).
-    - PyTorch does not officially support AMD GPUs for on Windows, therefore you need to use the CPU.
+    - PyTorch does not officially support AMD GPUs on Windows, therefore you need to use the CPU.
   - On Linux:
     - If using NVIDIA GPU: Make sure NVIDIA drivers are installed. If CUDA is installed then make sure [CUDA version is one of those listed on pytorch website as "Compute platform" for your system](https://pytorch.org/get-started/locally/). If CUDA is not installed then it will be set up automatically during installation (pytorch binary packages contain the appropriate CUDA version).
     - If using AMD GPU: In theory, ROCm-compatible AMD GPUs should work, but this is not tested.
@@ -47,6 +47,7 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
     - With CUDA-capable GPU: `Abdominal organs` task should be completed within a few minutes.
     - Without GPU: tens of minutes.
 - To display the segmentation in 3D: click the `Show 3D` button
+- For high-quality rendering in 3D: use `Colorize volume` module (in `Sandbox` extension). Voxel intensities are set based on the original image, their color is based on the segmentation.
 
 ## User interface
 

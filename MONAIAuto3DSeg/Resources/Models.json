@@ -5,7 +5,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
+            "sampleData": ["CTLiver"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip" }
@@ -16,7 +16,7 @@
             "description": "Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
+            "sampleData": ["CTLiver"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip" }
@@ -90,14 +90,29 @@
             ]
         },
         {
-            "title": "Whole Body Segmentation TS1",
+            "title": "Whole body segmentation TS1",
             "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
             "subject": "human",
             "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
+            "sampleData": ["CTLiver"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip" }
+            ]
+        },
+        {
+            "title": "Abdominal organs TS1",
+            "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "sampleData": ["CTLiver"],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
             ]
         },
         {
@@ -139,7 +154,7 @@
             "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
+            "sampleData": ["CTLiver"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip" }
@@ -150,7 +165,7 @@
             "description": "Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
             "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
+            "sampleData": ["CTLiver"],
             "versions":
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip" }
@@ -227,21 +242,6 @@
             [
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Abdominal organs",
-            "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
             ]
         },
         {
