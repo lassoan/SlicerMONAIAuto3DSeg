@@ -101,6 +101,17 @@
             ]
         },
         {
+            "title": "Whole body segmentation TS1 - quick",
+            "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
+            "subject": "human",
+            "imagingModality": "CT",
+            "sampleData": ["CTLiver"],
+            "versions":
+            [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v1.0.0.zip" }
+            ]
+        },
+        {
             "title": "Abdominal organs TS1",
             "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
             "subject": "human",
