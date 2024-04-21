@@ -2145,11 +2145,33 @@
             "CodeValue": "90597002",
             "CodeMeaning": "Lobe of brain",
             "recommendedDisplayRGBValue": [
-              90,
-              100,
-              110
+              180,
+              140,
+              170
             ],
             "3dSlicerLabel": "brain lobe"
+          },
+          {
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "279706003",
+            "CodeMeaning": "Peripheral zone of prostate",
+            "recommendedDisplayRGBValue": [
+              180,
+              140,
+              190
+            ],
+            "3dSlicerLabel": "prostate pz"
+          },
+          {
+            "CodingSchemeDesignator": "SCT",
+            "CodeValue": "399384005",
+            "CodeMeaning": "Transition zone of prostate",
+            "recommendedDisplayRGBValue": [
+              190,
+              190,
+              110
+            ],
+            "3dSlicerLabel": "prostate tz"
           }
         ]
       }

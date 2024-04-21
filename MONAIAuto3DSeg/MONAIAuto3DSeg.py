@@ -560,13 +560,18 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.util.messageBox("No sample data is available for this model.")
             return
         
-        # For now, always just use the first data set
-        sampleDataName = sampleDataName[0]
+        if type(sampleDataName) == list:
+            # For now, always just use the first data set if multiple data sets are provided
+            sampleDataName = sampleDataName[0]
 
         with slicer.util.tryWithErrorDisplay("Failed to download sample data", waitCursor=True):
             import SampleData
             loadedSampleNodes = SampleData.SampleDataLogic().downloadSamples(sampleDataName)
             inputs = model.get("inputs")
+
+        if not loadedSampleNodes:
+            slicer.util.messageBox(f"Failed to load sample data set '{sampleDataName}'.")
+            return
 
         for inputIndex, input in enumerate(inputs):
             namePattern = input.get("namePattern")
