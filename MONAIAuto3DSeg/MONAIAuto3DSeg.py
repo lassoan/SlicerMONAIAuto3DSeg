@@ -1435,12 +1435,27 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
         if not os.path.exists(testResultsPath):
             os.makedirs(testResultsPath)
 
+        import json
+        modelsTestResultsJsonFilePath = os.path.join(testResultsPath.joinpath("ModelsTestResults.json"))
+        if os.path.exists(modelsTestResultsJsonFilePath):
+            # resume testing
+            with open(modelsTestResultsJsonFilePath) as f:
+              models = json.load(f)
+        else:
+            # start testing from scratch
+            models = logic.models
+
         for forceUseCpu in [False, True]:
             configurationName = "CPU" if forceUseCpu else "GPU"
 
-            for modelIndex, model in enumerate(logic.models):
+            for modelIndex, model in enumerate(models):
                 if model.get("deprecated"):
                     # Do not teset deprecated models
+                    continue
+
+                segmentationTimePropertyName = "segmentationTimeSec"+configurationName
+                if segmentationTimePropertyName in models[modelIndex]:
+                    # Skip already tested models
                     continue
 
                 self.delayDisplay(f"Testing {model['title']} (v{model['version']})")
@@ -1479,7 +1494,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                 segmentationTimeSec = time.time() - startTime
 
                 # Save segmentation time (rounded to 0.1 sec) into model description
-                logic.models[modelIndex]["segmentationTimeSec"+configurationName] = round(segmentationTimeSec * 10) / 10
+                models[modelIndex][segmentationTimePropertyName] = round(segmentationTimeSec * 10) / 10
 
                 # Save all segment names into model description
                 labelDescriptions = logic.labelDescriptions(model["id"])
@@ -1496,17 +1511,15 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                         regionName = f"{regionModifierName} {regionName}"
                     name = f"{typeName} in {regionName}" if regionName else typeName
                     segmentNames.append(name)
-                logic.models[modelIndex]["segmentNames"] = segmentNames
+                models[modelIndex]["segmentNames"] = segmentNames
 
                 sliceScreenshotFilename, rotate3dScreenshotFilename = self._writeScreenshots(outputSegmentation, testResultsPath, model["id"]+"-"+configurationName)
-                logic.models[modelIndex]["segmentationResultsScreenshot2D"] = sliceScreenshotFilename.name
-                logic.models[modelIndex]["segmentationResultsScreenshot3D"] = rotate3dScreenshotFilename.name
+                models[modelIndex]["segmentationResultsScreenshot2D"] = sliceScreenshotFilename.name
+                models[modelIndex]["segmentationResultsScreenshot3D"] = rotate3dScreenshotFilename.name
 
                 # Write results to file (to allow accessing the results before all tests complete)
-                import json
-                modelsTestResultsJsonFilePath = os.path.join(testResultsPath.joinpath("ModelsTestResults.json"))
                 with open(modelsTestResultsJsonFilePath, 'w') as f:
-                    json.dump(logic.models, f, indent=2)
+                    json.dump(models, f, indent=2)
 
         self.delayDisplay("Test passed")
 
