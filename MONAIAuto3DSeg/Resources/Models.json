@@ -52,6 +52,7 @@
             "sampleData": ["CTACardio"],
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.1.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip" }
             ]
         },
@@ -63,6 +64,7 @@
             "sampleData": ["CTACardio"],
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.1.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
             ]
         },
@@ -74,6 +76,7 @@
             "sampleData": ["CTACardio"],
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.2.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.1.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip" }
             ]
@@ -146,6 +149,7 @@
             "sampleData": ["msd-prostate-01", "ProstateX-0000"],
             "versions":
             [
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.1.zip" },
                 { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip" }
             ]
         },
