@@ -123,7 +123,7 @@ The module uses <a href="https://github.com/Project-MONAI/tutorials/blob/main/MO
                 """
             ]
         ]
-                
+
         import SampleData
         iconsPath = os.path.join(os.path.dirname(__file__), 'Resources/Icons')
         for sampleDataSet in sampleDataSets:
@@ -154,7 +154,7 @@ The module uses <a href="https://github.com/Project-MONAI/tutorials/blob/main/MO
                 checksums=checksums
             )
 
-        
+
 #
 # MONAIAuto3DSegWidget
 #
@@ -352,10 +352,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
                 if searchWords:
                     textToSearchIn = modelTitle.lower() + " " + model.get("description").lower() + " " + model.get("imagingModality").lower()
-                    print(textToSearchIn)
                     if not all(word in textToSearchIn for word in searchWords):
                         continue
-                   
+
                 itemIndex = self.ui.modelComboBox.count
                 self.ui.modelComboBox.addItem(modelTitle)
                 item = self.ui.modelComboBox.item(itemIndex)
@@ -543,7 +542,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if not item:
             return ""
         return item.data(qt.Qt.UserRole)
-    
+
     def _setCurrentModelId(self, modelId):
         import qt
         for itemIndex in range(self.ui.modelComboBox.count):
@@ -559,7 +558,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if not sampleDataName:
             slicer.util.messageBox("No sample data is available for this model.")
             return
-        
+
         if type(sampleDataName) == list:
             # For now, always just use the first data set if multiple data sets are provided
             sampleDataName = sampleDataName[0]
@@ -573,22 +572,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.util.messageBox(f"Failed to load sample data set '{sampleDataName}'.")
             return
 
-        for inputIndex, input in enumerate(inputs):
-            namePattern = input.get("namePattern")
-            if namePattern:
-                matchingNode = self._findFirstNodeBynamePattern(namePattern, loadedSampleNodes)
-            else:
-                matchingNode = loadedSampleNodes[inputIndex] if inputIndex < len(loadedSampleNodes) else loadedSampleNodes[0]
-            if not matchingNode:
-                continue
-            self.inputNodeSelectors[inputIndex].setCurrentNode(matchingNode)
-
-    def _findFirstNodeBynamePattern(self, namePattern, nodes):
-        import fnmatch
-        for node in nodes:
-            if fnmatch.fnmatchcase(node.GetName(), namePattern):
-                return node
-        return None
+        inputNodes = MONAIAuto3DSegLogic.assignInputNodesByName(inputs, loadedSampleNodes)
+        for inputIndex, inputNode in enumerate(inputNodes):
+            if inputNode:
+                self.inputNodeSelectors[inputIndex].setCurrentNode(inputNode)
 
     def onPackageInfoUpdate(self):
         self.ui.packageInfoTextBrowser.plainText = ""
@@ -670,11 +657,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         # List of anatomic regions that are specified by MONAIAuto3DSeg.
         self.MONAIAuto3DSegAnatomicRegions = self._MONAIAuto3DSegAnatomicRegions()
 
-        # Segmentation models specified by MONAIAuto3DSeg
-        # Ideally, this information should be provided by MONAIAuto3DSeg itself.
-        self.models = OrderedDict()
-
-        # Main
+        # Segmentation models specified by in models.json file
         self.models = self.loadModelsDescription()
         self.defaultModel = self.models[0]["id"]
 
@@ -939,7 +922,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                     + "~"
                     # Anatomic region modifier: "SCT^7771000^Left", ...
                     + "^".join(getCodeString("AnatomicRegionModifierSequence", columnNames, row))
-                    + "|")
+                    )
 
                 # Store the terminology string for this structure
                 labelValue = int(row[columnNames.index("LabelValue")])
@@ -947,7 +930,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                 labelDescriptions[labelValue] = { "name": name, "terminology": terminologyEntryStr }
 
         return labelDescriptions
-
 
     def getSegmentLabelColor(self, terminologyEntryStr):
         """Get segment label and color from terminology"""
@@ -988,6 +970,26 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             return labelColorFromTypeObject(foundTerminologyEntry.GetTypeObject())
 
         raise RuntimeError(f"Color was not found for terminology {terminologyEntryStr}")
+
+    @staticmethod
+    def _findFirstNodeBynamePattern(namePattern, nodes):
+        import fnmatch
+        for node in nodes:
+            if fnmatch.fnmatchcase(node.GetName(), namePattern):
+                return node
+        return None
+
+    @staticmethod
+    def assignInputNodesByName(inputs, loadedSampleNodes):
+        inputNodes = []
+        for inputIndex, input in enumerate(inputs):
+            namePattern = input.get("namePattern")
+            if namePattern:
+                matchingNode = MONAIAuto3DSegLogic._findFirstNodeBynamePattern(namePattern, loadedSampleNodes)
+            else:
+                matchingNode = loadedSampleNodes[inputIndex] if inputIndex < len(loadedSampleNodes) else loadedSampleNodes[0]
+            inputNodes.append(matchingNode)
+        return inputNodes
 
     def log(self, text):
         logging.info(text)
@@ -1067,12 +1069,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         segmentationProcessInfo["procReturnCode"] = retcode
         if retcode != 0:
             raise CalledProcessError(retcode, proc.args, output=proc.stdout, stderr=proc.stderr)
-
-
-    @staticmethod
-    def executableName(name):
-        return name + ".exe" if os.name == "nt" else name
-
 
     def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None):
 
@@ -1421,33 +1417,172 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
 
         self.delayDisplay("Starting the test")
 
-        # Get/create input data
-
-        import SampleData
-        inputVolume = SampleData.downloadSample("CTACardio")
-        self.delayDisplay("Loaded test data set")
-
-        outputSegmentation = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
-
-        # Test the module logic
-
         # Logic testing is disabled by default to not overload automatic build machines (pytorch is a huge package and computation
         # on CPU takes 5-10 minutes). Set testLogic to True to enable testing.
-        testLogic = False
+        testLogic = True
 
-        if testLogic:
-            logic = MONAIAuto3DSegLogic()
-            logic.logCallback = self._mylog
+        if not testLogic:
+            self.delayDisplay("Logic testing is disabled. Set testLogic to True to enable it.")
+            return
 
-            self.delayDisplay("Set up required Python packages")
-            logic.setupPythonRequirements()
+        logic = MONAIAuto3DSegLogic()
+        logic.logCallback = self._mylog
 
-            self.delayDisplay("Compute output")
-            logic.process([inputVolume], outputSegmentation, "abdominal-organs-3mm-v2.0.0")
-        else:
-            logging.warning("test_MONAIAuto3DSeg1 logic testing was skipped")
+        self.delayDisplay("Set up required Python packages")
+        logic.setupPythonRequirements()
+
+        testResultsPath = logic.fileCachePath.joinpath("ModelsTestResults")
+        if not os.path.exists(testResultsPath):
+            os.makedirs(testResultsPath)
+
+        for forceUseCpu in [False, True]:
+            configurationName = "CPU" if forceUseCpu else "GPU"
+
+            for modelIndex, model in enumerate(logic.models):
+                if model.get("deprecated"):
+                    # Do not teset deprecated models
+                    continue
+
+                self.delayDisplay(f"Testing {model['title']} (v{model['version']})")
+                slicer.mrmlScene.Clear()
+
+                # Download sample data for model input
+
+                sampleDataName = model.get("sampleData")
+                if not sampleDataName:
+                    self.delayDisplay(f"Sample data not available for {model['title']}")
+                    continue
+
+                if type(sampleDataName) == list:
+                    # For now, always just use the first data set if multiple data sets are provided
+                    sampleDataName = sampleDataName[0]
+
+                import SampleData
+                loadedSampleNodes = SampleData.SampleDataLogic().downloadSamples(sampleDataName)
+                if not loadedSampleNodes:
+                    raise RuntimeError(f"Failed to load sample data set '{sampleDataName}'.")
+
+                # Set model inputs
+
+                inputNodes = []
+                inputs = model.get("inputs")
+                inputNodes = MONAIAuto3DSegLogic.assignInputNodesByName(inputs, loadedSampleNodes)
+
+                outputSegmentation = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
+
+                # Run the segmentation
+
+                self.delayDisplay(f"Running segmentation for {model['title']}...")
+                import time
+                startTime = time.time()
+                logic.process(inputNodes, outputSegmentation, model["id"], forceUseCpu)
+                segmentationTimeSec = time.time() - startTime
+
+                # Save segmentation time (rounded to 0.1 sec) into model description
+                logic.models[modelIndex]["segmentationTimeSec"+configurationName] = round(segmentationTimeSec * 10) / 10
+
+                # Save all segment names into model description
+                labelDescriptions = logic.labelDescriptions(model["id"])
+                segmentNames = []
+                for terminology in labelDescriptions.values():
+                    contextName, category, typeStr, typeModifier, anatomicContext, region, regionModifier = terminology["terminology"].split("~")
+                    typeName = typeStr.split("^")[2]
+                    typeModifierName = typeModifier.split("^")[2]
+                    if typeModifierName:
+                        typeName = f"{typeModifierName} {typeName}"
+                    regionName = region.split("^")[2]
+                    regionModifierName = regionModifier.split("^")[2]
+                    if regionModifierName:
+                        regionName = f"{regionModifierName} {regionName}"
+                    name = f"{typeName} in {regionName}" if regionName else typeName
+                    segmentNames.append(name)
+                logic.models[modelIndex]["segmentNames"] = segmentNames
+
+                sliceScreenshotFilename, rotate3dScreenshotFilename = self._writeScreenshots(outputSegmentation, testResultsPath, model["id"]+"-"+configurationName)
+                logic.models[modelIndex]["segmentationResultsScreenshot2D"] = sliceScreenshotFilename.name
+                logic.models[modelIndex]["segmentationResultsScreenshot3D"] = rotate3dScreenshotFilename.name
+
+                # Write results to file (to allow accessing the results before all tests complete)
+                import json
+                modelsTestResultsJsonFilePath = os.path.join(testResultsPath.joinpath("ModelsTestResults.json"))
+                with open(modelsTestResultsJsonFilePath, 'w') as f:
+                    json.dump(logic.models, f, indent=2)
 
         self.delayDisplay("Test passed")
 
     def _mylog(self,text):
         print(text)
+
+    def _writeScreenshots(self, segmentationNode, outputPath, baseName, numberOfImages=25, lightboxColumns=5, numberOfVideoFrames=50):
+        import ScreenCapture
+        cap = ScreenCapture.ScreenCaptureLogic()
+
+        sliceScreenshotFilename = outputPath.joinpath(f"{baseName}-slices.png")
+        rotate3dScreenshotFilename = outputPath.joinpath(f"{baseName}-rotate3d.gif")  # gif, mp4, png
+        videoLengthSec = 5
+
+        # Capture slice sweep
+        sliceScreenshotsFilenamePattern = outputPath.joinpath("slices_%04d.png")
+        cap.showViewControllers(False)
+        slicer.app.layoutManager().resetSliceViews()
+        sliceNode = slicer.util.getNode("vtkMRMLSliceNodeRed")
+        sliceOffsetMin, sliceOffsetMax = cap.getSliceOffsetRange(sliceNode)
+        sliceOffsetStart = sliceOffsetMin + (sliceOffsetMax - sliceOffsetMin) * 0.05
+        sliceOffsetEnd = sliceOffsetMax - (sliceOffsetMax - sliceOffsetMin) * 0.05
+        cap.captureSliceSweep(
+            sliceNode, sliceOffsetStart, sliceOffsetEnd, numberOfImages,
+            sliceScreenshotsFilenamePattern.parent, sliceScreenshotsFilenamePattern.name,
+            captureAllViews=None, transparentBackground=False)
+        cap.showViewControllers(True)
+
+        # Create lightbox image
+        cap.createLightboxImage(lightboxColumns,
+            sliceScreenshotsFilenamePattern.parent,
+            sliceScreenshotsFilenamePattern.name,
+            numberOfImages,
+            sliceScreenshotFilename)
+        cap.deleteTemporaryFiles(sliceScreenshotsFilenamePattern.parent, sliceScreenshotsFilenamePattern.name, numberOfImages)
+
+        # Capture 3D rotation
+        rotate3dScreenshotsFilenamePattern = outputPath.joinpath("rotate3d_%04d.png")
+        segmentationNode.CreateClosedSurfaceRepresentation()
+        segmentationNode.GetDisplayNode().SetOpacity3D(0.6)
+
+        if rotate3dScreenshotFilename.suffix.lower() == ".png":
+            video = False
+            numberOfImages3d = numberOfImages
+        else:
+            video = True
+            numberOfImages3d = numberOfVideoFrames
+            if rotate3dScreenshotFilename.suffix.lower() == ".gif":
+                # animated GIF
+                extraOptions = "-filter_complex palettegen,[v]paletteuse"
+            elif rotate3dScreenshotFilename.suffix.lower() == ".mp4":
+                # H264 high-quality
+                extraOptions = "-codec libx264 -preset slower -crf 18 -pix_fmt yuv420p"
+            else:
+                raise ValueError(f"Unsupported format: {rotate3dScreenshotFilename.suffix}")
+
+        viewLabel = "1"
+        viewNode = slicer.vtkMRMLViewLogic().GetViewNode(slicer.mrmlScene, viewLabel)
+        viewNode.SetBackgroundColor(0,0,0)
+        viewNode.SetBackgroundColor2(0,0,0)
+        viewNode.SetAxisLabelsVisible(False)
+        viewNode.SetBoxVisible(False)
+        cap.showViewControllers(False)
+        slicer.app.layoutManager().resetThreeDViews()
+        cap.capture3dViewRotation(viewNode, -180, 180, numberOfImages3d, ScreenCapture.AXIS_YAW, rotate3dScreenshotsFilenamePattern.parent, rotate3dScreenshotsFilenamePattern.name)
+        cap.showViewControllers(True)
+
+        if video:
+            cap.createVideo(numberOfImages3d/videoLengthSec, extraOptions, rotate3dScreenshotsFilenamePattern.parent, rotate3dScreenshotsFilenamePattern.name, rotate3dScreenshotFilename)
+        else:
+            cap.createLightboxImage(lightboxColumns,
+                rotate3dScreenshotsFilenamePattern.parent,
+                rotate3dScreenshotsFilenamePattern.name,
+                numberOfImages3d,
+                rotate3dScreenshotFilename)
+
+        cap.deleteTemporaryFiles(rotate3dScreenshotsFilenamePattern.parent, rotate3dScreenshotsFilenamePattern.name, numberOfImages3d)
+
+        return sliceScreenshotFilename, rotate3dScreenshotFilename
