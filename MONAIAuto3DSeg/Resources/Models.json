@@ -337,7 +337,7 @@
             "sampleData": ["BraTS-PED-00030-000"],
             "versions":
             [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-pet-v1.0.0.zip" }
+                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ped-v1.0.0.zip" }
             ]
         },
         {
