@@ -1508,7 +1508,8 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
             configurations = [{"forceUseCPU": True}]
 
         for configurationIndex, configuration in enumerate(configurations):
-            configurationName = "CPU" if configuration["forceUseCPU"] else "GPU"
+            forceUseCpu = configuration["forceUseCPU"]
+            configurationName = "CPU" if forceUseCpu else "GPU"
 
             for modelIndex, model in enumerate(models):
                 if model.get("deprecated"):
