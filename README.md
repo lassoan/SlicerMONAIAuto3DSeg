@@ -96,7 +96,7 @@ Problem: Your computer has a CUDA-capable GPU but MONAI reports that GPU is not 
 Explanation: CUDA may not be installed on the system or CUDA version in PyTorch does not match the system CUDA version.
 
 Solution:
-- Make sure that the the CUDA vesion installed on the system [is one of those listed on pytorch website as "Compute platform" for your system](https://pytorch.org/get-started/locally/). You can download CUDA from [here](https://developer.nvidia.com/cuda-downloads).
+- Make sure that the the CUDA version installed on the system [is one of those listed on pytorch website as "Compute platform" for your system](https://pytorch.org/get-started/locally/). You can download CUDA from [here](https://developer.nvidia.com/cuda-downloads).
 - Go to `PyTorch Util` module, click `Uninstall PyTorch`.
 - An error may be reported at the end of this step, as some PyTorch files are in use. Click `Restart the application` button to unload all PyTorch files.
 - Go to `PyTorch Util` module, select the `Computation backend` that matches the system CUDA version, and click `Install PyTorch`. The CUDA computational backend name has the format `cuNNN`, where _NNN_ corresponds to the CUDA major+minor version. For example, CUDA 11.7 backend name is `cu117`.
