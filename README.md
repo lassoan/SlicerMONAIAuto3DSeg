@@ -9,7 +9,7 @@ Highlights:
   - multiple input volumes may be utilized: currently used for prostate and brain tumor segmentation
   - models are automatically downloaded when needed (and cached in the user's home folder within `.MONAIAuto3DSeg` subfolder)
   - sample data set is provided for each model: one click for downloading test data, one click to segment it.
-  - completely free (even for commercial use), restriction free license for all the software; most models can be used without restrictions, except models those that use the ATM dataset (CC BY-NC) and PARSE dataset (CC BY-NC-ND 6.0).
+  - completely free (even for commercial use), restriction free license for all the software.
 - Efficient processing:
   - processing time:
     - using CUDA-capable GPU: all models complete under 45 seconds
