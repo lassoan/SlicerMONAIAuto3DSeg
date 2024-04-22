@@ -97,16 +97,36 @@ Solution:
 
 ### Segmentation is inaccurate
 
-Currently, all models are experimental. It is expected that they are not accurate and computation time is not optimal.
+Currently, all models are experimental. If significant segmentation inaccuracy is observed then you can [submit an issue](https://github.com/lassoan/SlicerMONAIAuto3DSeg/issues) to discuss it.
 
 ### Fail to download model files
 
-Model files are hosted on github.com and downloaded automatically when segmenting the first time. Institutional firewall or proxy servers may prevent access or the server may be temporarily overloaded. Potential solutions:
-- retry later when the server may be less overloaded
+Model files are hosted on github.com and downloaded automatically when segmenting the first time. Institutional firewall or proxy servers may prevent interfere with this. Potential solutions:
 - talk to IT administrators or use a VPN to access the server
-- download the file manually from https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ and unzip it in the `.MONAIAuto3DSeg\models` folder in the user's profile (for example in `c:\Users\(yourusername)\.MONAIAuto3DSeg\models\abdominal-17`)
+- download the files manually from https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ and unzip it in the `.MONAIAuto3DSeg/models` folder in the user's profile (for example in `c:\Users\(yourusername)\.MONAIAuto3DSeg\models\whole-body-3mm-v2.0.0`)
 
 ## Developers
+
+### Training models
+
+#### General guidelines
+
+These guidelines are recommended for creating models to provide good experience for a wide range of users:
+- Required GPU memory of all the provided models must not be more than 7GB (then we can run the models comfortably on a 8GB GPU that is fairly commonly available). It is just not worth the time to make models widely available that everyday users cannot run on their computers. Models can be split to smaller models or resolution can be reduced. If the model uses more memory than this then the model is not ready yet, we should not release it.
+- There must be a low-resolution version of every model that can be executed on CPU under 3 minutes, without using more than 4GB RAM (so that it can run on a computer with 8GB RAM).
+- Full-resolution model should not require more than 5 minutes to run on GPU (this is about the maximum time that is acceptable for intraoperative use; this is also an expectation that is set by TotalSegmentator's few-minute computation time).
+- The model should leave at least 1 CPU core unused to make sure the computer remains usable.
+- Make the model work on easily accessible test data sets. The model should work well on relevant Slicer sample data sets. If none of the current sample data sets are relevant then provide at least one new data set for testing (the extension can register custom data sets into the Sample Data module).
+
+#### How to train a new model from scratch
+
+This 3D Slicer extension is only for running inference. You can train the Auto3D using by following [Auto3DSeg examples](https://github.com/Project-MONAI/tutorials/tree/main/auto3dseg/tasks) or [tutorial](https://github.com/Project-MONAI/tutorials/blob/main/auto3dseg/README.md).
+
+Additional suggestions:
+- Create the YAML and JSON file to train Auto3DSeg on your dataset. JSON file will need at least two folds (fold means a group of training samples, useful for cross validation). You can repeat the folds using the whole training set on each fold.
+- Only use the SegResNet architecture when training your model. It works great and makes the training faster. Here is an example of the script: `python -m monai.apps.auto3dseg AutoRunner run --input ./my_task.yaml --algos segresnet --work_dir ./outputs/output_my_task`
+- Once it is trained, you will find a model.pt file inside the `./outputs/output_my_task/segresnet_0/model` folder. That's the one you could use in this extension. Add a labels.csv in the same folder as the model.pt file to describe the meaning of each label value.
+- The label indices representing the segments must match the number of segments and be consistent throughout the dataset. For example, if you want to segment 4 regions - liver, tumor, pulmonary vein, and hepatic veins - the indices must be 1, 2, 3, 4 and the liver is always index 1, pulmonary vein is always 3, etc.
 
 ### Model files
 
@@ -122,19 +142,6 @@ Filename is composed as: <modelname>-v<version>.zip
 File content:
 - labels.csv: Contains maping from label value to internal name and standard terminology. The file may be in a subfolder within the zip achive, but it is recommended to be placed directly in the root folder in the zip archive (if the file is not found in the root folder then the whole archive content will be searched).
 - model.pt: Model weights. It must be in the same folder as labels.csv.
-
-In legacy model files, instead of a `model.pt` file a `main.py` script file is placed along with the labels.csv file and model weights are in various subfolders. These model files are deprecated.
-
-### Training models
-
-#### General guidelines
-
-These guidelines are recommended for creating models to provide good experience for a wide range of users:
-- Required GPU memory of all the provided models must not be more than 7GB (then we can run the models comfortably on a 8GB GPU that is fairly commonly available). It is just not worth the time to make models widely available that everyday users cannot run on their computers. Models can be split to smaller models or resolution can be reduced. If the model uses more memory than this then the model is not ready yet, we should not release it.
-- There must be a low-resolution version of every model that can be executed on CPU under 3 minutes, without using more than 4GB RAM (so that it can run on a computer with 8GB RAM).
-- Full-resolution model should not require more than 5 minutes to run on GPU (this is about the maximum time that is acceptable for intraoperative use; this is also an expectation that is set by TotalSegmentator's few-minute computation time).
-- The model should leave at least 1 CPU core unused to make sure the computer remains usable.
-- Make the model work on easily accessible test data sets. The model should work well on relevant Slicer sample data sets. If none of the current sample data sets are relevant then provide at least one new data set for testing (the extension can register custom data sets into the Sample Data module).
 
 ## Contributing
 
