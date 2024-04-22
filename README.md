@@ -21,6 +21,8 @@ Highlights:
   - Network connection is only needed during installation and downloading of models.
   - All data remains on the user's computer, all computation is performed locally.
 
+_Note: The developers do not claim that the tools are appropriate for any specific clinical purpose and the user is responsible for obtaining any necessary ethics or regulatory approvals._
+
 ![](Screenshot01.jpg)
 
 ## Setup
