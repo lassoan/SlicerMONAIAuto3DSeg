@@ -3,14 +3,16 @@
 Extension for [3D Slicer](https://www.slicer.org) for fully automatic AI segmentation of images using [MONAI Auto3DSeg models](https://docs.monai.io/en/stable/auto3dseg.html).
 
 Highlights:
-- models are available for multiple imaging modalities: CT (various abdominal organs, bones, vessels, heart, lungs), MR (brain, prostate)
-- segmentation is provided for both healthy anatomy and lesions: tumor, edema, hemorrhage, etc.
-- fast segmentation: all segmentations are performed within a few minutes on GPU
-- low hardware requirements: most models do not require GPU (runs on any laptop), GPU does not need to have more than 8GB RAM
-- multiple input volumes can be used: used for prostate or brain tumor segmentation
-- sample data set is provided for each model for easy testing
-
-Models are automatically downloaded and stored in the user's home folder within `.MONAIAuto3DSeg` subfolder.
+- Many ready-to-use segmentation models: see **[complete list - with screenshots, computation times, list of segments](https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/tag/ModelsTestResults)**
+  - multiple imaging modalities: CT (various abdominal organs, bones, vessels, heart, lungs), MR (brain, prostate)
+  - healthy anatomy and lesions: tumor, edema, hemorrhage, etc.
+  - multiple input volumes may be utilized: currently used for prostate and brain tumor segmentation
+  - models are automatically downloaded when needed (and cached in the user's home folder within `.MONAIAuto3DSeg` subfolder)
+- Efficient processing:
+  - processing time: on GPU under 45 seconds (all models), on CPU under 1 minute (quick models) / under 10 minutes (full-quality models)
+  - low hardware requirements: most models do not require GPU (runs on any laptop), GPU does not need to have more than 8GB RAM
+- Sample data set is provided for each model: one click for downloading test data, one click to segment it
+- All data remains on the user's computer, all computation is performed locally
 
 ![](Screenshot01.jpg)
 
