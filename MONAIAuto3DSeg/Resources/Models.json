@@ -1,356 +1,1392 @@
 {
-    "models": [
+  "models": [
+    {
+      "title": "Abdominal organs TS2 - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
         {
-            "title": "Abdominal organs TS2 - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Abdominal organs TS2",
-            "description": "Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Body TS2",
-            "description": "Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Body TS2 - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Vertebrae TS2 - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.1.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Vertebrae TS2",
-            "description": "Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.1.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Mediastinal anatomy TS2",
-            "description": "Trained on TotalSegmentatorV2, ATM and PARSE dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.2.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.1.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Mediastinal anatomy TS2 - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Whole body segmentation TS1",
-            "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Whole body segmentation TS1 - quick",
-            "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Whole body segmentation TS2 - quick",
-            "description": "Segment >100 structures (abdominal organs, bones, vessels, etc) on CT images. Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Abdominal organs TS1",
-            "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Prostate - Multisequence",
-            "description": "Segments peripheral (PZ) and transition zone (TZ) on T2 and ADC sequences. Trained on Medical Segmentation Decathlon dataset.",
-            "subject": "human",
-            "imagingModality": "MR",
-            "inputs": [{"title": "Input T2 volume", "namePattern": "*t2*"}, {"title": "Input ADC volume", "namePattern": "*adc*"}],
-            "sampleData": ["msd-prostate-01", "ProstateX-0000"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.1.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Ribs TS2 - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_ribs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Ribs TS2",
-            "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Muscles TS2 - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Muscles TS2",
-            "description": "Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Cardiac TS2 - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_cardiac of TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Cardiac TS2",
-            "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Lungs - quick",
-            "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTChest"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-3mm-v2.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Lungs",
-            "description": "Segment 9 segments: lung segments, pulmonary vein, pulmonary artery, lung vessels and trachea. Trained on TotalSegmentatorV2, ATM and PARSE datasets. In v1.x there are no pulmonary vein and artery segments but there is esophagus.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTChest"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.1.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.2.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.1.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Hips and spine",
-            "description": "Segment 27 segments: hips, sacrum and vertebrae. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTLiver"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.2.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.1.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Aorta",
-            "description": "Aorta segmentation. Trained on TotalSegmentatorV1 dataset.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["CTACardio"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip" },
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Intracranial hemorrhage (ICrH) Segmentation",
-            "description": "Intracranial Hemorrhage segmentation using CT images.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["ICH-ADAPT2"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/icrh-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Brain and intracranial hemorrhage (ICrH) Segmentation",
-            "description": "Brain Anatomy and Intracranial Hemorrhage segmentation using CT images.",
-            "subject": "human",
-            "imagingModality": "CT",
-            "sampleData": ["ICH-ADAPT2"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Brain Tumor Segmentation (BRATS) GLI",
-            "description": "Brain Tumor Segmentation (BRATS) GLI",
-            "subject": "human",
-            "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
-            "sampleData": ["BraTS-GLI-00001-000"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-gli-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Brain Tumor Segmentation (BRATS) MEN",
-            "description": "Brain Tumor Segmentation (BRATS) MEN",
-            "subject": "human",
-            "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
-            "sampleData": ["BraTS-MEN-00000-000"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-men-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Brain Tumor Segmentation (BRATS) MET",
-            "description": "Brain Tumor Segmentation (BRATS) MET",
-            "subject": "human",
-            "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
-            "sampleData": ["BraTS-MET-00002-000"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-met-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Brain Tumor Segmentation (BRATS) PED",
-            "description": "Brain Tumor Segmentation (BRATS) PED",
-            "subject": "human",
-            "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
-            "sampleData": ["BraTS-PED-00030-000"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ped-v1.0.0.zip" }
-            ]
-        },
-        {
-            "title": "Brain Tumor Segmentation (BRATS) SSA",
-            "description": "Brain Tumor Segmentation (BRATS) SSA",
-            "subject": "human",
-            "imagingModality": "MR",
-            "inputs": [{"title": "Input T2F volume", "namePattern": "*t2f*"}, {"title": "Input T1C volume", "namePattern": "*t1c*"}, {"title": "Input T1N volume", "namePattern": "*t1n*"}, {"title": "Input T2W volume", "namePattern": "*t2w*"}],
-            "sampleData": ["BraTS-SSA-00002-000"],
-            "versions":
-            [
-                { "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip" }
-            ]
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip"
         }
-    ]
+      ],
+      "segmentationTimeSecGPU": 25.4,
+      "segmentationTimeSecCPU": 50.4,
+      "segmentNames": [
+        "Left Adrenal gland",
+        "Right Adrenal gland",
+        "Colon",
+        "Duodenum",
+        "Esophagus",
+        "Gallbladder",
+        "Left Kidney",
+        "Right Kidney",
+        "Liver",
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Pancreas",
+        "Small Intestine",
+        "Spleen",
+        "Stomach",
+        "Trachea",
+        "Urinary bladder",
+        "Cyst in Left Kidney",
+        "Cyst in Right Kidney",
+        "Prostate"
+      ]
+    },
+    {
+      "title": "Abdominal organs TS2",
+      "description": "Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 28.1,
+      "segmentationTimeSecCPU": 159.5,
+      "segmentNames": [
+        "Left Adrenal gland",
+        "Right Adrenal gland",
+        "Colon",
+        "Duodenum",
+        "Esophagus",
+        "Gallbladder",
+        "Left Kidney",
+        "Right Kidney",
+        "Liver",
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Pancreas",
+        "Small Intestine",
+        "Spleen",
+        "Stomach",
+        "Trachea",
+        "Urinary bladder",
+        "Cyst in Left Kidney",
+        "Cyst in Right Kidney",
+        "Prostate"
+      ]
+    },
+    {
+      "title": "Body TS2",
+      "description": "Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 24.5,
+      "segmentationTimeSecCPU": 359.5,
+      "segmentNames": [
+        "Trunk",
+        "Limb"
+      ]
+    },
+    {
+      "title": "Body TS2 - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 18.1,
+      "segmentationTimeSecCPU": 47.8,
+      "segmentNames": [
+        "Trunk",
+        "Limb"
+      ]
+    },
+    {
+      "title": "Vertebrae TS2 - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.1.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 18.2,
+      "segmentationTimeSecCPU": 53.0,
+      "segmentNames": [
+        "Sacrum",
+        "C1 vertebra",
+        "C2 vertebra",
+        "C3 vertebra",
+        "C4 vertebra",
+        "C5 vertebra",
+        "C6 vertebra",
+        "C7 vertebra",
+        "L1 vertebra",
+        "L2 vertebra",
+        "L3 vertebra",
+        "L4 vertebra",
+        "L5 vertebra",
+        "T1 vertebra",
+        "T2 vertebra",
+        "T3 vertebra",
+        "T4 vertebra",
+        "T5 vertebra",
+        "T6 vertebra",
+        "T7 vertebra",
+        "T8 vertebra",
+        "T9 vertebra",
+        "T10 vertebra",
+        "T11 vertebra",
+        "T12 vertebra"
+      ]
+    },
+    {
+      "title": "Vertebrae TS2",
+      "description": "Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.1.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 24.9,
+      "segmentationTimeSecCPU": 385.3,
+      "segmentNames": [
+        "Sacrum",
+        "C1 vertebra",
+        "C2 vertebra",
+        "C3 vertebra",
+        "C4 vertebra",
+        "C5 vertebra",
+        "C6 vertebra",
+        "C7 vertebra",
+        "L1 vertebra",
+        "L2 vertebra",
+        "L3 vertebra",
+        "L4 vertebra",
+        "L5 vertebra",
+        "T1 vertebra",
+        "T2 vertebra",
+        "T3 vertebra",
+        "T4 vertebra",
+        "T5 vertebra",
+        "T6 vertebra",
+        "T7 vertebra",
+        "T8 vertebra",
+        "T9 vertebra",
+        "T10 vertebra",
+        "T11 vertebra",
+        "T12 vertebra"
+      ]
+    },
+    {
+      "title": "Mediastinal anatomy TS2",
+      "description": "Trained on TotalSegmentatorV2, ATM and PARSE dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.2.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.1.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 25.6,
+      "segmentationTimeSecCPU": 385.5,
+      "segmentNames": [
+        "Aorta",
+        "Esophagus",
+        "Inferior vena cava",
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Pulmonary artery",
+        "Trachea",
+        "Heart",
+        "Pulmonary vein",
+        "Brachiocephalic artery",
+        "Right Subclavian artery",
+        "Left Subclavian artery",
+        "Right Common carotid artery",
+        "Left Common carotid artery",
+        "Left Brachiocephalic vein",
+        "Right Brachiocephalic vein",
+        "Left Entire atrial appendage",
+        "Superior Vena cava",
+        "Blood vessel in Lung"
+      ]
+    },
+    {
+      "title": "Mediastinal anatomy TS2 - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 18.6,
+      "segmentationTimeSecCPU": 48.8,
+      "segmentNames": [
+        "Aorta",
+        "Esophagus",
+        "Inferior vena cava",
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Trachea",
+        "Heart",
+        "Pulmonary vein",
+        "Brachiocephalic artery",
+        "Right Subclavian artery",
+        "Left Subclavian artery",
+        "Right Common carotid artery",
+        "Left Common carotid artery",
+        "Left Brachiocephalic vein",
+        "Right Brachiocephalic vein",
+        "Left Entire atrial appendage",
+        "Superior Vena cava"
+      ]
+    },
+    {
+      "title": "Whole body segmentation TS1",
+      "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 40.2,
+      "segmentationTimeSecCPU": 184.5,
+      "segmentNames": [
+        "Left Adrenal gland",
+        "Right Adrenal gland",
+        "Aorta",
+        "Left Deep muscle of back",
+        "Right Deep muscle of back",
+        "Brain",
+        "Left Clavicle",
+        "Right Clavicle",
+        "Colon",
+        "Duodenum",
+        "Esophagus",
+        "Face",
+        "Left Femur",
+        "Right Femur",
+        "Gallbladder",
+        "Left Gluteus maximus muscle",
+        "Right Gluteus maximus muscle",
+        "Left Gluteus medius muscle",
+        "Right Gluteus medius muscle",
+        "Left Gluteus minius muscle",
+        "Right Gluteus minius muscle",
+        "Left atrium",
+        "Right atrium",
+        "Myocardium",
+        "Left ventricle of heart",
+        "Right ventricle of heart",
+        "Left Hip",
+        "Right Hip",
+        "Left Humerus",
+        "Right Humerus",
+        "Left Common iliac artery",
+        "Right Common iliac artery",
+        "Left Common iliac vein",
+        "Right Common iliac vein",
+        "Left Iliopsoas muscle",
+        "Right Iliopsoas muscle",
+        "Inferior vena cava",
+        "Left Kidney",
+        "Right Kidney",
+        "Liver",
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Pancreas",
+        "Portal vein and splenic vein",
+        "Pulmonary artery",
+        "Left First rib",
+        "Left Second rib",
+        "Left Third rib",
+        "Left Fourth rib",
+        "Left Fifth rib",
+        "Left Sixth rib",
+        "Left Seventh rib",
+        "Left Eighth rib",
+        "Left Ninth rib",
+        "Left Tenth rib",
+        "Left Eleventh rib",
+        "Left Twelfth rib",
+        "Right First rib",
+        "Right Second rib",
+        "Right Third rib",
+        "Right Fourth rib",
+        "Right Fifth rib",
+        "Right Sixth rib",
+        "Right Seventh rib",
+        "Right Eighth rib",
+        "Right Ninth rib",
+        "Right Tenth rib",
+        "Right Eleventh rib",
+        "Right Twelfth rib",
+        "Sacrum",
+        "Left Scapula",
+        "Right Scapula",
+        "Small Intestine",
+        "Spleen",
+        "Stomach",
+        "Trachea",
+        "Urinary bladder",
+        "C1 vertebra",
+        "C2 vertebra",
+        "C3 vertebra",
+        "C4 vertebra",
+        "C5 vertebra",
+        "C6 vertebra",
+        "C7 vertebra",
+        "L1 vertebra",
+        "L2 vertebra",
+        "L3 vertebra",
+        "L4 vertebra",
+        "L5 vertebra",
+        "T1 vertebra",
+        "T2 vertebra",
+        "T3 vertebra",
+        "T4 vertebra",
+        "T5 vertebra",
+        "T6 vertebra",
+        "T7 vertebra",
+        "T8 vertebra",
+        "T9 vertebra",
+        "T10 vertebra",
+        "T11 vertebra",
+        "T12 vertebra"
+      ]
+    },
+    {
+      "title": "Whole body segmentation TS1 - quick",
+      "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 31.6,
+      "segmentationTimeSecCPU": 57.1,
+      "segmentNames": [
+        "Left Adrenal gland",
+        "Right Adrenal gland",
+        "Aorta",
+        "Left Deep muscle of back",
+        "Right Deep muscle of back",
+        "Brain",
+        "Left Clavicle",
+        "Right Clavicle",
+        "Colon",
+        "Duodenum",
+        "Esophagus",
+        "Face",
+        "Left Femur",
+        "Right Femur",
+        "Gallbladder",
+        "Left Gluteus maximus muscle",
+        "Right Gluteus maximus muscle",
+        "Left Gluteus medius muscle",
+        "Right Gluteus medius muscle",
+        "Left Gluteus minius muscle",
+        "Right Gluteus minius muscle",
+        "Left atrium",
+        "Right atrium",
+        "Myocardium",
+        "Left ventricle of heart",
+        "Right ventricle of heart",
+        "Left Hip",
+        "Right Hip",
+        "Left Humerus",
+        "Right Humerus",
+        "Left Common iliac artery",
+        "Right Common iliac artery",
+        "Left Common iliac vein",
+        "Right Common iliac vein",
+        "Left Iliopsoas muscle",
+        "Right Iliopsoas muscle",
+        "Inferior vena cava",
+        "Left Kidney",
+        "Right Kidney",
+        "Liver",
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Pancreas",
+        "Portal vein and splenic vein",
+        "Pulmonary artery",
+        "Left First rib",
+        "Left Second rib",
+        "Left Third rib",
+        "Left Fourth rib",
+        "Left Fifth rib",
+        "Left Sixth rib",
+        "Left Seventh rib",
+        "Left Eighth rib",
+        "Left Ninth rib",
+        "Left Tenth rib",
+        "Left Eleventh rib",
+        "Left Twelfth rib",
+        "Right First rib",
+        "Right Second rib",
+        "Right Third rib",
+        "Right Fourth rib",
+        "Right Fifth rib",
+        "Right Sixth rib",
+        "Right Seventh rib",
+        "Right Eighth rib",
+        "Right Ninth rib",
+        "Right Tenth rib",
+        "Right Eleventh rib",
+        "Right Twelfth rib",
+        "Sacrum",
+        "Left Scapula",
+        "Right Scapula",
+        "Small Intestine",
+        "Spleen",
+        "Stomach",
+        "Trachea",
+        "Urinary bladder",
+        "C1 vertebra",
+        "C2 vertebra",
+        "C3 vertebra",
+        "C4 vertebra",
+        "C5 vertebra",
+        "C6 vertebra",
+        "C7 vertebra",
+        "L1 vertebra",
+        "L2 vertebra",
+        "L3 vertebra",
+        "L4 vertebra",
+        "L5 vertebra",
+        "T1 vertebra",
+        "T2 vertebra",
+        "T3 vertebra",
+        "T4 vertebra",
+        "T5 vertebra",
+        "T6 vertebra",
+        "T7 vertebra",
+        "T8 vertebra",
+        "T9 vertebra",
+        "T10 vertebra",
+        "T11 vertebra",
+        "T12 vertebra"
+      ]
+    },
+    {
+      "title": "Whole body segmentation TS2 - quick",
+      "description": "Segment >100 structures (abdominal organs, bones, vessels, etc) on CT images. Trained on TotalSegmentatorV2 dataset.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 31.8,
+      "segmentationTimeSecCPU": 58.1,
+      "segmentNames": [
+        "Spleen",
+        "Right Kidney",
+        "Left Kidney",
+        "Gallbladder",
+        "Liver",
+        "Stomach",
+        "Pancreas",
+        "Right Adrenal gland",
+        "Left Adrenal gland",
+        "Left Upper lobe of lung",
+        "Left Lower lobe of lung",
+        "Right Upper lobe of lung",
+        "Middle lobe of right lung",
+        "Right Lower lobe of lung",
+        "Esophagus",
+        "Trachea",
+        "Thyroid gland",
+        "Small Intestine",
+        "Duodenum",
+        "Colon",
+        "Urinary bladder",
+        "Prostate",
+        "Cyst in Left Kidney",
+        "Cyst in Right Kidney",
+        "Sacrum",
+        "S1 vertebra",
+        "L5 vertebra",
+        "L4 vertebra",
+        "L3 vertebra",
+        "L2 vertebra",
+        "L1 vertebra",
+        "T12 vertebra",
+        "T11 vertebra",
+        "T10 vertebra",
+        "T9 vertebra",
+        "T8 vertebra",
+        "T7 vertebra",
+        "T6 vertebra",
+        "T5 vertebra",
+        "T4 vertebra",
+        "T3 vertebra",
+        "T2 vertebra",
+        "T1 vertebra",
+        "C7 vertebra",
+        "C6 vertebra",
+        "C5 vertebra",
+        "C4 vertebra",
+        "C3 vertebra",
+        "C2 vertebra",
+        "C1 vertebra",
+        "Heart",
+        "Aorta",
+        "Pulmonary vein",
+        "Brachiocephalic artery",
+        "Right Subclavian artery",
+        "Left Subclavian artery",
+        "Right Common carotid artery",
+        "Left Common carotid artery",
+        "Left Brachiocephalic vein",
+        "Right Brachiocephalic vein",
+        "Left Entire atrial appendage",
+        "Superior Vena cava",
+        "Inferior vena cava",
+        "Portal vein and splenic vein",
+        "Left Common iliac artery",
+        "Right Common iliac artery",
+        "Left Common iliac vein",
+        "Right Common iliac vein",
+        "Left Humerus",
+        "Right Humerus",
+        "Left Scapula",
+        "Right Scapula",
+        "Left Clavicle",
+        "Right Clavicle",
+        "Left Femur",
+        "Right Femur",
+        "Left Hip",
+        "Right Hip",
+        "Spinal cord",
+        "Left Gluteus maximus muscle",
+        "Right Gluteus maximus muscle",
+        "Left Gluteus medius muscle",
+        "Right Gluteus medius muscle",
+        "Left Gluteus minius muscle",
+        "Right Gluteus minius muscle",
+        "Left Deep muscle of back",
+        "Right Deep muscle of back",
+        "Left Iliopsoas muscle",
+        "Right Iliopsoas muscle",
+        "Brain",
+        "Skull",
+        "Right Fourth rib",
+        "Right Third rib",
+        "Left First rib",
+        "Left Second rib",
+        "Left Third rib",
+        "Left Fourth rib",
+        "Left Fifth rib",
+        "Left Sixth rib",
+        "Left Seventh rib",
+        "Left Eighth rib",
+        "Left Ninth rib",
+        "Left Tenth rib",
+        "Left Eleventh rib",
+        "Left Twelfth rib",
+        "Right First rib",
+        "Right Second rib",
+        "Right Fifth rib",
+        "Right Sixth rib",
+        "Right Seventh rib",
+        "Right Eighth rib",
+        "Right Ninth rib",
+        "Right Tenth rib",
+        "Right Eleventh rib",
+        "Right Twelfth rib",
+        "Sternum",
+        "Entire costal cartilage"
+      ]
+    },
+    {
+      "title": "Abdominal organs TS1",
+      "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 26.1,
+      "segmentationTimeSecCPU": 154.9,
+      "segmentNames": [
+        "Left Adrenal gland",
+        "Right Adrenal gland",
+        "Aorta",
+        "Gallbladder",
+        "Inferior vena cava",
+        "Left Kidney",
+        "Right Kidney",
+        "Liver",
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Pancreas",
+        "Portal vein and splenic vein",
+        "Spleen",
+        "Stomach"
+      ]
+    },
+    {
+      "title": "Prostate - Multisequence",
+      "description": "Segments peripheral (PZ) and transition zone (TZ) on T2 and ADC sequences. Trained on Medical Segmentation Decathlon dataset.",
+      "subject": "human",
+      "imagingModality": "MR",
+      "inputs": [
+        {
+          "title": "Input T2 volume",
+          "namePattern": "*t2*"
+        },
+        {
+          "title": "Input ADC volume",
+          "namePattern": "*adc*"
+        }
+      ],
+      "sampleData": [
+        "msd-prostate-01",
+        "ProstateX-0000"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.1.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 13.3,
+      "segmentationTimeSecCPU": 17.9,
+      "segmentNames": [
+        "Peripheral zone of prostate",
+        "Transition zone of prostate"
+      ]
+    },
+    {
+      "title": "Ribs TS2 - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_ribs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 18.9,
+      "segmentationTimeSecCPU": 53.5,
+      "segmentNames": [
+        "Left First rib",
+        "Left Second rib",
+        "Left Third rib",
+        "Left Fourth rib",
+        "Left Fifth rib",
+        "Left Sixth rib",
+        "Left Seventh rib",
+        "Left Eighth rib",
+        "Left Ninth rib",
+        "Left Tenth rib",
+        "Left Eleventh rib",
+        "Left Twelfth rib",
+        "Right First rib",
+        "Right Second rib",
+        "Right Third rib",
+        "Right Fourth rib",
+        "Right Fifth rib",
+        "Right Sixth rib",
+        "Right Seventh rib",
+        "Right Eighth rib",
+        "Right Ninth rib",
+        "Right Tenth rib",
+        "Right Eleventh rib",
+        "Right Twelfth rib",
+        "Sternum",
+        "Entire costal cartilage"
+      ]
+    },
+    {
+      "title": "Ribs TS2",
+      "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 25.7,
+      "segmentationTimeSecCPU": 374.1,
+      "segmentNames": [
+        "Left First rib",
+        "Left Second rib",
+        "Left Third rib",
+        "Left Fourth rib",
+        "Left Fifth rib",
+        "Left Sixth rib",
+        "Left Seventh rib",
+        "Left Eighth rib",
+        "Left Ninth rib",
+        "Left Tenth rib",
+        "Left Eleventh rib",
+        "Left Twelfth rib",
+        "Right First rib",
+        "Right Second rib",
+        "Right Third rib",
+        "Right Fourth rib",
+        "Right Fifth rib",
+        "Right Sixth rib",
+        "Right Seventh rib",
+        "Right Eighth rib",
+        "Right Ninth rib",
+        "Right Tenth rib",
+        "Right Eleventh rib",
+        "Right Twelfth rib",
+        "Sternum",
+        "Entire costal cartilage"
+      ]
+    },
+    {
+      "title": "Muscles TS2 - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 24.1,
+      "segmentationTimeSecCPU": 39.9,
+      "segmentNames": [
+        "Left Deep muscle of back",
+        "Right Deep muscle of back",
+        "Brain",
+        "Left Clavicle",
+        "Right Clavicle",
+        "Left Femur",
+        "Right Femur",
+        "Left Gluteus maximus muscle",
+        "Right Gluteus maximus muscle",
+        "Left Gluteus medius muscle",
+        "Right Gluteus medius muscle",
+        "Left Gluteus minius muscle",
+        "Right Gluteus minius muscle",
+        "Left Hip",
+        "Right Hip",
+        "Left Humerus",
+        "Right Humerus",
+        "Left Iliopsoas muscle",
+        "Right Iliopsoas muscle",
+        "Left Scapula",
+        "Right Scapula",
+        "Skull",
+        "Spinal cord"
+      ]
+    },
+    {
+      "title": "Muscles TS2",
+      "description": "Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 26.9,
+      "segmentationTimeSecCPU": 152.4,
+      "segmentNames": [
+        "Left Deep muscle of back",
+        "Right Deep muscle of back",
+        "Brain",
+        "Left Clavicle",
+        "Right Clavicle",
+        "Left Femur",
+        "Right Femur",
+        "Left Gluteus maximus muscle",
+        "Right Gluteus maximus muscle",
+        "Left Gluteus medius muscle",
+        "Right Gluteus medius muscle",
+        "Left Gluteus minius muscle",
+        "Right Gluteus minius muscle",
+        "Left Hip",
+        "Right Hip",
+        "Left Humerus",
+        "Right Humerus",
+        "Left Iliopsoas muscle",
+        "Right Iliopsoas muscle",
+        "Left Scapula",
+        "Right Scapula",
+        "Skull",
+        "Spinal cord"
+      ]
+    },
+    {
+      "title": "Cardiac TS2 - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_cardiac of TotalSegmentatorV2 dataset.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 18.4,
+      "segmentationTimeSecCPU": 52.4,
+      "segmentNames": [
+        "Aorta",
+        "Left Common iliac artery",
+        "Right Common iliac artery",
+        "Left Common iliac vein",
+        "Right Common iliac vein",
+        "Inferior vena cava",
+        "Portal vein and splenic vein",
+        "Heart",
+        "Pulmonary vein",
+        "Brachiocephalic artery",
+        "Right Subclavian artery",
+        "Left Subclavian artery",
+        "Right Common carotid artery",
+        "Left Common carotid artery",
+        "Left Brachiocephalic vein",
+        "Right Brachiocephalic vein",
+        "Left Entire atrial appendage",
+        "Superior Vena cava"
+      ]
+    },
+    {
+      "title": "Cardiac TS2",
+      "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 24.8,
+      "segmentationTimeSecCPU": 366.1,
+      "segmentNames": [
+        "Aorta",
+        "Left Common iliac artery",
+        "Right Common iliac artery",
+        "Left Common iliac vein",
+        "Right Common iliac vein",
+        "Inferior vena cava",
+        "Portal vein and splenic vein",
+        "Heart",
+        "Pulmonary vein",
+        "Brachiocephalic artery",
+        "Right Subclavian artery",
+        "Left Subclavian artery",
+        "Right Common carotid artery",
+        "Left Common carotid artery",
+        "Left Brachiocephalic vein",
+        "Right Brachiocephalic vein",
+        "Left Entire atrial appendage",
+        "Superior Vena cava"
+      ]
+    },
+    {
+      "title": "Lungs - quick",
+      "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTChest"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-3mm-v2.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 15.4,
+      "segmentationTimeSecCPU": 37.8,
+      "segmentNames": [
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Trachea",
+        "Pulmonary vein"
+      ]
+    },
+    {
+      "title": "Lungs",
+      "description": "Segment 9 segments: lung segments, pulmonary vein, pulmonary artery, lung vessels and trachea. Trained on TotalSegmentatorV2, ATM and PARSE datasets. In v1.x there are no pulmonary vein and artery segments but there is esophagus.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTChest"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.1.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.2.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.1.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 18.6,
+      "segmentationTimeSecCPU": 154.4,
+      "segmentNames": [
+        "Left Lower lobe of lung",
+        "Right Lower lobe of lung",
+        "Middle lobe of right lung",
+        "Left Upper lobe of lung",
+        "Right Upper lobe of lung",
+        "Pulmonary artery",
+        "Trachea",
+        "Pulmonary vein",
+        "Blood vessel in Lung"
+      ]
+    },
+    {
+      "title": "Hips and spine",
+      "description": "Segment 27 segments: hips, sacrum and vertebrae. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTLiver"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.2.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.1.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 27.0,
+      "segmentationTimeSecCPU": 153.4,
+      "segmentNames": [
+        "Left Hip",
+        "Right Hip",
+        "Sacrum",
+        "C1 vertebra",
+        "C2 vertebra",
+        "C3 vertebra",
+        "C4 vertebra",
+        "C5 vertebra",
+        "C6 vertebra",
+        "C7 vertebra",
+        "L1 vertebra",
+        "L2 vertebra",
+        "L3 vertebra",
+        "L4 vertebra",
+        "L5 vertebra",
+        "T1 vertebra",
+        "T2 vertebra",
+        "T3 vertebra",
+        "T4 vertebra",
+        "T5 vertebra",
+        "T6 vertebra",
+        "T7 vertebra",
+        "T8 vertebra",
+        "T9 vertebra",
+        "T10 vertebra",
+        "T11 vertebra",
+        "T12 vertebra"
+      ]
+    },
+    {
+      "title": "Aorta",
+      "description": "Aorta segmentation. Trained on TotalSegmentatorV1 dataset.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTACardio"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip"
+        },
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 42.3,
+      "segmentationTimeSecCPU": 1882.2,
+      "segmentNames": [
+        "Aorta"
+      ]
+    },
+    {
+      "title": "Intracranial hemorrhage (ICrH) Segmentation",
+      "description": "Intracranial Hemorrhage segmentation using CT images.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "ICH-ADAPT2"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/icrh-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 17.0,
+      "segmentationTimeSecCPU": 203.8,
+      "segmentNames": [
+        "Hemorrhage in Cerebellum",
+        "Hemorrhage in Ventricular system of brain",
+        "Hemorrhage in Subdural space",
+        "Hemorrhage in Subarachnoid space"
+      ]
+    },
+    {
+      "title": "Brain and intracranial hemorrhage (ICrH) Segmentation",
+      "description": "Brain Anatomy and Intracranial Hemorrhage segmentation using CT images.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "ICH-ADAPT2"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 18.1,
+      "segmentationTimeSecCPU": 218.7,
+      "segmentNames": [
+        "Parenchyma of brain",
+        "Subarachnoid space",
+        "Dural venous sinus",
+        "Septum pellucidum",
+        "Cerebellum",
+        "Caudate nucleus",
+        "Lentiform nucleus",
+        "Insula",
+        "Internal capsule",
+        "Ventricular system of brain",
+        "???",
+        "Thalamus",
+        "Hemorrhage in Cerebellum",
+        "Hemorrhage in Ventricular system of brain",
+        "Hemorrhage in Subdural space",
+        "Hemorrhage in Subarachnoid space"
+      ]
+    },
+    {
+      "title": "Brain Tumor Segmentation (BRATS) GLI",
+      "description": "Brain Tumor Segmentation (BRATS) GLI",
+      "subject": "human",
+      "imagingModality": "MR",
+      "inputs": [
+        {
+          "title": "Input T2F volume",
+          "namePattern": "*t2f*"
+        },
+        {
+          "title": "Input T1C volume",
+          "namePattern": "*t1c*"
+        },
+        {
+          "title": "Input T1N volume",
+          "namePattern": "*t1n*"
+        },
+        {
+          "title": "Input T2W volume",
+          "namePattern": "*t2w*"
+        }
+      ],
+      "sampleData": [
+        "BraTS-GLI-00001-000"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-gli-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 14.0,
+      "segmentationTimeSecCPU": 36.2,
+      "segmentNames": [
+        "Neoplasm, Primary in Brain",
+        "Edema in Brain",
+        "Necrosis in Brain"
+      ]
+    },
+    {
+      "title": "Brain Tumor Segmentation (BRATS) MEN",
+      "description": "Brain Tumor Segmentation (BRATS) MEN",
+      "subject": "human",
+      "imagingModality": "MR",
+      "inputs": [
+        {
+          "title": "Input T2F volume",
+          "namePattern": "*t2f*"
+        },
+        {
+          "title": "Input T1C volume",
+          "namePattern": "*t1c*"
+        },
+        {
+          "title": "Input T1N volume",
+          "namePattern": "*t1n*"
+        },
+        {
+          "title": "Input T2W volume",
+          "namePattern": "*t2w*"
+        }
+      ],
+      "sampleData": [
+        "BraTS-MEN-00000-000"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-men-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 14.0,
+      "segmentationTimeSecCPU": 36.3,
+      "segmentNames": [
+        "Neoplasm, Primary in Neoplasm, Primary",
+        "Edema in Edema",
+        "Necrosis in Necrosis"
+      ]
+    },
+    {
+      "title": "Brain Tumor Segmentation (BRATS) MET",
+      "description": "Brain Tumor Segmentation (BRATS) MET",
+      "subject": "human",
+      "imagingModality": "MR",
+      "inputs": [
+        {
+          "title": "Input T2F volume",
+          "namePattern": "*t2f*"
+        },
+        {
+          "title": "Input T1C volume",
+          "namePattern": "*t1c*"
+        },
+        {
+          "title": "Input T1N volume",
+          "namePattern": "*t1n*"
+        },
+        {
+          "title": "Input T2W volume",
+          "namePattern": "*t2w*"
+        }
+      ],
+      "sampleData": [
+        "BraTS-MET-00002-000"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-met-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 14.6,
+      "segmentationTimeSecCPU": 36.7,
+      "segmentNames": [
+        "Neoplasm, Primary in Neoplasm, Primary",
+        "Edema in Edema",
+        "Necrosis in Necrosis"
+      ]
+    },
+    {
+      "title": "Brain Tumor Segmentation (BRATS) PED",
+      "description": "Brain Tumor Segmentation (BRATS) PED",
+      "subject": "human",
+      "imagingModality": "MR",
+      "inputs": [
+        {
+          "title": "Input T2F volume",
+          "namePattern": "*t2f*"
+        },
+        {
+          "title": "Input T1C volume",
+          "namePattern": "*t1c*"
+        },
+        {
+          "title": "Input T1N volume",
+          "namePattern": "*t1n*"
+        },
+        {
+          "title": "Input T2W volume",
+          "namePattern": "*t2w*"
+        }
+      ],
+      "sampleData": [
+        "BraTS-PED-00030-000"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ped-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 32.7,
+      "segmentationTimeSecCPU": 36.1,
+      "segmentNames": [
+        "Neoplasm, Primary in Neoplasm, Primary",
+        "Edema in Edema",
+        "Necrosis in Necrosis"
+      ]
+    },
+    {
+      "title": "Brain Tumor Segmentation (BRATS) SSA",
+      "description": "Brain Tumor Segmentation (BRATS) SSA",
+      "subject": "human",
+      "imagingModality": "MR",
+      "inputs": [
+        {
+          "title": "Input T2F volume",
+          "namePattern": "*t2f*"
+        },
+        {
+          "title": "Input T1C volume",
+          "namePattern": "*t1c*"
+        },
+        {
+          "title": "Input T1N volume",
+          "namePattern": "*t1n*"
+        },
+        {
+          "title": "Input T2W volume",
+          "namePattern": "*t2w*"
+        }
+      ],
+      "sampleData": [
+        "BraTS-SSA-00002-000"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 13.7,
+      "segmentationTimeSecCPU": 36.5,
+      "segmentNames": [
+        "Neoplasm, Primary in Neoplasm, Primary",
+        "Edema in Edema",
+        "Necrosis in Necrosis"
+      ]
+    }
+  ]
 }

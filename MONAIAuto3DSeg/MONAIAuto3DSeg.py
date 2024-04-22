@@ -351,7 +351,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         modelTitle = model['title']
 
                 if searchWords:
-                    textToSearchIn = modelTitle.lower() + " " + model.get("description").lower() + " " + model.get("imagingModality").lower()
+                    segmentNames = model.get("segmentNames")
+                    if segmentNames:
+                        segmentNames = " ".join(segmentNames)
+                    else:
+                        segmentNames = ""
+                    textToSearchIn = modelTitle.lower() + " " + model.get("description").lower() + " " + model.get("imagingModality").lower() + " " + segmentNames.lower()
+                    print(textToSearchIn)
                     if not all(word in textToSearchIn for word in searchWords):
                         continue
 
@@ -359,7 +365,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.modelComboBox.addItem(modelTitle)
                 item = self.ui.modelComboBox.item(itemIndex)
                 item.setData(qt.Qt.UserRole, model["id"])
-                item.setData(qt.Qt.ToolTipRole, model.get("details"))
+                item.setData(qt.Qt.ToolTipRole, "<html>" + model.get("details") + "</html>")
 
             modelId = self._parameterNode.GetParameter("Model")
             currentModelSelectable = self._setCurrentModelId(modelId)
@@ -681,57 +687,81 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         raise RuntimeError(f"Model {modelId} not found")
 
 
+    def modelsDescriptionJsonFilePath(self):
+        return os.path.join(self.moduleDir, "Resources", "Models.json")
+
     def loadModelsDescription(self):
-        modelsJsonFilePath = os.path.join(self.moduleDir, "Resources", "Models.json")
+        modelsJsonFilePath = self.modelsDescriptionJsonFilePath()
         try:
             models = []
             import json
             import re
             with open(modelsJsonFilePath) as f:
                 modelsTree = json.load(f)["models"]
-                for model in modelsTree:
-                    deprecated = False
-                    for version in model["versions"]:
-                        url = version["url"]
-                        # URL format: <path>/<filename>-v<version>.zip
-                        # Example URL: https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-v1.0.3.zip
-                        match = re.search(r"(?P<filename>[^/]+)-v(?P<version>\d+\.\d+\.\d+)", url)
-                        if match:
-                            filename = match.group("filename")
-                            version = match.group("version")
-                        else:
-                            logging.error(f"Failed to extract model id and version from url: {url}")
-                        if "inputs" in model:
-                            # Contains a list of dict. One dict for each input.
-                            # Currently, only "title" (user-displayable name) and "namePattern" of the input are specified.
-                            # In the future, inputs could have additional properties, such as name, type, optional, ...
-                            inputs = model["inputs"]
-                        else:
-                            # Inputs are not defined, use default (single input volume)
-                            inputs = [{"title": "Input volume"}]
-                        models.append({
-                            "id": f"{filename}-v{version}",
-                            "title": model['title'],
-                            "version": version,
-                            "inputs": inputs,
-                            "imagingModality": model["imagingModality"],
-                            "description": model["description"],
-                            "sampleData": model.get("sampleData"),
-                            "details":
-                                f"Model: {model['title']} (v{version})\n"
-                                f"Description: {model['description']}\n"
-                                f"Subject: {model['subject']}\n"
-                                f"Imaging modality: {model['imagingModality']}",
-                            "url": url,
-                            "deprecated": deprecated
-                            })
-                        # First version is not deprecated, all subsequent versions are deprecated
-                        deprecated = True
-                return models
+            for model in modelsTree:
+                deprecated = False
+                for version in model["versions"]:
+                    url = version["url"]
+                    # URL format: <path>/<filename>-v<version>.zip
+                    # Example URL: https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-v1.0.3.zip
+                    match = re.search(r"(?P<filename>[^/]+)-v(?P<version>\d+\.\d+\.\d+)", url)
+                    if match:
+                        filename = match.group("filename")
+                        version = match.group("version")
+                    else:
+                        logging.error(f"Failed to extract model id and version from url: {url}")
+                    if "inputs" in model:
+                        # Contains a list of dict. One dict for each input.
+                        # Currently, only "title" (user-displayable name) and "namePattern" of the input are specified.
+                        # In the future, inputs could have additional properties, such as name, type, optional, ...
+                        inputs = model["inputs"]
+                    else:
+                        # Inputs are not defined, use default (single input volume)
+                        inputs = [{"title": "Input volume"}]
+                    segmentNames = model.get('segmentNames')
+                    if not segmentNames:
+                        segmentNames = "N/A"
+                    models.append({
+                        "id": f"{filename}-v{version}",
+                        "title": model['title'],
+                        "version": version,
+                        "inputs": inputs,
+                        "imagingModality": model["imagingModality"],
+                        "description": model["description"],
+                        "sampleData": model.get("sampleData"),
+                        "segmentNames": model.get("segmentNames"),
+                        "details":
+                            f"<p><b>Model:</b> {model['title']} (v{version})"
+                            f"<p><b>Description:</b> {model['description']}\n"
+                            f"<p><b>Computation time on GPU:</b> {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model.get('segmentationTimeSecGPU'))}\n"
+                            f"<br><b>Computation time on CPU:</b> {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model.get('segmentationTimeSecCPU'))}\n"
+                            f"<p><b>Imaging modality:</b> {model['imagingModality']}\n"
+                            f"<p><b>Subject:</b> {model['subject']}\n"
+                            f"<p><b>Segments:</b> {', '.join(segmentNames)}",
+                        "url": url,
+                        "deprecated": deprecated
+                        })
+                    # First version is not deprecated, all subsequent versions are deprecated
+                    deprecated = True
+            return models
         except Exception as e:
             import traceback
             traceback.print_exc()
             raise RuntimeError(f"Failed to load models description from {modelsJsonFilePath}")
+
+    @staticmethod
+    def humanReadableTimeFromSec(seconds):
+        import math
+        if not seconds:
+            return "N/A"
+        if seconds < 55:
+            # if less than a minute, round up to the nearest 5 seconds
+            return f"{math.ceil(seconds/5) * 5} sec"
+        elif seconds < 60 * 60:
+            # if less then 1 hour, round up to the nearest minute
+            return f"{math.ceil(seconds/60)} min"
+        # Otherwise round up to the nearest 0.1 hour
+        return f"{seconds/3600:.1f} h"
 
     def modelsPath(self):
         import pathlib
@@ -1381,6 +1411,30 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             except RuntimeError as e:
                 self.log(str(e))
 
+    def updateModelsDescriptionJsonFilePathFromTestResults(self, modelsTestResultsJsonFilePath):
+        import json
+
+        modelsDescriptionJsonFilePath = self.modelsDescriptionJsonFilePath()
+
+        with open(modelsTestResultsJsonFilePath) as f:
+            modelsTestResults = json.load(f)
+
+        with open(modelsDescriptionJsonFilePath) as f:
+            modelsDescription = json.load(f)
+            
+        for model in modelsDescription["models"]:
+            title = model["title"]
+            for modelTestResult in modelsTestResults:
+                if modelTestResult["title"] == title:
+                    for fieldName in ["segmentationTimeSecGPU", "segmentationTimeSecCPU", "segmentNames"]:
+                        fieldValue = modelTestResult.get(fieldName)
+                        if fieldValue:
+                            model[fieldName] = fieldValue
+                    break
+
+        with open(modelsDescriptionJsonFilePath, 'w', newline="\n") as f:
+            json.dump(modelsDescription, f, indent=2)
+
 #
 # MONAIAuto3DSegTest
 #
@@ -1445,8 +1499,17 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
             # start testing from scratch
             models = logic.models
 
-        for forceUseCpu in [False, True]:
-            configurationName = "CPU" if forceUseCpu else "GPU"
+        import PyTorchUtils
+        pytorchLogic = PyTorchUtils.PyTorchUtilsLogic()
+        if pytorchLogic.cuda:
+            # CUDA is available, test on both CPU and GPU
+            configurations = [{"forceUseCPU": False}, {"forceUseCPU": True}]
+        else:
+            # CUDA is not available, only test on CPU
+            configurations = [{"forceUseCPU": True}]
+
+        for configurationIndex, configuration in enumerate(configurations):
+            configurationName = "CPU" if configuration["forceUseCPU"] else "GPU"
 
             for modelIndex, model in enumerate(models):
                 if model.get("deprecated"):
@@ -1514,12 +1577,17 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                 models[modelIndex]["segmentNames"] = segmentNames
 
                 sliceScreenshotFilename, rotate3dScreenshotFilename = self._writeScreenshots(outputSegmentation, testResultsPath, model["id"]+"-"+configurationName)
-                models[modelIndex]["segmentationResultsScreenshot2D"] = sliceScreenshotFilename.name
-                models[modelIndex]["segmentationResultsScreenshot3D"] = rotate3dScreenshotFilename.name
+                if configurationIndex == 0:
+                    # Use screenshot computed during the first configuration
+                    models[modelIndex]["segmentationResultsScreenshot2D"] = sliceScreenshotFilename.name
+                    models[modelIndex]["segmentationResultsScreenshot3D"] = rotate3dScreenshotFilename.name
 
                 # Write results to file (to allow accessing the results before all tests complete)
                 with open(modelsTestResultsJsonFilePath, 'w') as f:
                     json.dump(models, f, indent=2)
+
+        logic.updateModelsDescriptionJsonFilePathFromTestResults(modelsTestResultsJsonFilePath)
+        self._writeTestResultsToMarkdown(modelsTestResultsJsonFilePath)
 
         self.delayDisplay("Test passed")
 
@@ -1599,3 +1667,41 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
         cap.deleteTemporaryFiles(rotate3dScreenshotsFilenamePattern.parent, rotate3dScreenshotsFilenamePattern.name, numberOfImages3d)
 
         return sliceScreenshotFilename, rotate3dScreenshotFilename
+
+    def _writeTestResultsToMarkdown(self, modelsTestResultsJsonFilePath, modelsTestResultsMarkdownFilePath=None, screenshotUrlBase=None):
+
+        if modelsTestResultsMarkdownFilePath is None:
+            modelsTestResultsMarkdownFilePath = modelsTestResultsJsonFilePath.replace(".json", ".md")
+        if screenshotUrlBase is None:
+            screenshotUrlBase = "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/ModelsTestResults/"
+
+        import json
+        from MONAIAuto3DSeg import MONAIAuto3DSegLogic
+        with open(modelsTestResultsJsonFilePath) as f:
+            modelsTestResults = json.load(f)
+
+        with open(modelsTestResultsMarkdownFilePath, 'w', newline="\n") as f:
+            f.write("# 3D Slicer MONAI Auto3DSeg models\n\n")
+            # Write hardware information (only on Windows for now)
+            if os.name == "nt":
+                import subprocess
+                cpu = subprocess.check_output('wmic cpu get name', stderr=open(os.devnull, 'w'), shell=True).decode('utf-8').partition('Name')[2].strip(' \r\n')
+                ramSizeGb = round(int(subprocess.check_output('systeminfo | findstr /C:"Total Physical Memory"', stderr=open(os.devnull, 'w'), shell=True).decode('utf-8').partition('Total Physical Memory:     ')[2].strip('\r\n').partition(' MB')[0].replace(',',''))/1024)
+                f.write(f"Testing hardware: {cpu}, {ramSizeGb} GB RAM")
+                import torch
+                for i in range(torch.cuda.device_count()):
+                    gpuProperties = torch.cuda.get_device_properties(i)
+                    f.write(f", {gpuProperties.name} {round(torch.cuda.get_device_properties(0).total_memory/(2**30))}GB")
+                f.write("\n\n")
+            # Write test results
+            for model in modelsTestResults:
+                if model["deprecated"]:
+                    continue
+                title = f"{model['title']} (v{model['version']})"
+                f.write(f"## {title}\n")
+                f.write(f"{model['description']}\n\n")
+                f.write(f"Processing time: {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model['segmentationTimeSecGPU'])} on GPU, {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model['segmentationTimeSecCPU'])} on CPU\n\n")
+                f.write(f"Segment names: {', '.join(model['segmentNames'])}\n\n")
+                f.write(f"![2D view]({screenshotUrlBase}{model['segmentationResultsScreenshot2D']})\n")
+                f.write(f"![3D view]({screenshotUrlBase}{model['segmentationResultsScreenshot3D']})\n")
+
