@@ -216,7 +216,7 @@
     },
     {
       "title": "Mediastinal anatomy TS2",
-      "description": "Trained on TotalSegmentatorV2, ATM and PARSE dataset. Input image is abdominal, chest, or whole body CT.",
+      "description": "Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
       "sampleData": [
@@ -1027,7 +1027,7 @@
     },
     {
       "title": "Lungs",
-      "description": "Segment 9 segments: lung segments, pulmonary vein, pulmonary artery, lung vessels and trachea. Trained on TotalSegmentatorV2, ATM and PARSE datasets. In v1.x there are no pulmonary vein and artery segments but there is esophagus.",
+      "description": "Segment 9 segments: lung segments, pulmonary vein, pulmonary artery, lung vessels and trachea. Trained on TotalSegmentatorV2 datasets. In v1.x there are no pulmonary vein and artery segments but there is esophagus.",
       "subject": "human",
       "imagingModality": "CT",
       "sampleData": [
