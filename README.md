@@ -20,17 +20,18 @@ Highlights:
 
 1. Setup your GPU driver (optional)
 
-If you have a powerful GPU is available then a full-quality segmentation can be computed in a few minutes, instead of hours on the CPU. Therefore, it is recommended to set up GPU acceleration as described in this section.
+If you have a powerful GPU is available then a full-quality segmentation can be computed within a minutes, instead of 10 minutes or more on the CPU.
 
 - If a strong GPU with 7GB or more memory is available:
   - On Windows:
     - If using NVIDIA GPU: Make sure CUDA is installed. [CUDA version must be one of those listed on pytorch website as "Compute platform" for your system](https://pytorch.org/get-started/locally/). You can download CUDA from [here](https://developer.nvidia.com/cuda-downloads).
-    - PyTorch does not officially support AMD GPUs on Windows, therefore you need to use the CPU.
+    - If using AMD GPU: PyTorch does not officially support AMD GPUs on Windows, therefore if you have such a GPU then you may be limited to using the CPU.
   - On Linux:
     - If using NVIDIA GPU: Make sure NVIDIA drivers are installed. If CUDA is installed then make sure [CUDA version is one of those listed on pytorch website as "Compute platform" for your system](https://pytorch.org/get-started/locally/). If CUDA is not installed then it will be set up automatically during installation (pytorch binary packages contain the appropriate CUDA version).
     - If using AMD GPU: In theory, ROCm-compatible AMD GPUs should work, but this is not tested.
   - On macOS: PyTorch might be able to use some harware acceleration, but this is not tested.
-- If suitable GPU is not available: Graphics driver updates or CUDA installation is not necessary, everything will still work, it will just take more time.
+- If a weak GPU is available: if segmentation fails, then enable `Force to use CPU` checkbox in `Advanced` section and retry the segmentation.
+- If no GPU is not available: Graphics driver updates or CUDA installation is not necessary, everything will still work, it will just take more time.
 
 2. Install latest version of [3D Slicer](https://slicer.readthedocs.io/en/latest/user_guide/getting_started.html#installing-3d-slicer)
 
@@ -41,15 +42,19 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 - Start 3D Slicer
 - Go to `MONAI Auto3DSeg` module
 - Select model: `Abdominal Organs TS2 - quick`. Tip: use `quick` models if you do not have a GPU to get lower-resolution segmentation in a few minutes (computing full-quality segmentation on CPU may take up to a few ten minutes).
-- Select input volume: choose an image that is already loaded. If you do not have images to test with then click the `Download sample data set...` icon button (next to the model selector) to download a sample data set suitable for the selected model.
+- Select input volume: choose the image that will be segmented. If you do not have images to test with, then click the `Download sample data set...` icon button (next to the model selector) to download a sample data set suitable for the selected model.
 - Click `Apply`
-  - When this module is used the first time:
-    - It needs to download and install PyTorch and MONAI Python packages and weights for the AI models. This can take 5-10 minutes and several GB disk space.
-  - Expected computation time:
-    - With CUDA-capable GPU: `Abdominal organs` task should be completed within a few minutes.
-    - Without GPU: tens of minutes.
-- To display the segmentation in 3D: click the `Show 3D` button
-- For high-quality rendering in 3D: use `Colorize volume` module (in `Sandbox` extension). Voxel intensities are set based on the original image, their color is based on the segmentation.
+  - When this module is used the first time: The module will download and install a few Python packages (largest ones are PyTorch and MONAI) and weights for the AI models. This can take 5-10 minutes and several GB disk space. To ensure successful installation, have 20GB free disk space before starting this step.
+  - Expected computation time: with CUDA-capable GPU computation time is under a minute, without discrete GPU computation time may be up to about 10x longer. See typical computation times for each model on [this page](https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/tag/ModelsTestResults).
+- To display the segmentation in 3D: click the `Show 3D` button.
+- For high-quality rendering in 3D:
+  - Switch to `Colorize volume` module (provided by `Sandbox` extension).
+  - Click `Apply` to display the segmented image with default settings. Voxel intensities will be set based on the original image, while their color and opacity is determined by the segmentation.
+  - Switch to `Lights` module (also provided by `Sandbox` extension) to further optimize appearance in 3D.
+  - Click `Select all` button in `Managed 3D views` row (top-right corner).
+  - Check `Enable` in `Ambient shadows` section and move the `Size scale` slider until the desired shadow appearance is achieved.
+
+![](SegmentationResults3D.png)
 
 ## User interface
 
@@ -92,18 +97,19 @@ Explanation: CUDA may not be installed on the system or CUDA version in PyTorch 
 
 Solution:
 - Make sure that the the CUDA vesion installed on the system [is one of those listed on pytorch website as "Compute platform" for your system](https://pytorch.org/get-started/locally/). You can download CUDA from [here](https://developer.nvidia.com/cuda-downloads).
-- Go to `PyTorch Util` module, click `Uninstall PyTorch`. An error may be reported at the end of this step, as some PyTorch files are in use. Click `Restart the application` button to unload all PyTorch files.
+- Go to `PyTorch Util` module, click `Uninstall PyTorch`.
+- An error may be reported at the end of this step, as some PyTorch files are in use. Click `Restart the application` button to unload all PyTorch files.
 - Go to `PyTorch Util` module, select the `Computation backend` that matches the system CUDA version, and click `Install PyTorch`. The CUDA computational backend name has the format `cuNNN`, where _NNN_ corresponds to the CUDA major+minor version. For example, CUDA 11.7 backend name is `cu117`.
 
 ### Segmentation is inaccurate
 
-Currently, all models are experimental. If significant segmentation inaccuracy is observed then you can [submit an issue](https://github.com/lassoan/SlicerMONAIAuto3DSeg/issues) to discuss it.
+If significant segmentation inaccuracy is observed then you can [submit an issue](https://github.com/lassoan/SlicerMONAIAuto3DSeg/issues) to discuss it.
 
 ### Fail to download model files
 
 Model files are hosted on github.com and downloaded automatically when segmenting the first time. Institutional firewall or proxy servers may prevent interfere with this. Potential solutions:
 - talk to IT administrators or use a VPN to access the server
-- download the files manually from https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ and unzip it in the `.MONAIAuto3DSeg/models` folder in the user's profile (for example in `c:\Users\(yourusername)\.MONAIAuto3DSeg\models\whole-body-3mm-v2.0.0`)
+- download the model file manually from https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ and unzip it in the `.MONAIAuto3DSeg/models` folder in the user's profile (for example in `c:\Users\(yourusername)\.MONAIAuto3DSeg\models\whole-body-3mm-v2.0.0`)
 
 ## Developers
 

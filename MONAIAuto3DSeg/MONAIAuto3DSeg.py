@@ -357,7 +357,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     else:
                         segmentNames = ""
                     textToSearchIn = modelTitle.lower() + " " + model.get("description").lower() + " " + model.get("imagingModality").lower() + " " + segmentNames.lower()
-                    print(textToSearchIn)
                     if not all(word in textToSearchIn for word in searchWords):
                         continue
 
