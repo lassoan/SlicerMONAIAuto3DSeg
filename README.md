@@ -11,8 +11,9 @@ Highlights:
 - Efficient processing:
   - processing time: on GPU under 45 seconds (all models), on CPU under 1 minute (quick models) / under 10 minutes (full-quality models)
   - low hardware requirements: most models do not require GPU (runs on any laptop), GPU does not need to have more than 8GB RAM
-- Sample data set is provided for each model: one click for downloading test data, one click to segment it
-- All data remains on the user's computer, all computation is performed locally
+- Sample data set is provided for each model: one click for downloading test data, one click to segment it.
+- All data remains on the user's computer, all computation is performed locally.
+- Most processing runs in the background, therefore the application can be used while the segmentation is in progress.
 
 ![](Screenshot01.jpg)
 
