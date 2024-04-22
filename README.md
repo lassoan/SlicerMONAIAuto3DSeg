@@ -3,17 +3,23 @@
 Extension for [3D Slicer](https://www.slicer.org) for fully automatic AI segmentation of images using [MONAI Auto3DSeg models](https://docs.monai.io/en/stable/auto3dseg.html).
 
 Highlights:
-- Many ready-to-use segmentation models: see **[complete list - with screenshots, computation times, list of segments](https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/tag/ModelsTestResults)**
-  - multiple imaging modalities: CT (various abdominal organs, bones, vessels, heart, lungs), MR (brain, prostate)
-  - healthy anatomy and lesions: tumor, edema, hemorrhage, etc.
+- Dozens of ready-to-use segmentation models: see **[complete list - with screenshots, computation times, list of segments](https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/tag/ModelsTestResults)**
+  - multiple imaging modalities: CT (various abdominal organs, bones, vessels, heart, lungs, ...), MR (brain, prostate, ...)
+  - both healthy anatomy and lesions (tumor, edema, hemorrhage, etc.) are segmented and segments are described by standard terminology (DICOM/SNOMED CT)
   - multiple input volumes may be utilized: currently used for prostate and brain tumor segmentation
   - models are automatically downloaded when needed (and cached in the user's home folder within `.MONAIAuto3DSeg` subfolder)
+  - sample data set is provided for each model: one click for downloading test data, one click to segment it.
+  - completely free (even for commercial use), restriction free license for all the software and all models
 - Efficient processing:
-  - processing time: on GPU under 45 seconds (all models), on CPU under 1 minute (quick models) / under 10 minutes (full-quality models)
+  - processing time:
+    - using CUDA-capable GPU: all models complete under 45 seconds
+    - on workstation without GPU: under 1 minute (quick models), under 10 minutes (full-quality models)
+    - on laptop without GPU: in 2-3 minutes (quick models), under 30 minutes (full-quality models)
   - low hardware requirements: most models do not require GPU (runs on any laptop), GPU does not need to have more than 8GB RAM
-- Sample data set is provided for each model: one click for downloading test data, one click to segment it.
-- All data remains on the user's computer, all computation is performed locally.
-- Most processing runs in the background, therefore the application can be used while the segmentation is in progress.
+  - most processing runs in the background, therefore the application can be used normally while the segmentation is in progress
+- Offline:
+  - Network connection is only needed during installation and downloading of models.
+  - All data remains on the user's computer, all computation is performed locally.
 
 ![](Screenshot01.jpg)
 
@@ -32,7 +38,7 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
     - If using AMD GPU: In theory, ROCm-compatible AMD GPUs should work, but this is not tested.
   - On macOS: PyTorch might be able to use some harware acceleration, but this is not tested.
 - If a weak GPU is available: if segmentation fails, then enable `Force to use CPU` checkbox in `Advanced` section and retry the segmentation.
-- If no GPU is not available: Graphics driver updates or CUDA installation is not necessary, everything will still work, it will just take more time.
+- If no GPU is not available: Graphics driver updates or CUDA installation is not necessary, everything will still work, it will just take more time. Minimum 16GB CPU RAM is strongly recommended: if your computer has 16GB RAM then it is recommended to exit other programs (especially web browser) when using full-quality models. If the computer has less than 16GB RAM or the memory is used up by other running programs then virtual memory will be used and processing can be 10-100x slower.
 
 2. Install latest version of [3D Slicer](https://slicer.readthedocs.io/en/latest/user_guide/getting_started.html#installing-3d-slicer)
 
