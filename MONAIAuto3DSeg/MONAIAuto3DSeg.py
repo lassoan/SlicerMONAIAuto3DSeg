@@ -1420,7 +1420,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         with open(modelsDescriptionJsonFilePath) as f:
             modelsDescription = json.load(f)
-            
+
         for model in modelsDescription["models"]:
             title = model["title"]
             for modelTestResult in modelsTestResults:
@@ -1685,9 +1685,12 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
             # Write hardware information (only on Windows for now)
             if os.name == "nt":
                 import subprocess
-                cpu = subprocess.check_output('wmic cpu get name', stderr=open(os.devnull, 'w'), shell=True).decode('utf-8').partition('Name')[2].strip(' \r\n')
-                ramSizeGb = round(int(subprocess.check_output('systeminfo | findstr /C:"Total Physical Memory"', stderr=open(os.devnull, 'w'), shell=True).decode('utf-8').partition('Total Physical Memory:     ')[2].strip('\r\n').partition(' MB')[0].replace(',',''))/1024)
-                f.write(f"Testing hardware: {cpu}, {ramSizeGb} GB RAM")
+                cpu = subprocess.check_output('wmic cpu get name', stderr=open(os.devnull, 'w')).decode('utf-8').partition('Name')[2].strip(' \r\n')
+                systemInfoStr = subprocess.check_output('systeminfo', stderr=open(os.devnull, 'w')).decode('utf-8')
+                # System information has a line like this: "Total Physical Memory:     32,590 MB"
+                import re
+                ram = re.search(r"Total Physical Memory:(.+)", systemInfoStr).group(1).strip()
+                f.write(f"Testing hardware: {cpu}, {ram}")
                 import torch
                 for i in range(torch.cuda.device_count()):
                     gpuProperties = torch.cuda.get_device_properties(i)
@@ -1704,4 +1707,3 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                 f.write(f"Segment names: {', '.join(model['segmentNames'])}\n\n")
                 f.write(f"![2D view]({screenshotUrlBase}{model['segmentationResultsScreenshot2D']})\n")
                 f.write(f"![3D view]({screenshotUrlBase}{model['segmentationResultsScreenshot3D']})\n")
-

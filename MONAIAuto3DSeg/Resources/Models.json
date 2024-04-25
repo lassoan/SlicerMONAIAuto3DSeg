@@ -13,8 +13,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 25.4,
-      "segmentationTimeSecCPU": 50.4,
+      "segmentationTimeSecGPU": 64.6,
+      "segmentationTimeSecCPU": 73.2,
       "segmentNames": [
         "Left Adrenal gland",
         "Right Adrenal gland",
@@ -54,8 +54,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 28.1,
-      "segmentationTimeSecCPU": 159.5,
+      "segmentationTimeSecGPU": 95.3,
+      "segmentationTimeSecCPU": 301.1,
       "segmentNames": [
         "Left Adrenal gland",
         "Right Adrenal gland",
@@ -95,8 +95,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 24.5,
-      "segmentationTimeSecCPU": 359.5,
+      "segmentationTimeSecGPU": 37.6,
+      "segmentationTimeSecCPU": 668.5,
       "segmentNames": [
         "Trunk",
         "Limb"
@@ -115,8 +115,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 18.1,
-      "segmentationTimeSecCPU": 47.8,
+      "segmentationTimeSecGPU": 40.7,
+      "segmentationTimeSecCPU": 66.8,
       "segmentNames": [
         "Trunk",
         "Limb"
@@ -138,34 +138,35 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 18.2,
-      "segmentationTimeSecCPU": 53.0,
+      "segmentationTimeSecGPU": 41.0,
+      "segmentationTimeSecCPU": 78.9,
       "segmentNames": [
         "Sacrum",
-        "C1 vertebra",
-        "C2 vertebra",
-        "C3 vertebra",
-        "C4 vertebra",
-        "C5 vertebra",
-        "C6 vertebra",
-        "C7 vertebra",
-        "L1 vertebra",
-        "L2 vertebra",
-        "L3 vertebra",
-        "L4 vertebra",
+        "S1 vertebra",
         "L5 vertebra",
-        "T1 vertebra",
-        "T2 vertebra",
-        "T3 vertebra",
-        "T4 vertebra",
-        "T5 vertebra",
-        "T6 vertebra",
-        "T7 vertebra",
-        "T8 vertebra",
-        "T9 vertebra",
-        "T10 vertebra",
+        "L4 vertebra",
+        "L3 vertebra",
+        "L2 vertebra",
+        "L1 vertebra",
+        "T12 vertebra",
         "T11 vertebra",
-        "T12 vertebra"
+        "T10 vertebra",
+        "T9 vertebra",
+        "T8 vertebra",
+        "T7 vertebra",
+        "T6 vertebra",
+        "T5 vertebra",
+        "T4 vertebra",
+        "T3 vertebra",
+        "T2 vertebra",
+        "T1 vertebra",
+        "C7 vertebra",
+        "C6 vertebra",
+        "C5 vertebra",
+        "C4 vertebra",
+        "C3 vertebra",
+        "C2 vertebra",
+        "C1 vertebra"
       ]
     },
     {
@@ -184,34 +185,35 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 24.9,
-      "segmentationTimeSecCPU": 385.3,
+      "segmentationTimeSecGPU": 62.4,
+      "segmentationTimeSecCPU": 659.5,
       "segmentNames": [
         "Sacrum",
-        "C1 vertebra",
-        "C2 vertebra",
-        "C3 vertebra",
-        "C4 vertebra",
-        "C5 vertebra",
-        "C6 vertebra",
-        "C7 vertebra",
-        "L1 vertebra",
-        "L2 vertebra",
-        "L3 vertebra",
-        "L4 vertebra",
+        "S1 vertebra",
         "L5 vertebra",
-        "T1 vertebra",
-        "T2 vertebra",
-        "T3 vertebra",
-        "T4 vertebra",
-        "T5 vertebra",
-        "T6 vertebra",
-        "T7 vertebra",
-        "T8 vertebra",
-        "T9 vertebra",
-        "T10 vertebra",
+        "L4 vertebra",
+        "L3 vertebra",
+        "L2 vertebra",
+        "L1 vertebra",
+        "T12 vertebra",
         "T11 vertebra",
-        "T12 vertebra"
+        "T10 vertebra",
+        "T9 vertebra",
+        "T8 vertebra",
+        "T7 vertebra",
+        "T6 vertebra",
+        "T5 vertebra",
+        "T4 vertebra",
+        "T3 vertebra",
+        "T2 vertebra",
+        "T1 vertebra",
+        "C7 vertebra",
+        "C6 vertebra",
+        "C5 vertebra",
+        "C4 vertebra",
+        "C3 vertebra",
+        "C2 vertebra",
+        "C1 vertebra"
       ]
     },
     {
@@ -233,21 +235,23 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 25.6,
-      "segmentationTimeSecCPU": 385.5,
+      "segmentationTimeSecGPU": 109.1,
+      "segmentationTimeSecCPU": 668.6,
       "segmentNames": [
-        "Aorta",
-        "Esophagus",
-        "Inferior vena cava",
-        "Left Lower lobe of lung",
-        "Right Lower lobe of lung",
-        "Middle lobe of right lung",
+        "Thyroid gland",
         "Left Upper lobe of lung",
+        "Left Lower lobe of lung",
         "Right Upper lobe of lung",
-        "Pulmonary artery",
+        "Middle lobe of right lung",
+        "Right Lower lobe of lung",
+        "Blood vessel in Lung",
         "Trachea",
         "Heart",
         "Pulmonary vein",
+        "Pulmonary artery",
+        "Esophagus",
+        "Aorta",
+        "Inferior vena cava",
         "Brachiocephalic artery",
         "Right Subclavian artery",
         "Left Subclavian artery",
@@ -256,8 +260,7 @@
         "Left Brachiocephalic vein",
         "Right Brachiocephalic vein",
         "Left Entire atrial appendage",
-        "Superior Vena cava",
-        "Blood vessel in Lung"
+        "Superior Vena cava"
       ]
     },
     {
@@ -273,8 +276,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 18.6,
-      "segmentationTimeSecCPU": 48.8,
+      "segmentationTimeSecGPU": 45.3,
+      "segmentationTimeSecCPU": 72.0,
       "segmentNames": [
         "Aorta",
         "Esophagus",
@@ -311,8 +314,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 40.2,
-      "segmentationTimeSecCPU": 184.5,
+      "segmentationTimeSecGPU": 201.9,
+      "segmentationTimeSecCPU": 332.0,
       "segmentNames": [
         "Left Adrenal gland",
         "Right Adrenal gland",
@@ -433,8 +436,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 31.6,
-      "segmentationTimeSecCPU": 57.1,
+      "segmentationTimeSecGPU": 82.3,
+      "segmentationTimeSecCPU": 73.0,
       "segmentNames": [
         "Left Adrenal gland",
         "Right Adrenal gland",
@@ -555,8 +558,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 31.8,
-      "segmentationTimeSecCPU": 58.1,
+      "segmentationTimeSecGPU": 74.5,
+      "segmentationTimeSecCPU": 71.0,
       "segmentNames": [
         "Spleen",
         "Right Kidney",
@@ -702,8 +705,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 26.1,
-      "segmentationTimeSecCPU": 154.9,
+      "segmentationTimeSecGPU": 83.5,
+      "segmentationTimeSecCPU": 268.3,
       "segmentNames": [
         "Left Adrenal gland",
         "Right Adrenal gland",
@@ -751,8 +754,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 13.3,
-      "segmentationTimeSecCPU": 17.9,
+      "segmentationTimeSecGPU": 30.8,
+      "segmentationTimeSecCPU": 19.0,
       "segmentNames": [
         "Peripheral zone of prostate",
         "Transition zone of prostate"
@@ -771,8 +774,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 18.9,
-      "segmentationTimeSecCPU": 53.5,
+      "segmentationTimeSecGPU": 45.5,
+      "segmentationTimeSecCPU": 121.9,
       "segmentNames": [
         "Left First rib",
         "Left Second rib",
@@ -815,8 +818,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 25.7,
-      "segmentationTimeSecCPU": 374.1,
+      "segmentationTimeSecGPU": 66.2,
+      "segmentationTimeSecCPU": 782.2,
       "segmentNames": [
         "Left First rib",
         "Left Second rib",
@@ -859,8 +862,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 24.1,
-      "segmentationTimeSecCPU": 39.9,
+      "segmentationTimeSecGPU": 60.5,
+      "segmentationTimeSecCPU": 42.3,
       "segmentNames": [
         "Left Deep muscle of back",
         "Right Deep muscle of back",
@@ -900,8 +903,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 26.9,
-      "segmentationTimeSecCPU": 152.4,
+      "segmentationTimeSecGPU": 88.5,
+      "segmentationTimeSecCPU": 276.4,
       "segmentNames": [
         "Left Deep muscle of back",
         "Right Deep muscle of back",
@@ -941,8 +944,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 18.4,
-      "segmentationTimeSecCPU": 52.4,
+      "segmentationTimeSecGPU": 42.9,
+      "segmentationTimeSecCPU": 80.5,
       "segmentNames": [
         "Aorta",
         "Left Common iliac artery",
@@ -977,8 +980,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 24.8,
-      "segmentationTimeSecCPU": 366.1,
+      "segmentationTimeSecGPU": 95.6,
+      "segmentationTimeSecCPU": 782.6,
       "segmentNames": [
         "Aorta",
         "Left Common iliac artery",
@@ -1013,8 +1016,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-3mm-v2.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 15.4,
-      "segmentationTimeSecCPU": 37.8,
+      "segmentationTimeSecGPU": 37.5,
+      "segmentationTimeSecCPU": 53.7,
       "segmentNames": [
         "Left Lower lobe of lung",
         "Right Lower lobe of lung",
@@ -1050,8 +1053,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 18.6,
-      "segmentationTimeSecCPU": 154.4,
+      "segmentationTimeSecGPU": 25.5,
+      "segmentationTimeSecCPU": 307.9,
       "segmentNames": [
         "Left Lower lobe of lung",
         "Right Lower lobe of lung",
@@ -1083,8 +1086,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 27.0,
-      "segmentationTimeSecCPU": 153.4,
+      "segmentationTimeSecGPU": 86.9,
+      "segmentationTimeSecCPU": 282.4,
       "segmentNames": [
         "Left Hip",
         "Right Hip",
@@ -1131,8 +1134,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 42.3,
-      "segmentationTimeSecCPU": 1882.2,
+      "segmentationTimeSecGPU": 60.0,
+      "segmentationTimeSecCPU": 713.9,
       "segmentNames": [
         "Aorta"
       ]
@@ -1150,8 +1153,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/icrh-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 17.0,
-      "segmentationTimeSecCPU": 203.8,
+      "segmentationTimeSecGPU": 21.7,
+      "segmentationTimeSecCPU": 507.2,
       "segmentNames": [
         "Hemorrhage in Cerebellum",
         "Hemorrhage in Ventricular system of brain",
@@ -1172,8 +1175,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 18.1,
-      "segmentationTimeSecCPU": 218.7,
+      "segmentationTimeSecGPU": 40.1,
+      "segmentationTimeSecCPU": 479.2,
       "segmentNames": [
         "Parenchyma of brain",
         "Subarachnoid space",
@@ -1224,12 +1227,12 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-gli-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 14.0,
-      "segmentationTimeSecCPU": 36.2,
+      "segmentationTimeSecGPU": 32.4,
+      "segmentationTimeSecCPU": 51.8,
       "segmentNames": [
-        "Neoplasm, Primary in Brain",
-        "Edema in Brain",
-        "Necrosis in Brain"
+        "Neoplasm, Primary in Neoplasm, Primary",
+        "Edema in Edema",
+        "Necrosis in Necrosis"
       ]
     },
     {
@@ -1263,8 +1266,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-men-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 14.0,
-      "segmentationTimeSecCPU": 36.3,
+      "segmentationTimeSecGPU": 36.2,
+      "segmentationTimeSecCPU": 52.2,
       "segmentNames": [
         "Neoplasm, Primary in Neoplasm, Primary",
         "Edema in Edema",
@@ -1302,8 +1305,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-met-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 14.6,
-      "segmentationTimeSecCPU": 36.7,
+      "segmentationTimeSecGPU": 39.5,
+      "segmentationTimeSecCPU": 52.0,
       "segmentNames": [
         "Neoplasm, Primary in Neoplasm, Primary",
         "Edema in Edema",
@@ -1341,8 +1344,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ped-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 32.7,
-      "segmentationTimeSecCPU": 36.1,
+      "segmentationTimeSecGPU": 42.0,
+      "segmentationTimeSecCPU": 50.7,
       "segmentNames": [
         "Neoplasm, Primary in Neoplasm, Primary",
         "Edema in Edema",
@@ -1380,8 +1383,8 @@
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip"
         }
       ],
-      "segmentationTimeSecGPU": 13.7,
-      "segmentationTimeSecCPU": 36.5,
+      "segmentationTimeSecGPU": 43.2,
+      "segmentationTimeSecCPU": 55.0,
       "segmentNames": [
         "Neoplasm, Primary in Neoplasm, Primary",
         "Edema in Edema",

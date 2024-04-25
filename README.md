@@ -143,6 +143,8 @@ Additional suggestions:
 - Once it is trained, you will find a model.pt file inside the `./outputs/output_my_task/segresnet_0/model` folder. That's the one you could use in this extension. Add a labels.csv in the same folder as the model.pt file to describe the meaning of each label value.
 - The label indices representing the segments must match the number of segments and be consistent throughout the dataset. For example, if you want to segment 4 regions - liver, tumor, pulmonary vein, and hepatic veins - the indices must be 1, 2, 3, 4 and the liver is always index 1, pulmonary vein is always 3, etc.
 
+See [this page](UsingStandardTerminology.md) for information on how to prepare training data and create labels.csv file using standard terminology.
+
 ### Model files
 
 Model files must be stored in a zip file.
