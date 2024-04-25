@@ -1060,7 +1060,10 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         # Install MONAI with required components
         self.log("Initializing MONAI...")
-        monaiInstallString = "monai[fire,pyyaml,nibabel,pynrrd,psutil,tensorboard,skimage,itk,tqdm]"
+        # Specify minimum version 1.3, as this is a known working version (it is possible that an earlier version works, too).
+        # Without this, for some users monai-0.9.0 got installed, which failed with this error:
+        # "ImportError: cannot import name ‘MetaKeys’ from 'monai.utils'"
+        monaiInstallString = "monai[fire,pyyaml,nibabel,pynrrd,psutil,tensorboard,skimage,itk,tqdm]>=1.3"
         if upgrade:
             monaiInstallString += " --upgrade"
         slicer.util.pip_install(monaiInstallString)
