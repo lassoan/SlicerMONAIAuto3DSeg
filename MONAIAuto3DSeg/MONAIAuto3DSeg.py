@@ -223,6 +223,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # (in the selected parameter node).
         for inputNodeSelector in self.inputNodeSelectors:
             inputNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+        self.ui.fullTextSearchCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.cpuCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.showAllModelsCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.useStandardSegmentNamesCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
@@ -333,7 +334,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.modelSearchBox.text = self._parameterNode.GetParameter("ModelSearchText")
 
             searchWords = self._parameterNode.GetParameter("ModelSearchText").lower().split()
-
+            fullTextSearch = self._parameterNode.GetParameter("FullTextSearch") == "true"
             showAllModels = self._parameterNode.GetParameter("ShowAllModels") == "true"
             self.ui.modelComboBox.clear()
             for model in self.logic.models:
@@ -351,12 +352,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         modelTitle = model['title']
 
                 if searchWords:
-                    segmentNames = model.get("segmentNames")
-                    if segmentNames:
-                        segmentNames = " ".join(segmentNames)
-                    else:
-                        segmentNames = ""
-                    textToSearchIn = modelTitle.lower() + " " + model.get("description").lower() + " " + model.get("imagingModality").lower() + " " + segmentNames.lower()
+                    textToSearchIn = modelTitle.lower()
+                    if fullTextSearch:
+                        textToSearchIn += " " + model.get("description").lower() + " " + model.get("imagingModality").lower()
+                        segmentNames = model.get("segmentNames")
+                        if segmentNames:
+                            segmentNames = " ".join(segmentNames)
+                            textToSearchIn += " " + segmentNames.lower()
                     if not all(word in textToSearchIn for word in searchWords):
                         continue
 
@@ -373,6 +375,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             sampleDataAvailable = self.logic.model(modelId).get("inputs") if modelId else False
             self.ui.downloadSampleDataToolButton.visible = sampleDataAvailable
 
+            self.ui.fullTextSearchCheckBox.checked = fullTextSearch
             self.ui.cpuCheckBox.checked = self._parameterNode.GetParameter("CPU") == "true"
             self.ui.showAllModelsCheckBox.checked = showAllModels
             self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
@@ -459,6 +462,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if modelId:
                 # Only save model ID if valid, otherwise it is temporarily filtered out in the selector
                 self._parameterNode.SetParameter("Model", modelId)
+            self._parameterNode.SetParameter("FullTextSearch", "true" if self.ui.fullTextSearchCheckBox.checked else "false")
             self._parameterNode.SetParameter("CPU", "true" if self.ui.cpuCheckBox.checked else "false")
             self._parameterNode.SetParameter("ShowAllModels", "true" if self.ui.showAllModelsCheckBox.checked else "false")
             self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.useStandardSegmentNamesCheckBox.checked else "false")
