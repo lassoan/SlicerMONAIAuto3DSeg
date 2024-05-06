@@ -104,7 +104,7 @@ def main(model_file,
             print('Using orientation_ras')
             # we assume LPS physical coordinate system orientation
             # This code is only tested with NRRD files that use LPS space
-            ts.append(Orientationd(keys="image", axcodes="RAS", labels=(("R", "L"), ("A", "P"), ("I", "S"))))  # reorient
+            ts.append(Orientationd(keys="image", axcodes="RAS"))  # reorient
         if config.get("crop_foreground", True):
             print('Using crop_foreground')
             ts.append(CropForegroundd(keys="image", source_key="image", margin=10, allow_smaller=True))  # subcrop
@@ -245,7 +245,7 @@ def main(model_file,
             print('Using orientation_ras')
             # we assume LPS physical coordinate system orientation
             # This code is only tested with NRRD files that use LPS space
-            ts.append(Orientationd(keys="image", axcodes="RAS", labels=(("R", "L"), ("A", "P"), ("I", "S"))))  # reorient #
+            ts.append(Orientationd(keys="image", axcodes="RAS"))  # reorient #
         if config.get("crop_foreground", True):
             print('Using crop_foreground')
             ts.append(CropForegroundd(keys="image", source_key="image1", margin=10, allow_smaller=True))  # subcrop
