@@ -558,6 +558,9 @@
       ],
       "versions": [
         {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v2.0.1.zip"
+        },
+        {
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v2.0.0.zip"
         }
       ],
