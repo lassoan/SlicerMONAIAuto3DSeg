@@ -19,6 +19,7 @@ from monai.transforms import (
     CropForegroundd,
     EnsureTyped,
     Invertd,
+    KeepLargestConnectedComponentd,
     Lambdad,
     LoadImaged,
     NormalizeIntensityd,
