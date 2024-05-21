@@ -302,6 +302,60 @@
       ]
     },
     {
+      "title": "Whole Head Segmentation",
+      "description": "Model trained on CT scans for whole head segmentation.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTBrain"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-05mm-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 64.6,
+      "segmentationTimeSecCPU": 150.2,
+      "segmentNames": [
+        "masseter_muscle",
+        "temporal_muscle",
+        "lateral_pterygoid_muscle",
+        "medial_pterygoid_muscle",
+        "eyeball",
+        "brain",
+        "skull",
+        "mandible",
+        "rachis"
+      ]
+    },
+    {
+      "title": "Whole Head Segmentation - quick",
+      "description": "Low-resolution (1mm) for quick preview. Model trained on CT scans for whole head segmentation.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "CTBrain"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-1mm-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 30,
+      "segmentationTimeSecCPU": 73.2,
+      "segmentNames": [
+        "masseter_muscle",
+        "temporal_muscle",
+        "lateral_pterygoid_muscle",
+        "medial_pterygoid_muscle",
+        "eyeball",
+        "brain",
+        "skull",
+        "mandible",
+        "rachis"
+      ]
+    },
+    {
       "title": "Whole body segmentation TS1",
       "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
       "subject": "human",
