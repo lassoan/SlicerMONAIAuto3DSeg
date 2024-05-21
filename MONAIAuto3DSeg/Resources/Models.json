@@ -307,7 +307,7 @@
       "subject": "human",
       "imagingModality": "CT",
       "sampleData": [
-        "CTLiver"
+        "CTBrain"
       ],
       "versions": [
         {
@@ -334,7 +334,7 @@
       "subject": "human",
       "imagingModality": "CT",
       "sampleData": [
-        "CTLiver"
+        "CTBrain"
       ],
       "versions": [
         {
