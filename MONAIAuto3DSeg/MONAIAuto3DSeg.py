@@ -246,6 +246,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.updateGUIFromParameterNode()
 
+        # Make the model search box in focus by default so users can just start typing to find the model they need
+        qt.QTimer.singleShot(0, self.ui.modelSearchBox.setFocus)
+
     def cleanup(self):
         """
         Called when the application closes and the module widget is destroyed.
