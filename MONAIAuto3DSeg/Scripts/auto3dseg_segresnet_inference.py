@@ -304,7 +304,9 @@ def main(model_file,
 
         # pred = pred.cpu() # convert to CPU if the next step (reverse interpolation) is OOM on GPU
         # invert loading transforms (uncrop, reverse-resample, etc)
-        post_transforms = Compose([Invertd(keys="pred", orig_keys="image", transform=inf_transform, nearest_interp=True)])
+        post_transforms_list = [Invertd(keys="pred", orig_keys="image", transform=inf_transform, nearest_interp=True)]
+        post_transforms_list.append(KeepLargestConnectedComponentd(keys="pred", num_components=2)) if 'whole-head' in model_file else post_transforms_list
+        post_transforms = Compose(post_transforms_list)
 
         batch_data["pred"] = convert_to_dst_type(pred, batch_data["image"], dtype=pred.dtype, device=pred.device)[
             0]  # make Meta tensor
