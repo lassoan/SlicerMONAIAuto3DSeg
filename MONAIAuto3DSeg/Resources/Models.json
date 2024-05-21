@@ -306,8 +306,14 @@
       "description": "Model trained on CT scans for whole head segmentation.",
       "subject": "human",
       "imagingModality": "CT",
+      "inputs": [
+        {
+          "title": "Input volume",
+          "namePattern": "*CT*"
+        }
+      ],
       "sampleData": [
-        "CTBrain"
+        "CTMRBrain"
       ],
       "versions": [
         {
@@ -333,8 +339,14 @@
       "description": "Low-resolution (1mm) for quick preview. Model trained on CT scans for whole head segmentation.",
       "subject": "human",
       "imagingModality": "CT",
+      "inputs": [
+        {
+          "title": "Input volume",
+          "namePattern": "*CT*"
+        }
+      ],
       "sampleData": [
-        "CTBrain"
+        "CTMRBrain"
       ],
       "versions": [
         {
