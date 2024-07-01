@@ -1074,6 +1074,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if upgrade:
             monaiInstallString += " --upgrade"
         slicer.util.pip_install(monaiInstallString)
+        slicer.util.pip_install("openvino")
 
         self.dependenciesInstalled = True
         self.log("Dependencies are set up successfully.")
