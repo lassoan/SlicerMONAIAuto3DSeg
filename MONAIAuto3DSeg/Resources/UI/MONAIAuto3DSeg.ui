@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>402</width>
-    <height>653</height>
+    <width>408</width>
+    <height>674</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -17,7 +17,7 @@
       <string>Inputs</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="QListWidget" name="modelComboBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -39,14 +39,14 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="inputNodeLabel0">
         <property name="text">
          <string>Input volume 1:</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="qMRMLNodeComboBox" name="inputNodeSelector0">
         <property name="toolTip">
          <string/>
@@ -67,14 +67,14 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="inputNodeLabel1">
         <property name="text">
          <string>Input volume 2:</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="6" column="1">
        <widget class="qMRMLNodeComboBox" name="inputNodeSelector1">
         <property name="toolTip">
          <string/>
@@ -95,14 +95,14 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="7" column="0">
        <widget class="QLabel" name="inputNodeLabel2">
         <property name="text">
          <string>Input volume 3:</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
+      <item row="7" column="1">
        <widget class="qMRMLNodeComboBox" name="inputNodeSelector2">
         <property name="toolTip">
          <string/>
@@ -123,14 +123,14 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
+      <item row="8" column="0">
        <widget class="QLabel" name="inputNodeLabel3">
         <property name="text">
          <string>Input volume 4:</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
+      <item row="8" column="1">
        <widget class="qMRMLNodeComboBox" name="inputNodeSelector3">
         <property name="toolTip">
          <string/>
@@ -151,7 +151,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QToolButton" name="downloadSampleDataToolButton">
         <property name="toolTip">
          <string>Download sample data set for the current segmentation model</string>
@@ -161,7 +161,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="ctkSearchBox" name="modelSearchBox">
@@ -182,12 +182,46 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>Segmentation model:</string>
         </property>
        </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <layout class="QGridLayout" name="serverSettings">
+        <item row="0" column="1">
+         <widget class="QComboBox" name="serverComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="remoteServerButton">
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked {
+    /* Checked style */
+    background-color: green; /* Green background when checked */
+    border-color: darkgreen; /* Darker border color when checked */
+}</string>
+          </property>
+          <property name="text">
+           <string>Connect</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -401,17 +435,105 @@
     </widget>
    </item>
    <item>
-    <widget class="QPlainTextEdit" name="statusLabel">
-     <property name="lineWrapMode">
-      <enum>QPlainTextEdit::NoWrap</enum>
+    <widget class="qMRMLCollapsibleButton" name="serverCollapsibleButton">
+     <property name="text">
+      <string>Server Address:</string>
      </property>
-     <property name="readOnly">
-      <bool>true</bool>
+     <property name="collapsed">
+      <bool>false</bool>
      </property>
-     <property name="textInteractionFlags">
-      <set>Qt::TextSelectableByMouse</set>
-     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Port:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="portSpinBox">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>65535</number>
+        </property>
+        <property name="singleStep">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Log to Console: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="logConsoleCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Log to GUI: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="logGuiCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QPushButton" name="serverButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton:checked {
+    /* Checked style */
+    background-color: green; /* Green background when checked */
+    border-color: darkgreen; /* Darker border color when checked */
+}</string>
+        </property>
+        <property name="text">
+         <string>Start server</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="serverAddressLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Server address:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="statusLabel"/>
    </item>
   </layout>
  </widget>
@@ -436,6 +558,12 @@
    <class>ctkSearchBox</class>
    <extends>QLineEdit</extends>
    <header>ctkSearchBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLCollapsibleButton</class>
+   <extends>ctkCollapsibleButton</extends>
+   <header>qMRMLCollapsibleButton.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>qMRMLNodeComboBox</class>
@@ -533,6 +661,22 @@
     <hint type="destinationlabel">
      <x>370</x>
      <y>154</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>remoteServerButton</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>serverCollapsibleButton</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>356</x>
+     <y>49</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>203</x>
+     <y>533</y>
     </hint>
    </hints>
   </connection>
