@@ -1379,28 +1379,30 @@
       ],
       "versions": [
         {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.1.zip"
+        },
+        {
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 40.1,
       "segmentationTimeSecCPU": 479.2,
       "segmentNames": [
-        "Parenchyma of brain",
-        "Subarachnoid space",
-        "Dural venous sinus",
-        "Septum pellucidum",
+        "Brain_Parenchyma_NOS",
+        "Subarachnoid_Space",
+        "Dural_Folds_Venous_Sinuses",
+        "Septum_Pellucidum",
         "Cerebellum",
-        "Caudate nucleus",
-        "Lentiform nucleus",
-        "Insula",
-        "Internal capsule",
-        "Ventricular system of brain",
-        "???",
+        "Caudate_Nucleus",
+        "Lentiform_Nucleus",
+        "Insular_Cortex",
+        "Internal_Capsule",
+        "Ventricular_System",
+        "Cerebrum",
         "Thalamus",
-        "Hemorrhage in Cerebellum",
-        "Hemorrhage in Ventricular system of brain",
-        "Hemorrhage in Subdural space",
-        "Hemorrhage in Subarachnoid space"
+        "Intracerebral_Haemorrhage",
+        "Intraventricular_Haemorrhage",
+        "Extra-Axial_Haemorrhage"
       ]
     },
     {
