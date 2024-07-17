@@ -10,7 +10,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 64.6,
@@ -51,7 +51,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/v0.0.1/abdominal-organs-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-organs-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 95.3,
@@ -92,7 +92,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/body-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 37.6,
@@ -112,7 +112,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/body-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/body-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 40.7,
@@ -132,10 +132,10 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.1.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.1.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 41.0,
@@ -179,10 +179,10 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.1.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.1.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/vertebrae-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 62.4,
@@ -226,13 +226,13 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.2.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.2.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.1.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.1.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 109.1,
@@ -273,7 +273,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/mediastinal-anatomy-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 45.3,
@@ -317,7 +317,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-05mm-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-05mm-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 64.6,
@@ -350,7 +350,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-1mm-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-1mm-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 30,
@@ -377,10 +377,10 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.1.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.1.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 201.9,
@@ -502,7 +502,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 82.3,
@@ -624,10 +624,10 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v2.0.1.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v2.0.1.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 49.5,
@@ -762,7 +762,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/whole-body-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 74.5,
@@ -897,19 +897,19 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.4.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.3.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.2.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.1.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/abdominal-17-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 83.5,
@@ -955,10 +955,10 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.1.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.1.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/prostate-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 30.8,
@@ -978,7 +978,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 45.5,
@@ -1022,7 +1022,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/ribs-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 66.2,
@@ -1066,7 +1066,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 60.5,
@@ -1107,7 +1107,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/muscles-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 88.5,
@@ -1148,7 +1148,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 42.9,
@@ -1184,7 +1184,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/cardiac-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 95.6,
@@ -1220,7 +1220,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-3mm-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-3mm-v2.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 37.5,
@@ -1245,19 +1245,19 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.1.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.1.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v2.0.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.2.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.2.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.1.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.1.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/lungs-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 25.5,
@@ -1284,13 +1284,13 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.2.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.2.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.1.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.1.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/hips-and-spine-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 86.9,
@@ -1335,10 +1335,10 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.1.0.zip"
         },
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/aorta-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 60.0,
@@ -1357,7 +1357,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/icrh-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/icrh-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 21.7,
@@ -1379,7 +1379,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/anatomy_and_icrh-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 40.1,
@@ -1431,7 +1431,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-gli-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/brats-gli-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 32.4,
@@ -1470,7 +1470,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-men-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/brats-men-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 36.2,
@@ -1509,7 +1509,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-met-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/brats-met-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 39.5,
@@ -1548,7 +1548,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ped-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ped-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 42.0,
@@ -1587,7 +1587,7 @@
       ],
       "versions": [
         {
-          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip"
+          "url": "https://github.com/surajpaib/SlicerMONAIAuto3DSeg/releases/download/Models/brats-ssa-v1.0.0.zip"
         }
       ],
       "segmentationTimeSecGPU": 43.2,
