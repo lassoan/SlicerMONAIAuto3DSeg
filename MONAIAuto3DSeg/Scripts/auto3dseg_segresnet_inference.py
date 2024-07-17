@@ -32,6 +32,7 @@ from monai.transforms import (
     ConcatItemsd,
 )
 
+OPENVINO_DEFAULT_ON = True
 
 def logits2pred(logits, sigmoid=False, dim=1):
     if isinstance(logits, (list, tuple)):
@@ -97,7 +98,7 @@ def main(model_file,
     device = torch.device("cpu") if torch.cuda.device_count() == 0 else torch.device(0)
 
     enable_openvino = False
-    if device.type == 'cpu' and os.path.exists(model_file.replace('.pt', '.xml')):
+    if device.type == 'cpu' and os.path.exists(model_file.replace('.pt', '.xml')) and OPENVINO_DEFAULT_ON:
         print("OpenVINO Inference enabled")
         enable_openvino = True
 
