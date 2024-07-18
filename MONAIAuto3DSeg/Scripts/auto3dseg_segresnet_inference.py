@@ -1,10 +1,12 @@
+import gc
 import os
 import numpy as np
 import fire
 import time
 import torch
 from collections import OrderedDict
-
+from functools import partial
+import openvino as ov
 import nrrd
 from monai.bundle import ConfigParser
 from monai.data import decollate_batch, list_data_collate
@@ -30,6 +32,7 @@ from monai.transforms import (
     ConcatItemsd,
 )
 
+OPENVINO_DEFAULT_ON = True
 
 def logits2pred(logits, sigmoid=False, dim=1):
     if isinstance(logits, (list, tuple)):
@@ -44,6 +47,28 @@ def logits2pred(logits, sigmoid=False, dim=1):
 
     return pred
 
+def overrides_fn(kwargs):
+    overrides = {
+        "overlap": 0.5
+    }
+    if "overlap" in kwargs:
+        overrides["overlap"] = kwargs["overlap"]
+    return overrides
+
+def openvino_infer(infer_request, input_tensor):
+    ov_input_tensor = ov.Tensor(array=np.ascontiguousarray(input_tensor.numpy()), shared_memory=False)
+    infer_request.set_input_tensor(ov_input_tensor)
+    infer_request.start_async()
+    infer_request.wait()
+    output_tensor = infer_request.get_output_tensor()
+    result = torch.from_numpy(output_tensor.data)
+    return result
+
+def configure_openvino(model_path):
+    core = ov.Core()
+    model = core.read_model(model_path)
+    compiled_model = core.compile_model(model, "AUTO")
+    return compiled_model
 
 @torch.no_grad()
 def main(model_file,
@@ -54,10 +79,12 @@ def main(model_file,
          image_file_3=None,
          image_file_4=None,
          **kwargs):
+
+    overrides = overrides_fn(kwargs)
+
+    print(f"Applying overrides: {overrides}")
     start_time = time.time()
     timing_checkpoints = []  # list of (operation, time) tuples
-
-    # Checking for model file
 
     if not os.path.exists(model_file):
         raise ValueError('Cannot find model file:' + str(model_file))
@@ -68,6 +95,12 @@ def main(model_file,
         raise ValueError('Config not found in checkpoint (not a auto3dseg/segresnet model):' + str(model_file))
 
     config = checkpoint["config"]
+    device = torch.device("cpu") if torch.cuda.device_count() == 0 else torch.device(0)
+
+    enable_openvino = False
+    if device.type == 'cpu' and os.path.exists(model_file.replace('.pt', '.xml')) and OPENVINO_DEFAULT_ON:
+        print("OpenVINO Inference enabled")
+        enable_openvino = True
 
     state_dict = checkpoint["state_dict"]
 
@@ -75,18 +108,22 @@ def main(model_file,
     best_metric = checkpoint.get("best_metric", 0)
     sigmoid = config.get("sigmoid", False)
 
-    model = ConfigParser(config["network"]).get_parsed_content()
-    model.load_state_dict(state_dict, strict=True)
+    # Checking for model file
+    
+    if enable_openvino:
+        del checkpoint
+        gc.collect()
+        model = configure_openvino(model_file.replace('.pt', '.xml'))
+    else:
+        model = ConfigParser(config["network"]).get_parsed_content()
+        model.load_state_dict(state_dict, strict=True)
+        model = model.to(device=device, memory_format=torch.channels_last_3d)  # gpu
+        model.eval()
 
     print(f'Model epoch {epoch} metric {best_metric}')
 
-    device = torch.device("cpu") if torch.cuda.device_count() == 0 else torch.device(0)
-    model = model.to(device=device, memory_format=torch.channels_last_3d)  # gpu
-    model.eval()
-
     # If BRATS
     if save_mode == 'brats' or 'brats' in model_file:  # for brats case
-
         image_files = []
         for index, img in enumerate([image_file, image_file_2, image_file_3, image_file_4]):
             if img is not None:
@@ -135,8 +172,9 @@ def main(model_file,
 
         # sliding_inferrer
         roi_size = config["roi_size"]
+
         # roi_size = [224, 224, 144]
-        sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=0.625, mode="gaussian",
+        sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=overrides["overlap"], mode="gaussian",
                                                      cache_roi_weight_map=False, progress=True)
 
         # process DATA
@@ -148,8 +186,14 @@ def main(model_file,
         timing_checkpoints.append(("Preprocessing", time.time()))
 
         print('Running Inference ...')
-        with autocast(enabled=True):
-            logits = sliding_inferrer(inputs=data, network=model)
+        if enable_openvino:
+            infer_request = model.create_infer_request()
+            logits = sliding_inferrer(inputs=data, network=lambda x: openvino_infer(infer_request, x))
+            del infer_request, model
+            gc.collect()
+        else:
+            with autocast(enabled=True):
+                logits = sliding_inferrer(inputs=data, network=model)
         timing_checkpoints.append(("Inference", time.time()))
 
         print(f"Logits {logits.shape}")
@@ -271,8 +315,9 @@ def main(model_file,
 
         # sliding_inferrer
         roi_size = config["roi_size"]
+
         # roi_size = [224, 224, 144]
-        sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=0.625, mode="gaussian",
+        sliding_inferrer = SlidingWindowInfererAdapt(roi_size=roi_size, sw_batch_size=1, overlap=overrides["overlap"], mode="gaussian",
                                                      cache_roi_weight_map=False, progress=True)
 
         # process DATA
@@ -284,8 +329,16 @@ def main(model_file,
         timing_checkpoints.append(("Preprocessing", time.time()))
 
         print('Running Inference ...')
-        with autocast(enabled=True):
-            logits = sliding_inferrer(inputs=data, network=model)
+
+        if enable_openvino:
+            infer_request = model.create_infer_request()
+            logits = sliding_inferrer(inputs=data, network=lambda x: openvino_infer(infer_request, x))
+            del infer_request, model
+            gc.collect()
+        else:
+            with autocast(enabled=True):
+                logits = sliding_inferrer(inputs=data, network=model)
+
         timing_checkpoints.append(("Inference", time.time()))
 
         print(f"Logits {logits.shape}")
