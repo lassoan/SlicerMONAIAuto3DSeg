@@ -2,6 +2,7 @@
   "models": [
     {
       "title": "Abdominal organs TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -43,6 +44,7 @@
     },
     {
       "title": "Abdominal organs TS2",
+      "license": "CC BY 4.0",
       "description": "Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -84,6 +86,7 @@
     },
     {
       "title": "Body TS2",
+      "license": "CC BY 4.0",
       "description": "Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -104,6 +107,7 @@
     },
     {
       "title": "Body TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -124,6 +128,7 @@
     },
     {
       "title": "Vertebrae TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -171,6 +176,7 @@
     },
     {
       "title": "Vertebrae TS2",
+      "license": "CC BY 4.0",
       "description": "Trained on class_map_part_vertebrae of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -218,6 +224,7 @@
     },
     {
       "title": "Mediastinal anatomy TS2",
+      "license": "CC BY 4.0",
       "description": "Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -265,6 +272,7 @@
     },
     {
       "title": "Mediastinal anatomy TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -369,6 +377,7 @@
     },
     {
       "title": "Whole body segmentation TS1",
+      "license": "CC BY 4.0",
       "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
       "subject": "human",
       "imagingModality": "CT",
@@ -494,6 +503,7 @@
     },
     {
       "title": "Whole body segmentation TS1 - quick",
+      "license": "CC BY 4.0",
       "description": "Segment 104 structures (abdominal organs, bones, vessels) on CT images. Trained on TotalSegmentatorV1 dataset.",
       "subject": "human",
       "imagingModality": "CT",
@@ -754,6 +764,7 @@
     },
     {
       "title": "Whole body segmentation TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Segment >100 structures (abdominal organs, bones, vessels, etc) on CT images. Trained on TotalSegmentatorV2 dataset.",
       "subject": "human",
       "imagingModality": "CT",
@@ -889,6 +900,7 @@
     },
     {
       "title": "Abdominal organs TS1",
+      "license": "CC BY 4.0",
       "description": "Segment 17 abdominal organs. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -936,6 +948,7 @@
     },
     {
       "title": "Prostate - Multisequence",
+      "license": "CC-BY-SA4.0",
       "description": "Segments peripheral (PZ) and transition zone (TZ) on T2 and ADC sequences. Trained on Medical Segmentation Decathlon dataset.",
       "subject": "human",
       "imagingModality": "MR",
@@ -970,6 +983,7 @@
     },
     {
       "title": "Ribs TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_ribs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1014,6 +1028,7 @@
     },
     {
       "title": "Ribs TS2",
+      "license": "CC BY 4.0",
       "description": "class_map_part_ribs: Trained on TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1058,6 +1073,7 @@
     },
     {
       "title": "Muscles TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1099,6 +1115,7 @@
     },
     {
       "title": "Muscles TS2",
+      "license": "CC BY 4.0",
       "description": "Trained on class_map_part_muscles of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1140,6 +1157,7 @@
     },
     {
       "title": "Cardiac TS2 - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_cardiac of TotalSegmentatorV2 dataset.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1176,6 +1194,7 @@
     },
     {
       "title": "Cardiac TS2",
+      "license": "CC BY 4.0",
       "description": "class_map_part_cardiac: Trained on TotalSegmentatorV2 dataset.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1212,6 +1231,7 @@
     },
     {
       "title": "Lungs - quick",
+      "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on TotalSegmentatorV2 dataset.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1237,6 +1257,7 @@
     },
     {
       "title": "Lungs",
+      "license": "CC BY 4.0",
       "description": "Segment 9 segments: lung segments, pulmonary vein, pulmonary artery, lung vessels and trachea. Trained on TotalSegmentatorV2 datasets. In v1.x there are no pulmonary vein and artery segments but there is esophagus.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1276,6 +1297,7 @@
     },
     {
       "title": "Hips and spine",
+      "license": "CC BY 4.0",
       "description": "Segment 27 segments: hips, sacrum and vertebrae. Trained on TotalSegmentatorV1 dataset. Input image is abdominal, chest, or whole body CT.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1327,6 +1349,7 @@
     },
     {
       "title": "Aorta",
+      "license": "CC BY 4.0",
       "description": "Aorta segmentation. Trained on TotalSegmentatorV1 dataset.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1349,6 +1372,7 @@
     },
     {
       "title": "Intracranial hemorrhage (ICrH) Segmentation",
+      "license": "CC BY 4.0",
       "description": "Intracranial Hemorrhage segmentation using CT images.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1371,6 +1395,7 @@
     },
     {
       "title": "Brain and intracranial hemorrhage (ICrH) Segmentation",
+      "license": "CC BY 4.0",
       "description": "Brain Anatomy and Intracranial Hemorrhage segmentation using CT images.",
       "subject": "human",
       "imagingModality": "CT",
@@ -1407,6 +1432,7 @@
     },
     {
       "title": "Brain Tumor Segmentation (BRATS) GLI",
+      "license": "Free to use and/or refer to the BraTS datasets",
       "description": "Brain Tumor Segmentation (BRATS) GLI",
       "subject": "human",
       "imagingModality": "MR",
@@ -1446,6 +1472,7 @@
     },
     {
       "title": "Brain Tumor Segmentation (BRATS) MEN",
+      "license": "Free to use and/or refer to the BraTS datasets",
       "description": "Brain Tumor Segmentation (BRATS) MEN",
       "subject": "human",
       "imagingModality": "MR",
@@ -1485,6 +1512,7 @@
     },
     {
       "title": "Brain Tumor Segmentation (BRATS) MET",
+      "license": "Free to use and/or refer to the BraTS datasets",
       "description": "Brain Tumor Segmentation (BRATS) MET",
       "subject": "human",
       "imagingModality": "MR",
@@ -1524,6 +1552,7 @@
     },
     {
       "title": "Brain Tumor Segmentation (BRATS) PED",
+      "license": "Free to use and/or refer to the BraTS datasets",
       "description": "Brain Tumor Segmentation (BRATS) PED",
       "subject": "human",
       "imagingModality": "MR",
@@ -1563,6 +1592,7 @@
     },
     {
       "title": "Brain Tumor Segmentation (BRATS) SSA",
+      "license": "Free to use and/or refer to the BraTS datasets",
       "description": "Brain Tumor Segmentation (BRATS) SSA",
       "subject": "human",
       "imagingModality": "MR",
