@@ -14,7 +14,7 @@ from monai.utils import convert_to_dst_type
 from monai.utils import MetaKeys
 
 from torch.cuda.amp import autocast
-from monai.inferers import SlidingWindowInfererAdapt, SlidingWindowInferer
+from monai.inferers import SlidingWindowInfererAdapt
 
 from monai.transforms import (
     Compose,
@@ -186,8 +186,14 @@ def main(model_file,
         timing_checkpoints.append(("Preprocessing", time.time()))
 
         print('Running Inference ...')
-        with autocast(enabled=True):
-            logits = sliding_inferrer(inputs=data, network=model)
+        if enable_openvino:
+            infer_request = model.create_infer_request()
+            logits = sliding_inferrer(inputs=data, network=lambda x: openvino_infer(infer_request, x))
+            del infer_request, model
+            gc.collect()
+        else:
+            with autocast(enabled=True):
+                logits = sliding_inferrer(inputs=data, network=model)
         timing_checkpoints.append(("Inference", time.time()))
 
         print(f"Logits {logits.shape}")
