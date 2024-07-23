@@ -1045,11 +1045,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         if model is None:
             model = self.defaultModel
 
-        try:
-            modelPath = self.modelPath(model)
-        except:
-            self.downloadModel(model)
-            modelPath = self.modelPath(model)
+        modelPath = self.modelPath(model)
 
         segmentationProcessInfo = {}
 
@@ -1420,14 +1416,14 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                         name = f"{name}_{idx}"
                     files[name] = open(inputFile, 'rb')
 
-                    with requests.post(self._server_address + f"/infer?model_name={modelId}", files=files) as r:
-                        r.raise_for_status()
+                with requests.post(self._server_address + f"/infer?model_name={modelId}", files=files) as r:
+                    r.raise_for_status()
 
-                        with open(outputSegmentationFile, "wb") as binary_file:
-                            for chunk in r.iter_content(chunk_size=8192):
-                                binary_file.write(chunk)
+                    with open(outputSegmentationFile, "wb") as binary_file:
+                        for chunk in r.iter_content(chunk_size=8192):
+                            binary_file.write(chunk)
 
-                        segmentationProcessInfo["procReturnCode"] = 0
+                    segmentationProcessInfo["procReturnCode"] = 0
             finally:
                 for f in files.values():
                     f.close()

@@ -132,6 +132,13 @@ class ModelDatabase:
             os.makedirs(modelsDir)
 
     def modelPath(self, modelName):
+        try:
+            return self._modelPath(modelName)
+        except RuntimeError:
+            self.downloadModel(modelName)
+            return self._modelPath(modelName)
+
+    def _modelPath(self, modelName):
         modelRoot = self.modelsPath.joinpath(modelName)
         # find labels.csv file within the modelRoot folder and subfolders
         for path in Path(modelRoot).rglob("labels.csv"):

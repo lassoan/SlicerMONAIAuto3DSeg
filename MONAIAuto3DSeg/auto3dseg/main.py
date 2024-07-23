@@ -18,6 +18,7 @@ for path in paths:
 
 from MONAIAuto3DSegLib.model_database import ModelDatabase
 from MONAIAuto3DSegLib.dependency_handler import LocalPythonDependencies
+from MONAIAuto3DSegLib.constants import APPLICATION_NAME
 
 import shutil
 import asyncio
@@ -31,6 +32,10 @@ from fastapi.background import BackgroundTasks
 app = FastAPI()
 modelDB = ModelDatabase()
 dependencyHandler = LocalPythonDependencies()
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(APPLICATION_NAME)
 
 
 def upload(file, session_dir, identifier):
@@ -84,6 +89,8 @@ async def infer(
     if image_file_4:
         inputFiles.append(upload(image_file_4, session_dir, "image_file_4"))
 
+    # logging.info("Input Files: ", inputFiles)
+
     outputSegmentationFile = f"{session_dir}/output-segmentation.nrrd"
 
     modelPath = modelDB.modelPath(model_name)
@@ -104,6 +111,7 @@ async def infer(
         auto3DSegCommand.append(inputFiles[inputIndex])
 
     try:
+        # logger.info(auto3DSegCommand)
         proc = await asyncio.create_subprocess_shell(" ".join(auto3DSegCommand))
         await proc.wait()
         if proc.returncode != 0:
@@ -112,7 +120,6 @@ async def infer(
     except Exception as e:
         shutil.rmtree(session_dir)
         raise HTTPException(status_code=500, detail=f"Failed to run CMD command: {str(e)}")
-
 
 
 def main(argv):
