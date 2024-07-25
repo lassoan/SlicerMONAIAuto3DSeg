@@ -802,6 +802,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
     def _terminologyPropertyTypes(terminologyName):
         """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
         Terminology entries are either in DICOM or MONAI Auto3DSeg "Segmentation category and type".
+
+        # List of property type codes that are specified by in the terminology.
+        #
+        # Codes are stored as a list of strings containing coding scheme designator and code value of the property type,
+        # separated by "^" character. For example "SCT^123456".
+
         """
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
         terminologyPropertyTypes = []
@@ -809,18 +815,15 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         # Get anatomicalStructureCategory from the MONAI Auto3DSeg terminology
         anatomicalStructureCategory = slicer.vtkSlicerTerminologyCategory()
         numberOfCategories = terminologiesLogic.GetNumberOfCategoriesInTerminology(terminologyName)
-        for i in range(numberOfCategories):
-            terminologiesLogic.GetNthCategoryInTerminology(terminologyName, i, anatomicalStructureCategory)
-            # if anatomicalStructureCategory.GetCodingSchemeDesignator() == "SCT" and anatomicalStructureCategory.GetCodeValue() == "123037004":
-            #     # Found the (123037004, SCT, "Anatomical Structure") category within DICOM master list
-            #     break
+        for cIdx in range(numberOfCategories):
+            terminologiesLogic.GetNthCategoryInTerminology(terminologyName, cIdx, anatomicalStructureCategory)
 
             # Retrieve all anatomicalStructureCategory property type codes
             terminologyType = slicer.vtkSlicerTerminologyType()
             numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(terminologyName,
                                                                                      anatomicalStructureCategory)
-            for i in range(numberOfTypes):
-                if terminologiesLogic.GetNthTypeInTerminologyCategory(terminologyName, anatomicalStructureCategory, i,
+            for tIdx in range(numberOfTypes):
+                if terminologiesLogic.GetNthTypeInTerminologyCategory(terminologyName, anatomicalStructureCategory, tIdx,
                                                                       terminologyType):
                     terminologyPropertyTypes.append(
                         terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
@@ -911,22 +914,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         self.endResultImportCallback = None
         self.useStandardSegmentNames = True
 
-        # List of property type codes that are specified by in the MONAIAuto3DSeg terminology.
-        #
-        # Codes are stored as a list of strings containing coding scheme designator and code value of the property type,
-        # separated by "^" character. For example "SCT^123456".
-        #
-        # If property the code is found in this list then the MONAIAuto3DSeg terminology will be used,
-        # otherwise the DICOM terminology will be used. This is necessary because the DICOM terminology
-        # does not contain all the necessary items and some items are incomplete (e.g., don't have color or 3D Slicer label).
-        #
-        self.MONAIAuto3DSegTerminologyPropertyTypes = \
-            self._terminologyPropertyTypes(slicer.modules.MONAIAuto3DSegInstance.terminologyName)
-
-        # List of anatomic regions that are specified by MONAIAuto3DSeg.
-        self.MONAIAuto3DSegAnatomicRegions = \
-            self._anatomicRegions(slicer.modules.MONAIAuto3DSegInstance.anatomicContextName)
-
         # Timer for checking the output of the segmentation process that is running in the background
         self.processOutputCheckTimerIntervalMsec = 1000
 
@@ -977,11 +964,16 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                   row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator")]
                   + "^" + row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodeValue")])
                 terminologyName = None
+
+                # If property the code is found in this list then the terminology will be used,
                 for tName in self.getLoadedTerminologyNames():
                     propertyTypes = self._terminologyPropertyTypes(tName)
                     if terminologyPropertyTypeStr in propertyTypes:
                         terminologyName = tName
                         break
+
+                # NB: DICOM terminology will be used otherwise. Note: the DICOM terminology does not contain all the
+                # necessary items and some items are incomplete (e.g., don't have color or 3D Slicer label).
                 if not terminologyName:
                     terminologyName = "Segmentation category and type - DICOM master list"
 
@@ -989,9 +981,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 anatomicRegionStr = (  # Example: SCT^279245009
                   row[columnNames.index("AnatomicRegionSequence.CodingSchemeDesignator")]
                   + "^" + row[columnNames.index("AnatomicRegionSequence.CodeValue")])
-                if anatomicRegionStr in self.MONAIAuto3DSegAnatomicRegions:
-                    anatomicContextName = slicer.modules.MONAIAuto3DSegInstance.anatomicContextName
-                else:
+                anatomicContextName = None
+                for aName in self.getLoadedAnatomicContextNames():
+                    if anatomicRegionStr in self._anatomicRegions(aName):
+                        anatomicContextName = aName
+                if not anatomicContextName:
                     anatomicContextName = "Anatomic codes - DICOM master list"
 
                 terminologyEntryStr = (
