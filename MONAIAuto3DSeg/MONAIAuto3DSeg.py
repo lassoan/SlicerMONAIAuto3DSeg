@@ -780,6 +780,125 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
     DEPENDENCY_HANDLER = SlicerPythonDependencies()
 
+    @staticmethod
+    def getLoadedTerminologyNames():
+        import vtk
+        terminologyNames = vtk.vtkStringArray()
+        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
+        terminologiesLogic.GetLoadedTerminologyNames(terminologyNames)
+
+        return [terminologyNames.GetValue(idx) for idx in range(terminologyNames.GetNumberOfValues())]
+
+    @staticmethod
+    def getLoadedAnatomicContextNames():
+        import vtk
+        anatomicContextNames = vtk.vtkStringArray()
+        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
+        terminologiesLogic.GetLoadedAnatomicContextNames(anatomicContextNames)
+
+        return [anatomicContextNames.GetValue(idx) for idx in range(anatomicContextNames.GetNumberOfValues())]
+
+    @staticmethod
+    def _terminologyPropertyTypes(terminologyName):
+        """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
+        Terminology entries are either in DICOM or MONAI Auto3DSeg "Segmentation category and type".
+        """
+        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
+        terminologyPropertyTypes = []
+
+        # Get anatomicalStructureCategory from the MONAI Auto3DSeg terminology
+        anatomicalStructureCategory = slicer.vtkSlicerTerminologyCategory()
+        numberOfCategories = terminologiesLogic.GetNumberOfCategoriesInTerminology(terminologyName)
+        for i in range(numberOfCategories):
+            terminologiesLogic.GetNthCategoryInTerminology(terminologyName, i, anatomicalStructureCategory)
+            # if anatomicalStructureCategory.GetCodingSchemeDesignator() == "SCT" and anatomicalStructureCategory.GetCodeValue() == "123037004":
+            #     # Found the (123037004, SCT, "Anatomical Structure") category within DICOM master list
+            #     break
+
+            # Retrieve all anatomicalStructureCategory property type codes
+            terminologyType = slicer.vtkSlicerTerminologyType()
+            numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(terminologyName,
+                                                                                     anatomicalStructureCategory)
+            for i in range(numberOfTypes):
+                if terminologiesLogic.GetNthTypeInTerminologyCategory(terminologyName, anatomicalStructureCategory, i,
+                                                                      terminologyType):
+                    terminologyPropertyTypes.append(
+                        terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
+
+        return terminologyPropertyTypes
+
+    @staticmethod
+    def _anatomicRegions(anatomicContextName):
+        """Get anatomic regions defined in from MONAI Auto3DSeg terminology.
+        Terminology entries are either in DICOM or MONAI Auto3DSeg "Anatomic codes".
+        """
+        anatomicRegions = []
+
+        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
+        if not hasattr(terminologiesLogic, "GetNumberOfRegionsInAnatomicContext"):
+            # This Slicer version does not have GetNumberOfRegionsInAnatomicContext method,
+            # do not add the region modifier (the only impact is that the modifier will not be selectable
+            # when editing the terminology on the GUI)
+            return anatomicRegions
+
+        # Retrieve all anatomical region codes
+        regionObject = slicer.vtkSlicerTerminologyType()
+        numberOfRegions = terminologiesLogic.GetNumberOfRegionsInAnatomicContext(anatomicContextName)
+        for i in range(numberOfRegions):
+            if terminologiesLogic.GetNthRegionInAnatomicContext(anatomicContextName, i, regionObject):
+                anatomicRegions.append(regionObject.GetCodingSchemeDesignator() + "^" + regionObject.GetCodeValue())
+
+        return anatomicRegions
+
+    @staticmethod
+    def getSegmentLabelColor(terminologyEntryStr):
+        """Get segment label and color from terminology"""
+
+        def labelColorFromTypeObject(typeObject):
+            """typeObject is a terminology type or type modifier"""
+            label = typeObject.GetSlicerLabel() if typeObject.GetSlicerLabel() else typeObject.GetCodeMeaning()
+            rgb = typeObject.GetRecommendedDisplayRGBValue()
+            return label, (rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
+
+        tlogic = slicer.modules.terminologies.logic()
+
+        terminologyEntry = slicer.vtkSlicerTerminologyEntry()
+        if not tlogic.DeserializeTerminologyEntry(terminologyEntryStr, terminologyEntry):
+            raise RuntimeError(f"Failed to deserialize terminology string: {terminologyEntryStr}")
+
+        numberOfTypes = tlogic.GetNumberOfTypesInTerminologyCategory(terminologyEntry.GetTerminologyContextName(),
+                                                                     terminologyEntry.GetCategoryObject())
+        foundTerminologyEntry = slicer.vtkSlicerTerminologyEntry()
+        for typeIndex in range(numberOfTypes):
+            tlogic.GetNthTypeInTerminologyCategory(terminologyEntry.GetTerminologyContextName(),
+                                                   terminologyEntry.GetCategoryObject(), typeIndex,
+                                                   foundTerminologyEntry.GetTypeObject())
+            if terminologyEntry.GetTypeObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeObject().GetCodingSchemeDesignator():
+                continue
+            if terminologyEntry.GetTypeObject().GetCodeValue() != foundTerminologyEntry.GetTypeObject().GetCodeValue():
+                continue
+            if terminologyEntry.GetTypeModifierObject() and terminologyEntry.GetTypeModifierObject().GetCodeValue():
+                # Type has a modifier, get the color from there
+                numberOfModifiers = tlogic.GetNumberOfTypeModifiersInTerminologyType(
+                    terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(),
+                    terminologyEntry.GetTypeObject())
+                foundMatchingModifier = False
+                for modifierIndex in range(numberOfModifiers):
+                    tlogic.GetNthTypeModifierInTerminologyType(terminologyEntry.GetTerminologyContextName(),
+                                                               terminologyEntry.GetCategoryObject(),
+                                                               terminologyEntry.GetTypeObject(),
+                                                               modifierIndex,
+                                                               foundTerminologyEntry.GetTypeModifierObject())
+                    if terminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator():
+                        continue
+                    if terminologyEntry.GetTypeModifierObject().GetCodeValue() != foundTerminologyEntry.GetTypeModifierObject().GetCodeValue():
+                        continue
+                    return labelColorFromTypeObject(foundTerminologyEntry.GetTypeModifierObject())
+                continue
+            return labelColorFromTypeObject(foundTerminologyEntry.GetTypeObject())
+
+        raise RuntimeError(f"Color was not found for terminology {terminologyEntryStr}")
+
     def __init__(self):
         """
         Called when the logic class is instantiated. Can be used for initializing member variables.
@@ -801,10 +920,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         # otherwise the DICOM terminology will be used. This is necessary because the DICOM terminology
         # does not contain all the necessary items and some items are incomplete (e.g., don't have color or 3D Slicer label).
         #
-        self.MONAIAuto3DSegTerminologyPropertyTypes = self._MONAIAuto3DSegTerminologyPropertyTypes()
+        self.MONAIAuto3DSegTerminologyPropertyTypes = \
+            self._terminologyPropertyTypes(slicer.modules.MONAIAuto3DSegInstance.terminologyName)
 
         # List of anatomic regions that are specified by MONAIAuto3DSeg.
-        self.MONAIAuto3DSegAnatomicRegions = self._MONAIAuto3DSegAnatomicRegions()
+        self.MONAIAuto3DSegAnatomicRegions = \
+            self._anatomicRegions(slicer.modules.MONAIAuto3DSegInstance.anatomicContextName)
 
         # Timer for checking the output of the segmentation process that is running in the background
         self.processOutputCheckTimerIntervalMsec = 1000
@@ -820,58 +941,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
     def setupPythonRequirements(self, upgrade=False):
         self.DEPENDENCY_HANDLER.setupPythonRequirements(upgrade)
         return True
-
-    def _MONAIAuto3DSegTerminologyPropertyTypes(self):
-        """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
-        Terminology entries are either in DICOM or MONAI Auto3DSeg "Segmentation category and type".
-        """
-
-        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
-        MONAIAuto3DSegTerminologyName = slicer.modules.MONAIAuto3DSegInstance.terminologyName
-
-        # Get anatomicalStructureCategory from the MONAI Auto3DSeg terminology
-        anatomicalStructureCategory = slicer.vtkSlicerTerminologyCategory()
-        numberOfCategories = terminologiesLogic.GetNumberOfCategoriesInTerminology(MONAIAuto3DSegTerminologyName)
-        for i in range(numberOfCategories):
-            terminologiesLogic.GetNthCategoryInTerminology(MONAIAuto3DSegTerminologyName, i, anatomicalStructureCategory)
-            if anatomicalStructureCategory.GetCodingSchemeDesignator() == "SCT" and anatomicalStructureCategory.GetCodeValue() == "123037004":
-                # Found the (123037004, SCT, "Anatomical Structure") category within DICOM master list
-                break
-
-        # Retrieve all anatomicalStructureCategory property type codes
-        terminologyPropertyTypes = []
-        terminologyType = slicer.vtkSlicerTerminologyType()
-        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(MONAIAuto3DSegTerminologyName, anatomicalStructureCategory)
-        for i in range(numberOfTypes):
-            if terminologiesLogic.GetNthTypeInTerminologyCategory(MONAIAuto3DSegTerminologyName, anatomicalStructureCategory, i, terminologyType):
-                terminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
-
-        return terminologyPropertyTypes
-
-    def _MONAIAuto3DSegAnatomicRegions(self):
-        """Get anatomic regions defined in from MONAI Auto3DSeg terminology.
-        Terminology entries are either in DICOM or MONAI Auto3DSeg "Anatomic codes".
-        """
-        anatomicRegions = []
-
-        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
-        if not hasattr(terminologiesLogic, "GetNumberOfRegionsInAnatomicContext"):
-            # This Slicer version does not have GetNumberOfRegionsInAnatomicContext method,
-            # do not add the region modifier (the only impact is that the modifier will not be selectable
-            # when editing the terminology on the GUI)
-            return anatomicRegions
-
-        MONAIAuto3DSegAnatomicContextName = slicer.modules.MONAIAuto3DSegInstance.anatomicContextName
-
-        # Retrieve all anatomical region codes
-
-        regionObject = slicer.vtkSlicerTerminologyType()
-        numberOfRegions = terminologiesLogic.GetNumberOfRegionsInAnatomicContext(MONAIAuto3DSegAnatomicContextName)
-        for i in range(numberOfRegions):
-            if terminologiesLogic.GetNthRegionInAnatomicContext(MONAIAuto3DSegAnatomicContextName, i, regionObject):
-                anatomicRegions.append(regionObject.GetCodingSchemeDesignator() + "^" + regionObject.GetCodeValue())
-
-        return anatomicRegions
 
     def labelDescriptions(self, modelName):
         """Return mapping from label value to label description.
@@ -907,9 +976,13 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 terminologyPropertyTypeStr = (  # Example: SCT^23451007
                   row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator")]
                   + "^" + row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodeValue")])
-                if terminologyPropertyTypeStr in self.MONAIAuto3DSegTerminologyPropertyTypes:
-                    terminologyName = slicer.modules.MONAIAuto3DSegInstance.terminologyName
-                else:
+                terminologyName = None
+                for tName in self.getLoadedTerminologyNames():
+                    propertyTypes = self._terminologyPropertyTypes(tName)
+                    if terminologyPropertyTypeStr in propertyTypes:
+                        terminologyName = tName
+                        break
+                if not terminologyName:
                     terminologyName = "Segmentation category and type - DICOM master list"
 
                 # Determine the anatomic context name (DICOM or MONAIAuto3DSeg)
@@ -947,46 +1020,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 name = row[columnNames.index("Name")]
                 labelDescriptions[labelValue] = {"name": name, "terminology": terminologyEntryStr}
         return labelDescriptions
-
-    def getSegmentLabelColor(self, terminologyEntryStr):
-        """Get segment label and color from terminology"""
-
-        def labelColorFromTypeObject(typeObject):
-            """typeObject is a terminology type or type modifier"""
-            label = typeObject.GetSlicerLabel() if typeObject.GetSlicerLabel() else typeObject.GetCodeMeaning()
-            rgb = typeObject.GetRecommendedDisplayRGBValue()
-            return label, (rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
-
-        tlogic = slicer.modules.terminologies.logic()
-
-        terminologyEntry = slicer.vtkSlicerTerminologyEntry()
-        if not tlogic.DeserializeTerminologyEntry(terminologyEntryStr, terminologyEntry):
-            raise RuntimeError(f"Failed to deserialize terminology string: {terminologyEntryStr}")
-
-        numberOfTypes = tlogic.GetNumberOfTypesInTerminologyCategory(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject())
-        foundTerminologyEntry = slicer.vtkSlicerTerminologyEntry()
-        for typeIndex in range(numberOfTypes):
-            tlogic.GetNthTypeInTerminologyCategory(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(), typeIndex, foundTerminologyEntry.GetTypeObject())
-            if terminologyEntry.GetTypeObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeObject().GetCodingSchemeDesignator():
-                continue
-            if terminologyEntry.GetTypeObject().GetCodeValue() != foundTerminologyEntry.GetTypeObject().GetCodeValue():
-                continue
-            if terminologyEntry.GetTypeModifierObject() and terminologyEntry.GetTypeModifierObject().GetCodeValue():
-                # Type has a modifier, get the color from there
-                numberOfModifiers = tlogic.GetNumberOfTypeModifiersInTerminologyType(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(), terminologyEntry.GetTypeObject())
-                foundMatchingModifier = False
-                for modifierIndex in range(numberOfModifiers):
-                    tlogic.GetNthTypeModifierInTerminologyType(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(), terminologyEntry.GetTypeObject(),
-                        modifierIndex, foundTerminologyEntry.GetTypeModifierObject())
-                    if terminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator():
-                        continue
-                    if terminologyEntry.GetTypeModifierObject().GetCodeValue() != foundTerminologyEntry.GetTypeModifierObject().GetCodeValue():
-                        continue
-                    return labelColorFromTypeObject(foundTerminologyEntry.GetTypeModifierObject())
-                continue
-            return labelColorFromTypeObject(foundTerminologyEntry.GetTypeObject())
-
-        raise RuntimeError(f"Color was not found for terminology {terminologyEntryStr}")
 
     def setDefaultParameters(self, parameterNode):
         """
