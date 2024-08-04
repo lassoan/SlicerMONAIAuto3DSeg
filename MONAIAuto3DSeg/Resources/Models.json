@@ -325,6 +325,9 @@
       ],
       "versions": [
         {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-05mm-v1.0.1.zip"
+        },        
+        {
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-05mm-v1.0.0.zip"
         }
       ],
@@ -357,6 +360,9 @@
         "CTMRBrain"
       ],
       "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-1mm-v1.0.1.zip"
+        },        
         {
           "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/whole-head-1mm-v1.0.0.zip"
         }
