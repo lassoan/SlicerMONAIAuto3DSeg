@@ -1,6 +1,39 @@
 {
   "models": [
     {
+        "title": "HLHS segmentation",
+        "description": "Segmentation of the three leaflets of the Tricuspid Valve from 3DE images.",
+        "subject": "human",
+        "imagingModality": ["MR", "none"],
+        "inputs": [
+            {"title": "Input volume"},
+            {"title": "Input label (annulus + com)"}
+        ],
+        "versions":
+        [
+            { "url": "hlhs-v1.0.0.zip" }
+        ],
+        "segmentNames": [
+          "Tricuspid Anterior Leaflet",
+          "Tricuspid Posterior Leaflet",
+          "Tricuspid Septal Leaflet"
+        ]
+    },
+    {
+        "title": "LAVV segmentation (224x224x224)",
+        "description": "Segmentation of the three leaflets of the LAVV from 3DE images.",
+        "subject": "human",
+        "imagingModality": ["MR", "none"],
+        "inputs": [
+            {"title": "Input volume"},
+            {"title": "Input label (annulus + com)"}
+        ],
+        "versions":
+        [
+            { "url": "lavv-v1.0.0.zip" }
+        ]
+    },
+    {
       "title": "Abdominal organs TS2 - quick",
       "license": "CC BY 4.0",
       "description": "Low-resolution (3mm) for quick preview. Trained on class_map_part_organs of TotalSegmentatorV2 dataset. Input image is abdominal, chest, or whole body CT.",
