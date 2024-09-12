@@ -97,7 +97,7 @@ def main(model_file,
                 raise ValueError(f'Incorrect image filename for {img}: "{img}"')
 
         ts = [
-            LoadImaged(keys="image", ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False),
+            LoadImaged(keys="image", ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False, reader="ITKReader"),
             EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
         ]
 
@@ -204,7 +204,7 @@ def main(model_file,
                 raise ValueError(f'Incorrect image filename for {img}: "{image_files[img]}"')
 
         # Loading volumes
-        loader = LoadImaged(keys=keys, ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False)
+        loader = LoadImaged(keys=keys, ensure_channel_first=True, dtype=None, allow_missing_keys=True, image_only=False, reader="ITKReader")
         images_loaded = loader(image_files)
         timing_checkpoints.append(("Loading volumes", time.time()))
 
