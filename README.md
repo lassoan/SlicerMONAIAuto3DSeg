@@ -88,7 +88,16 @@ If you have a powerful GPU is available then a full-quality segmentation can be 
 
 ### Segmentation fails
 
-Problem: Segmentation fails while predicting and the `RuntimeError: CUDA out of memory.` message is found in the message log (textbox under the Apply button).
+#### Problem: Error popup on the first run: `Failed to compute results ... Command ... 'pip', 'install' ... returned non-zero exit status 1`
+
+Explanation: This happens because when the tool has to download and install PyTorch and other required Python packages.
+
+Solution:
+- The module instructs you to restart Slicer and try again if an error occurs. Please try this first.
+- If this does not help then make sure you have enough memory space (physical RAM and virtual memory in total should be at least 32GB) and you have enough disk space (at least 20GB free disk space is required) and try again.
+- If you still run into issues then report the problem on the [3D Slicer forum](https://discourse.slicer.org). In your forum post, include the full application log of the failed attempt (you can get the application log in menu: Help / Report a bug).
+
+#### Problem: Segmentation fails while predicting and the `RuntimeError: CUDA out of memory.` message is found in the message log (textbox under the Apply button).
 
 Explanation: This means that a CUDA-capable GPU is available, but it is not powerful enough for the chosen task.
 
