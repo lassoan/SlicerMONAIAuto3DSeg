@@ -280,6 +280,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         Called when the application closes and the module widget is destroyed.
         """
+        if self._webServer:
+            self._webServer.killProcess()
         self.removeObservers()
 
     def enter(self):
