@@ -261,7 +261,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.browseToModelsFolderButton.connect("clicked(bool)", self.onBrowseModelsFolder)
         self.ui.deleteAllModelsButton.connect("clicked(bool)", self.onClearModelsFolder)
 
-        self.ui.serverComboBox.lineEdit().setPlaceholderText("enter server address or leave empty to use default")
+        self.ui.serverComboBox.lineEdit().setPlaceholderText("Enter server address")
         self.ui.serverComboBox.currentIndexChanged.connect(self.onRemoteServerButtonToggled)
         self.ui.remoteServerButton.toggled.connect(self.onRemoteServerButtonToggled)
 
@@ -672,7 +672,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         slicer.util.messageBox("Downloaded models are deleted.")
 
     def onRemoteServerButtonToggled(self):
-        if self.ui.remoteServerButton.checked:
+        if self.ui.remoteServerButton.checked and self.ui.serverComboBox.currentText != '':
             self.ui.remoteServerButton.text = "Connected"
             self.logic = RemoteMONAIAuto3DSegLogic()
             self.logic.server_address = self.ui.serverComboBox.currentText
@@ -688,6 +688,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 return
             self.saveServerUrl()
         else:
+            self.ui.remoteServerButton.checked = False
             self.ui.remoteServerButton.text = "Connect"
             self.logic = MONAIAuto3DSegLogic()
 
