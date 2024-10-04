@@ -5,14 +5,12 @@ set(MODULE_NAME MONAIAuto3DSeg)
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
   ${MODULE_NAME}Lib/__init__.py
-  ${MODULE_NAME}Lib/constants.py
   ${MODULE_NAME}Lib/dependency_handler.py
-  ${MODULE_NAME}Lib/log_handler.py
   ${MODULE_NAME}Lib/model_database.py
   ${MODULE_NAME}Lib/server.py
   ${MODULE_NAME}Lib/utils.py
-  auto3dseg/__init__py
-  auto3dseg/main.py
+  ${MODULE_NAME}Server/__init__py
+  ${MODULE_NAME}Server/main.py
   )
 
 set(MODULE_PYTHON_RESOURCES

@@ -8,15 +8,12 @@ import vtk
 import qt
 import slicer
 import requests
+from typing import Callable
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 from MONAIAuto3DSegLib.model_database import ModelDatabase
-from MONAIAuto3DSegLib.constants import APPLICATION_NAME
-from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec, assignInputNodesByName
+from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec
 from MONAIAuto3DSegLib.dependency_handler import SlicerPythonDependencies, RemotePythonDependencies
-
-
-logger = logging.getLogger(APPLICATION_NAME)
 
 
 #
@@ -193,12 +190,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._segmentationProcessInfo = None
         self._webServer = None
 
-        from MONAIAuto3DSegLib.log_handler import LogHandler
-        handler = LogHandler(self.addLog, logging.INFO)
-        formatter = logging.Formatter('%(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
     def onReload(self):
         if self._webServer:
             self._webServer.killProcess()
@@ -261,7 +252,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.browseToModelsFolderButton.connect("clicked(bool)", self.onBrowseModelsFolder)
         self.ui.deleteAllModelsButton.connect("clicked(bool)", self.onClearModelsFolder)
 
-        self.ui.serverComboBox.lineEdit().setPlaceholderText("enter server address or leave empty to use default")
+        self.ui.serverComboBox.lineEdit().setPlaceholderText("Enter server address")
         self.ui.serverComboBox.currentIndexChanged.connect(self.onRemoteServerButtonToggled)
         self.ui.remoteServerButton.toggled.connect(self.onRemoteServerButtonToggled)
 
@@ -637,7 +628,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.util.messageBox(f"Failed to load sample data set '{sampleDataName}'.")
             return
 
-        inputNodes = assignInputNodesByName(inputs, loadedSampleNodes)
+        inputNodes = self.logic.assignInputNodesByName(inputs, loadedSampleNodes)
         for inputIndex, inputNode in enumerate(inputNodes):
             if inputNode:
                 self.inputNodeSelectors[inputIndex].setCurrentNode(inputNode)
@@ -672,7 +663,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         slicer.util.messageBox("Downloaded models are deleted.")
 
     def onRemoteServerButtonToggled(self):
-        if self.ui.remoteServerButton.checked:
+        if self.ui.remoteServerButton.checked and self.ui.serverComboBox.currentText != '':
             self.ui.remoteServerButton.text = "Connected"
             self.logic = RemoteMONAIAuto3DSegLogic()
             self.logic.server_address = self.ui.serverComboBox.currentText
@@ -688,6 +679,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 return
             self.saveServerUrl()
         else:
+            self.ui.remoteServerButton.checked = False
             self.ui.remoteServerButton.text = "Connect"
             self.logic = MONAIAuto3DSegLogic()
 
@@ -710,15 +702,14 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.serverAddressLineEdit.text = f"http://{hostName}:{port}"
 
                 from MONAIAuto3DSegLib.server import WebServer
-                self._webServer = WebServer(completedCallback=lambda: self.ui.serverButton.setChecked(False))
+                self._webServer = WebServer(
+                    logCallback=self.addLog,
+                    completedCallback=lambda: self.ui.serverButton.setChecked(False)
+                )
                 self._webServer.launchConsoleProcess(cmd)
         else:
             if self._webServer is not None and self._webServer.isRunning():
-                logger.info("Server stop requested.")
                 self._webServer.killProcess()
-                if not self._webServer.isRunning():
-                    logger.info("Server stopped.")
-
                 self._webServer = None
         self.updateGUIFromParameterNode()
 
@@ -781,6 +772,27 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
     EXIT_CODE_DID_NOT_RUN = 1002
 
     DEPENDENCY_HANDLER = SlicerPythonDependencies()
+
+    @staticmethod
+    def assignInputNodesByName(inputs, loadedSampleNodes):
+
+        def findFirstNodeByNamePattern(namePattern, nodes):
+            import fnmatch
+            for node in nodes:
+                if fnmatch.fnmatchcase(node.GetName(), namePattern):
+                    return node
+            return None
+
+        inputNodes = []
+        for inputIndex, input in enumerate(inputs):
+            namePattern = input.get("namePattern")
+            if namePattern:
+                matchingNode = findFirstNodeByNamePattern(namePattern, loadedSampleNodes)
+            else:
+                matchingNode = loadedSampleNodes[inputIndex] if inputIndex < len(loadedSampleNodes) else \
+                    loadedSampleNodes[0]
+            inputNodes.append(matchingNode)
+        return inputNodes
 
     @staticmethod
     def getLoadedTerminologyNames():
@@ -1042,7 +1054,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 line = proc.stdout.readline()
                 if not line:
                     break
-                logger.info(line.rstrip())
+                logging.info(line.rstrip())
             except UnicodeDecodeError as e:
                 # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
                 # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
@@ -1085,7 +1097,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         import time
         startTime = time.time()
-        logger.info("Processing started")
+        logging.info("Processing started")
 
         if self.debugSkipInference:
             # For debugging, use a fixed temporary folder
@@ -1105,7 +1117,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         for inputIndex, inputNode in enumerate(inputNodes):
             if inputNode.IsA('vtkMRMLScalarVolumeNode'):
                 inputImageFile = tempDir + f"/input-volume{inputIndex}.nrrd"
-                logger.info(f"Writing input file to {inputImageFile}")
+                logging.info(f"Writing input file to {inputImageFile}")
                 volumeStorageNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLVolumeArchetypeStorageNode")
                 volumeStorageNode.SetFileName(inputImageFile)
                 volumeStorageNode.UseCompressionOff()
@@ -1126,13 +1138,13 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             auto3DSegCommand.append(f"--image-file-{inputIndex+1}")
             auto3DSegCommand.append(inputFiles[inputIndex])
 
-        logger.info("Creating segmentations with MONAIAuto3DSeg AI...")
-        logger.info(f"Auto3DSeg command: {auto3DSegCommand}")
+        logging.info("Creating segmentations with MONAIAuto3DSeg AI...")
+        logging.info(f"Auto3DSeg command: {auto3DSegCommand}")
 
         additionalEnvironmentVariables = None
         if cpu:
             additionalEnvironmentVariables = {"CUDA_VISIBLE_DEVICES": "-1"}
-            logger.info(f"Additional environment variables: {additionalEnvironmentVariables}")
+            logging.info(f"Additional environment variables: {additionalEnvironmentVariables}")
 
         if self.debugSkipInference:
             proc = None
@@ -1166,7 +1178,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         return segmentationProcessInfo
 
     def cancelProcessing(self, segmentationProcessInfo):
-        logger.info("Cancel is requested.")
+        logging.info("Cancel is requested.")
         segmentationProcessInfo["cancelRequested"] = True
         proc = segmentationProcessInfo.get("proc")
         if proc:
@@ -1218,7 +1230,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 return
             try:
                 line = outputQueue.get_nowait()
-                logger.info(line)
+                logging.info(line)
             except queue.Empty:
                 break
 
@@ -1238,14 +1250,14 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         if cancelRequested:
             procReturnCode = MONAIAuto3DSegLogic.EXIT_CODE_USER_CANCELLED
-            logger.info(f"Processing was cancelled.")
+            logging.info(f"Processing was cancelled.")
         else:
             if procReturnCode == 0:
                 if self.startResultImportCallback:
                     self.startResultImportCallback(customData)
 
                 try: # Load result
-                    logger.info("Importing segmentation results...")
+                    logging.info("Importing segmentation results...")
                     self.readSegmentation(outputSegmentation, outputSegmentationFile, model)
 
                     # Set source volume - required for DICOM Segmentation export
@@ -1266,15 +1278,15 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                     if self.endResultImportCallback:
                         self.endResultImportCallback(customData)
             else:
-                logger.info(f"Processing failed with return code {procReturnCode}")
+                logging.info(f"Processing failed with return code {procReturnCode}")
 
         if self.clearOutputFolder:
-            logger.info("Cleaning up temporary folder.")
+            logging.info("Cleaning up temporary folder.")
             if os.path.isdir(tempDir):
                 import shutil
                 shutil.rmtree(tempDir)
         else:
-            logger.info(f"Not cleaning up temporary folder: {tempDir}")
+            logging.info(f"Not cleaning up temporary folder: {tempDir}")
 
         # Report total elapsed time
         import time
@@ -1282,12 +1294,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         segmentationProcessInfo["stopTime"] = stopTime
         elapsedTime = stopTime - startTime
         if cancelRequested:
-            logger.info(f"Processing was cancelled after {elapsedTime:.2f} seconds.")
+            logging.info(f"Processing was cancelled after {elapsedTime:.2f} seconds.")
         else:
             if procReturnCode == 0:
-                logger.info(f"Processing was completed in {elapsedTime:.2f} seconds.")
+                logging.info(f"Processing was completed in {elapsedTime:.2f} seconds.")
             else:
-                logger.info(f"Processing failed after {elapsedTime:.2f} seconds.")
+                logging.info(f"Processing failed after {elapsedTime:.2f} seconds.")
 
         if self.processingCompletedCallback:
             self.processingCompletedCallback(procReturnCode, customData)
@@ -1343,7 +1355,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                     segment.SetName(label)
                 segment.SetColor(color)
             except RuntimeError as e:
-                logger.info(str(e))
+                logging.info(str(e))
 
 
 class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
@@ -1356,6 +1368,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
 
     @server_address.setter
     def server_address(self, address):
+        self.DEPENDENCY_HANDLER.server_address = address
         self._server_address = address
         self._models = []
 
@@ -1413,7 +1426,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
 
         import time
         startTime = time.time()
-        logger.info("Processing started")
+        logging.info("Processing started")
 
         tempDir = slicer.util.tempDirectory()
         outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
@@ -1427,7 +1440,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
             for inputIndex, inputNode in enumerate(inputNodes):
                 if inputNode.IsA('vtkMRMLScalarVolumeNode'):
                     inputImageFile = tempDir / f"input-volume{inputIndex}.nrrd"
-                    logger.info(f"Writing input file to {inputImageFile}")
+                    logging.info(f"Writing input file to {inputImageFile}")
                     volumeStorageNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLVolumeArchetypeStorageNode")
                     volumeStorageNode.SetFileName(inputImageFile)
                     volumeStorageNode.UseCompressionOff()
@@ -1440,7 +1453,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
             segmentationProcessInfo = {}
             segmentationProcessInfo["procReturnCode"] = MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN
 
-            logger.info(f"Initiating Inference on {self._server_address}")
+            logging.info(f"Initiating Inference on {self._server_address}")
             files = {}
 
             try:
@@ -1474,6 +1487,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
         self.onSegmentationProcessCompleted(segmentationProcessInfo)
 
         return segmentationProcessInfo
+
 
 #
 # MONAIAuto3DSegTest
@@ -1583,7 +1597,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
 
                 # Set model inputs
                 inputs = model.get("inputs")
-                inputNodes = assignInputNodesByName(inputs, loadedSampleNodes)
+                inputNodes = logic.assignInputNodesByName(inputs, loadedSampleNodes)
 
                 outputSegmentation = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
 

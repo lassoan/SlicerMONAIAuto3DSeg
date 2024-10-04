@@ -2,7 +2,7 @@
 # pip install fastapi
 # pip install "uvicorn[standard]"
 
-# usage: uvicorn main:app --reload --host reslnjolleyws03.research.chop.edu --port 8891
+# usage: uvicorn main:app --reload --host example.com --port 8891
 # usage: uvicorn main:app --reload --host localhost --port 8891
 
 
@@ -17,8 +17,7 @@ for path in paths:
         sys.path.insert(0, path)
 
 from MONAIAuto3DSegLib.model_database import ModelDatabase
-from MONAIAuto3DSegLib.dependency_handler import LocalPythonDependencies
-from MONAIAuto3DSegLib.constants import APPLICATION_NAME
+from MONAIAuto3DSegLib.dependency_handler import DependenciesBase
 
 import shutil
 import asyncio
@@ -29,13 +28,63 @@ from fastapi import HTTPException
 from fastapi.background import BackgroundTasks
 
 
+class LocalPythonDependencies(DependenciesBase):
+    """ Dependency handler when running locally (not within 3D Slicer)
+
+    code:
+
+        from MONAIAuto3DSegLib.dependency_handler import LocalPythonDependencies
+        dependencies = LocalPythonDependencies()
+        dependencies.installedMONAIPythonPackageInfo()
+
+        # dependencies.setupPythonRequirements(upgrade=True)
+    """
+
+    def installedMONAIPythonPackageInfo(self):
+        versionInfo = subprocess.check_output([sys.executable, "-m", "pip", "show", "MONAI"]).decode()
+        return versionInfo
+
+    def _checkModuleInstalled(self, moduleName):
+      try:
+        import importlib
+        importlib.import_module(moduleName)
+        return True
+      except ModuleNotFoundError:
+        return False
+
+    def setupPythonRequirements(self, upgrade=False):
+        def install(package):
+          subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+        logging.debug("Initializing PyTorch...")
+
+        packageName = "torch"
+        if not self._checkModuleInstalled(packageName):
+          logging.debug("PyTorch Python package is required. Installing... (it may take several minutes)")
+          install(packageName)
+          if not self._checkModuleInstalled(packageName):
+            raise ValueError("pytorch needs to be installed to use this module.")
+        else:  # torch is installed, check version
+            from packaging import version
+            import torch
+            if version.parse(torch.__version__) < version.parse(self.minimumTorchVersion):
+                raise ValueError(f"PyTorch version {torch.__version__} is not compatible with this module."
+                                 + f" Minimum required version is {self.minimumTorchVersion}. You can use 'PyTorch Util' module to install PyTorch"
+                                 + f" with version requirement set to: >={self.minimumTorchVersion}")
+
+        logging.debug("Initializing MONAI...")
+        monaiInstallString = "monai[fire,pyyaml,nibabel,pynrrd,psutil,tensorboard,skimage,itk,tqdm]>=1.3"
+        if upgrade:
+            monaiInstallString += " --upgrade"
+        install(monaiInstallString)
+
+        self.dependenciesInstalled = True
+        logging.debug("Dependencies are set up successfully.")
+
+
 app = FastAPI()
 modelDB = ModelDatabase()
 dependencyHandler = LocalPythonDependencies()
-
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(APPLICATION_NAME)
 
 
 def upload(file, session_dir, identifier):
@@ -111,7 +160,7 @@ async def infer(
         auto3DSegCommand.append(inputFiles[inputIndex])
 
     try:
-        # logger.info(auto3DSegCommand)
+        # logging.debug(auto3DSegCommand)
         proc = await asyncio.create_subprocess_shell(" ".join(auto3DSegCommand))
         await proc.wait()
         if proc.returncode != 0:

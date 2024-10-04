@@ -4,13 +4,14 @@ import os
 from pathlib import Path
 
 from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec
-from MONAIAuto3DSegLib.constants import APPLICATION_NAME
-
-
-logger = logging.getLogger(APPLICATION_NAME)
 
 
 class ModelDatabase:
+    """ Retrieve model information, download and store models in model cache directory. Model information is stored
+    in local Models.json.
+    """
+
+    DEFAULT_CACHE_DIR_NAME = ".MONAIAuto3DSeg"
 
     @property
     def defaultModel(self):
@@ -33,7 +34,7 @@ class ModelDatabase:
         return os.path.join(self.moduleDir, "Resources", "Models.json")
 
     def __init__(self):
-        self.fileCachePath = Path.home().joinpath(f".{APPLICATION_NAME}")
+        self.fileCachePath = Path.home().joinpath(f"{self.DEFAULT_CACHE_DIR_NAME}")
         self.moduleDir = Path(__file__).parent.parent
 
         # Disabling this flag preserves input and output data after execution is completed,
@@ -66,7 +67,7 @@ class ModelDatabase:
                         filename = match.group("filename")
                         version = match.group("version")
                     else:
-                        logger.error(f"Failed to extract model id and version from url: {url}")
+                        logging.error(f"Failed to extract model id and version from url: {url}")
                     if "inputs" in model:
                         # Contains a list of dict. One dict for each input.
                         # Currently, only "title" (user-displayable name) and "namePattern" of the input are specified.
@@ -162,8 +163,8 @@ class ModelDatabase:
             modelDir = self.modelsPath.joinpath(modelName)
             Path(modelDir).mkdir(exist_ok=True)
             modelZipFile = tempDir.joinpath("autoseg3d_model.zip")
-            logger.info(f"Downloading model '{modelName}' from {url}...")
-            logger.debug(f"Downloading from {url} to {modelZipFile}...")
+            logging.info(f"Downloading model '{modelName}' from {url}...")
+            logging.debug(f"Downloading from {url} to {modelZipFile}...")
             try:
                 with open(modelZipFile, 'wb') as f:
                     with requests.get(url, stream=True) as r:
@@ -177,20 +178,20 @@ class ModelDatabase:
                             downloaded_size += len(chunk)
                             downloaded_percent = 100.0 * downloaded_size / total_size
                             if downloaded_percent - last_reported_download_percent > reporting_increment_percent:
-                                logger.info(
+                                logging.info(
                                     f"Downloading model: {downloaded_size / 1024 / 1024:.1f}MB / {total_size / 1024 / 1024:.1f}MB ({downloaded_percent:.1f}%)")
                                 last_reported_download_percent = downloaded_percent
 
-                logger.info(f"Download finished. Extracting to {modelDir}...")
+                logging.info(f"Download finished. Extracting to {modelDir}...")
                 with zipfile.ZipFile(modelZipFile, 'r') as zip_f:
                     zip_f.extractall(modelDir)
             except Exception as e:
                 raise e
             finally:
                 if self.clearOutputFolder:
-                    logger.info("Cleaning up temporary model download folder...")
+                    logging.info("Cleaning up temporary model download folder...")
                     if os.path.isdir(tempDir):
                         import shutil
                         shutil.rmtree(tempDir)
                 else:
-                    logger.info(f"Not cleaning up temporary model download folder: {tempDir}")
+                    logging.info(f"Not cleaning up temporary model download folder: {tempDir}")
