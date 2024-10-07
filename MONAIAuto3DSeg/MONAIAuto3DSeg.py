@@ -1181,7 +1181,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         segmentationProcessInfo["cancelRequested"] = False
         segmentationProcessInfo["startTime"] = startTime
         segmentationProcessInfo["tempDir"] = tempDir
-        segmentationProcessInfo["segmentationProcess"] = proc
         segmentationProcessInfo["inputNodes"] = inputNodes
         segmentationProcessInfo["outputSegmentation"] = outputSegmentation
         segmentationProcessInfo["outputSegmentationFile"] = outputSegmentationFile
@@ -1260,7 +1259,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 break
 
         # No more outputs to process now, check again later
-        qt.QTimer.singleShot(self.processOutputCheckTimerIntervalMsec, lambda segmentationProcessInfo=segmentationProcessInfo: self.checkSegmentationProcessOutput(segmentationProcessInfo))
+        qt.QTimer.singleShot(self.processOutputCheckTimerIntervalMsec, lambda: self.checkSegmentationProcessOutput(segmentationProcessInfo=segmentationProcessInfo))
 
     def onSegmentationProcessCompleted(self, segmentationProcessInfo):
         startTime = segmentationProcessInfo["startTime"]
@@ -1403,7 +1402,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
         self._models = []
 
     def getMONAIPythonPackageInfo(self):
-        return self.DEPENDENCY_HANDLER.installedMONAIPythonPackageInfo(self._server_address)
+        return self.DEPENDENCY_HANDLER.installedMONAIPythonPackageInfo()
 
     def setupPythonRequirements(self, upgrade=False):
         self.DEPENDENCY_HANDLER.setupPythonRequirements(upgrade)
@@ -1417,7 +1416,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
             json_data = json.loads(response.text)
             return json_data
 
-    def labelDescriptions(self, modelId):
+    def labelDescriptions(self, modelName):
         """Return mapping from label value to label description.
                 Label description is a dict containing "name" and "terminology".
                 Terminology string uses Slicer terminology entry format - see specification at
@@ -1428,7 +1427,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
         else:
             import tempfile
             with tempfile.NamedTemporaryFile(suffix=".csv") as tmpfile:
-                with requests.get(self._server_address + f"/labelDescriptions?id={modelId}", stream=True) as r:
+                with requests.get(self._server_address + f"/labelDescriptions?id={modelName}", stream=True) as r:
                     r.raise_for_status()
 
                     with open(tmpfile.name, 'wb') as f:
