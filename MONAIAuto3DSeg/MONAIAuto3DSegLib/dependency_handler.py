@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 import logging
+import sys
 
 
 from abc import ABC, abstractmethod
@@ -92,3 +93,57 @@ class SlicerPythonDependencies(DependenciesBase):
 
         self.dependenciesInstalled = True
         logging.info("Dependencies are set up successfully.")
+
+
+class NonSlicerPythonDependencies(DependenciesBase):
+    """ Dependency handler when running locally (not within 3D Slicer)
+
+    code:
+
+        from MONAIAuto3DSegLib.dependency_handler import LocalPythonDependencies
+        dependencies = LocalPythonDependencies()
+        dependencies.installedMONAIPythonPackageInfo()
+
+        # dependencies.setupPythonRequirements(upgrade=True)
+    """
+
+    def installedMONAIPythonPackageInfo(self):
+        versionInfo = subprocess.check_output([sys.executable, "-m", "pip", "show", "MONAI"]).decode()
+        return versionInfo
+
+    def _checkModuleInstalled(self, moduleName):
+      try:
+        import importlib
+        importlib.import_module(moduleName)
+        return True
+      except ModuleNotFoundError:
+        return False
+
+    def setupPythonRequirements(self, upgrade=False):
+        def install(package):
+          subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+        logging.debug("Initializing PyTorch...")
+
+        packageName = "torch"
+        if not self._checkModuleInstalled(packageName):
+          logging.debug("PyTorch Python package is required. Installing... (it may take several minutes)")
+          install(packageName)
+          if not self._checkModuleInstalled(packageName):
+            raise ValueError("pytorch needs to be installed to use this module.")
+        else:  # torch is installed, check version
+            from packaging import version
+            import torch
+            if version.parse(torch.__version__) < version.parse(self.minimumTorchVersion):
+                raise ValueError(f"PyTorch version {torch.__version__} is not compatible with this module."
+                                 + f" Minimum required version is {self.minimumTorchVersion}. You can use 'PyTorch Util' module to install PyTorch"
+                                 + f" with version requirement set to: >={self.minimumTorchVersion}")
+
+        logging.debug("Initializing MONAI...")
+        monaiInstallString = "monai[fire,pyyaml,nibabel,pynrrd,psutil,tensorboard,skimage,itk,tqdm]>=1.3"
+        if upgrade:
+            monaiInstallString += " --upgrade"
+        install(monaiInstallString)
+
+        self.dependenciesInstalled = True
+        logging.debug("Dependencies are set up successfully.")

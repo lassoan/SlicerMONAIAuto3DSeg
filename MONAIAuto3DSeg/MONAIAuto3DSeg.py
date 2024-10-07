@@ -8,7 +8,6 @@ import vtk
 import qt
 import slicer
 import requests
-from typing import Callable
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 from MONAIAuto3DSegLib.model_database import ModelDatabase
@@ -191,8 +190,21 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._webServer = None
 
     def onReload(self):
+        logging.debug(f"Reloading {self.moduleName}")
         if self._webServer:
             self._webServer.killProcess()
+
+        packageName ="MONAIAuto3DSegLib"
+        submoduleNames = ['dependency_handler', 'model_database', 'server', 'utils']
+        import imp
+        f, filename, description = imp.find_module(packageName)
+        package = imp.load_module(packageName, f, filename, description)
+        for submoduleName in submoduleNames:
+            f, filename, description = imp.find_module(submoduleName, package.__path__)
+            try:
+                imp.load_module(packageName + '.' + submoduleName, f, filename, description)
+            finally:
+                f.close()
         super().onReload()
 
     def setup(self):
@@ -689,29 +701,42 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.updateGUIFromParameterNode()
 
     def onServerButtonToggled(self, toggled):
-        if toggled:
-            if not self._webServer or not self._webServer.isRunning() :
-                import platform
-                from pathlib import Path
-                slicer.util.pip_install("python-multipart fastapi uvicorn[standard]")
+        with slicer.util.tryWithErrorDisplay("Failed to start server.", waitCursor=True):
+            if toggled:
+                if not hasattr(slicer.modules, 'pytorchutils'):
+                    raise ModuleNotFoundError ("This modules requires the PyTorch extension. Install PyTorch and restart Slicer.")
 
-                hostName = platform.node()
-                port = str(self.ui.portSpinBox.value)
-                cmd = [sys.executable, "main.py", "--host", hostName, "--port", port]
+                # TODO: improve error reporting if installation of requirements fails
+                self.logic.setupPythonRequirements()
 
-                self.ui.serverAddressLineEdit.text = f"http://{hostName}:{port}"
+                if not self._webServer or not self._webServer.isRunning() :
+                    import platform
+                    from pathlib import Path
+                    slicer.util.pip_install("python-multipart fastapi uvicorn[standard]")
 
-                from MONAIAuto3DSegLib.server import WebServer
-                self._webServer = WebServer(
-                    logCallback=self.addLog,
-                    completedCallback=lambda: self.ui.serverButton.setChecked(False)
-                )
-                self._webServer.launchConsoleProcess(cmd)
-        else:
-            if self._webServer is not None and self._webServer.isRunning():
-                self._webServer.killProcess()
-                self._webServer = None
+                    hostName = platform.node()
+                    port = str(self.ui.portSpinBox.value)
+
+                    cmd = [sys.executable, "main.py", "--host", hostName, "--port", port]
+
+                    self.ui.serverAddressLineEdit.text = f"http://{hostName}:{port}"
+
+                    from MONAIAuto3DSegLib.server import WebServer
+                    self._webServer = WebServer(
+                        logCallback=self.addLog,
+                        completedCallback=self.onServerCompleted
+                    )
+                    self._webServer.launchConsoleProcess(cmd)
+            else:
+                if self._webServer is not None and self._webServer.isRunning():
+                    self._webServer.killProcess()
+                    self._webServer = None
         self.updateGUIFromParameterNode()
+
+    def onServerCompleted(self, text=None):
+        if text:
+            self.addLog(text)
+        self.ui.serverButton.setChecked(False)
 
     def serverUrl(self):
         serverUrl = self.ui.serverComboBox.currentText.strip()

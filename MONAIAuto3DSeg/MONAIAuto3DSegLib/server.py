@@ -66,11 +66,12 @@ class WebServer:
             psProcess.kill()
 
     def launchConsoleProcess(self, cmd):
+        logging.debug(f"Launching process: {cmd}")
         self.serverProc = \
             slicer.util.launchConsoleProcess(cmd, cwd=Path(__file__).parent.parent / "MONAIAuto3DSegServer", useStartupEnvironment=False)
 
-        if self.logCallback and self.isRunning():
-            self.logCallback("Server Started")
+        if self.isRunning():
+            self.addLog("Server Started")
 
         self.queue = queue.Queue()
         self.procThread = threading.Thread(target=self._handleProcessOutputThreadProcess)
@@ -81,20 +82,24 @@ class WebServer:
         if self.procThread:
             self.procThread.join()
         if self.completedCallback:
-            self.completedCallback()
-        if self.logCallback:
-            self.logCallback("Server Stopped")
+            if self.serverProc.returncode not in [-9, 0]: # killed or stopped cleanly
+                self.addLog(self._err)
+            self.completedCallback("Server Stopped")
         self.serverProc = None
         self.procThread = None
         self.queue = None
 
     def _handleProcessOutputThreadProcess(self):
+        self._err = None
         while True:
             try:
                 line = self.serverProc.stdout.readline()
                 if not line:
                     break
-                self.queue.put(line.rstrip())
+                text = line.rstrip()
+                self.queue.put(text)
+                if "ERROR" in text:
+                    self._err = text
             except UnicodeDecodeError as e:
                 pass
         self.serverProc.wait()
@@ -113,3 +118,7 @@ class WebServer:
             qt.QTimer.singleShot(self.CHECK_TIMER_INTERVAL, self.checkProcessOutput)
         else:
             self.cleanup()
+
+    def addLog(self, text):
+        if self.logCallback:
+            self.logCallback(text)
