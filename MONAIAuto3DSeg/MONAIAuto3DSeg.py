@@ -703,9 +703,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onServerButtonToggled(self, toggled):
         with slicer.util.tryWithErrorDisplay("Failed to start server.", waitCursor=True):
             if toggled:
-                if not hasattr(slicer.modules, 'pytorchutils'):
-                    raise ModuleNotFoundError ("This modules requires the PyTorch extension. Install PyTorch and restart Slicer.")
-
                 # TODO: improve error reporting if installation of requirements fails
                 self.logic.setupPythonRequirements()
 
