@@ -476,6 +476,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             self.ui.portSpinBox.value = int(self._parameterNode.GetParameter("ServerPort"))
 
+            self.ui.serverAddressTitleLabel.visible = self._webServer is not None
+            self.ui.serverAddressLabel.visible = self._webServer is not None
+            if self._webServer:
+                self.ui.serverAddressLabel.text = self._webServer.getAddressUrl()
+
             self.ui.browseToModelsFolderButton.enabled = not remoteConnection
             self.ui.useStandardSegmentNamesCheckBox.enabled = not remoteConnection
             self.ui.cpuCheckBox.enabled = not remoteConnection
@@ -680,12 +685,12 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.logic = RemoteMONAIAuto3DSegLogic()
             self.logic.server_address = self.ui.serverComboBox.currentText
             try:
-                _ = self.logic.models
-                self.addLog(f"Remote Server Connected {self.logic.server_address}")
+                models = self.logic.models
+                self.addLog(f"Remote Server Connected {self.logic.server_address}. {len(models)} models are available.")
             except:
                 slicer.util.warningDisplay(
                     f"Connection to remote server '{self.logic.server_address}' failed. "
-                    f"Please check address, port, and connection"
+                    f"Please check address, port, and connection."
                 )
                 self.ui.remoteServerButton.checked = False
                 return
@@ -714,19 +719,17 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     hostName = platform.node()
                     port = str(self.ui.portSpinBox.value)
 
-                    cmd = [sys.executable, "main.py", "--host", hostName, "--port", port]
-
-                    self.ui.serverAddressLineEdit.text = f"http://{hostName}:{port}"
-
                     from MONAIAuto3DSegLib.server import WebServer
                     self._webServer = WebServer(
                         logCallback=self.addLog,
                         completedCallback=self.onServerCompleted
                     )
-                    self._webServer.launchConsoleProcess(cmd)
+                    self._webServer.hostName = hostName
+                    self._webServer.port = port
+                    self._webServer.start()
             else:
                 if self._webServer is not None and self._webServer.isRunning():
-                    self._webServer.killProcess()
+                    self._webServer.stop()
                     self._webServer = None
         self.updateGUIFromParameterNode()
 

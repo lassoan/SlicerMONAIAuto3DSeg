@@ -20,11 +20,11 @@ class WebServer:
 
         from MONAIAuto3DSegLib.server import WebServer
         server = WebServer(completedCallback=...)
-        server.launchConsoleProcess(cmd)
+        server.start()
 
         ...
 
-        server.killProcess()
+        server.stop()
 
     """
 
@@ -43,6 +43,8 @@ class WebServer:
         self.procThread = None
         self.serverProc = None
         self.queue = None
+        self.hostName = "127.0.0.1"
+        self.port = 8891
 
     def isRunning(self):
         if self.serverProc is not None:
@@ -52,9 +54,9 @@ class WebServer:
         return False
 
     def __del__(self):
-        self.killProcess()
+        self._killProcess()
 
-    def killProcess(self):
+    def _killProcess(self):
         if not self.serverProc:
             return
         psProcess = self.getPSProcess(self.serverProc.pid) # proc.kill() does not work, that would only stop the launcher
@@ -65,7 +67,18 @@ class WebServer:
         if psProcess.is_running():
             psProcess.kill()
 
-    def launchConsoleProcess(self, cmd):
+    def start(self):
+        import sys
+        cmd = [sys.executable, "main.py", "--host", self.hostName, "--port", self.port]
+        self._launchConsoleProcess(cmd)
+
+    def stop(self):
+        self._killProcess()
+
+    def getAddressUrl(self):
+        return f"http://{self.hostName}:{self.port}"
+
+    def _launchConsoleProcess(self, cmd):
         logging.debug(f"Launching process: {cmd}")
         self.serverProc = \
             slicer.util.launchConsoleProcess(cmd, cwd=Path(__file__).parent.parent / "MONAIAuto3DSegServer", useStartupEnvironment=False)
