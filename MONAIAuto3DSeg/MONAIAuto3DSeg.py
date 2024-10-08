@@ -2,17 +2,49 @@ import logging
 import os
 import json
 import sys
+import time
 
 import vtk
 
 import qt
 import slicer
 import requests
+
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 from MONAIAuto3DSegLib.model_database import ModelDatabase
 from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec
 from MONAIAuto3DSegLib.dependency_handler import SlicerPythonDependencies, RemotePythonDependencies
+
+
+import subprocess
+import queue
+import threading
+from dataclasses import dataclass
+from typing import Any
+
+from enum import Enum
+
+
+class ExitCode(Enum):
+    USER_CANCELLED = 1001
+    DID_NOT_RUN = 1002
+
+
+@dataclass
+class SegmentationProcessInfo:
+    proc: subprocess.Popen = None
+    startTime: float = time.time()
+    cancelRequested: bool = False
+    tempDir: str = ""
+    inputNodes: list = None
+    outputSegmentation: slicer.vtkMRMLSegmentationNode = None
+    outputSegmentationFile: str = ""
+    model: str = ""
+    procReturnCode: ExitCode = ExitCode.DID_NOT_RUN
+    procOutputQueue: queue.Queue = queue.Queue()
+    procThread: threading.Thread = None
+    customData: Any = None
 
 
 #
@@ -793,9 +825,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
-    EXIT_CODE_USER_CANCELLED = 1001
-    EXIT_CODE_DID_NOT_RUN = 1002
-
     DEPENDENCY_HANDLER = SlicerPythonDependencies()
 
     @staticmethod
@@ -836,11 +865,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         terminologiesLogic.GetLoadedAnatomicContextNames(anatomicContextNames)
 
         return [anatomicContextNames.GetValue(idx) for idx in range(anatomicContextNames.GetNumberOfValues())]
-
-    def downloadAllModels(self):
-        for model in self.models:
-            slicer.app.processEvents()
-            self.downloadModel(model["id"])
 
     @staticmethod
     def _terminologyPropertyTypes(terminologyName):
@@ -1070,10 +1094,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         if not parameterNode.GetParameter("ServerPort"):
             parameterNode.SetParameter("ServerPort", str(8891))
 
-    def logProcessOutputUntilCompleted(self, segmentationProcessInfo):
+    @staticmethod
+    def logProcessOutputUntilCompleted(segmentationProcessInfo: SegmentationProcessInfo):
         # Wait for the process to end and forward output to the log
         from subprocess import CalledProcessError
-        proc = segmentationProcessInfo["proc"]
+        proc = segmentationProcessInfo.proc
         while True:
             try:
                 line = proc.stdout.readline()
@@ -1087,7 +1112,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 pass
         proc.wait()
         retcode = proc.returncode
-        segmentationProcessInfo["procReturnCode"] = retcode
+        segmentationProcessInfo.procReturnCode = retcode
         if retcode != 0:
             raise CalledProcessError(retcode, proc.args, output=proc.stdout, stderr=proc.stderr)
 
@@ -1096,7 +1121,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         Run the processing algorithm.
         Can be used without GUI widget.
         :param inputNodes: input nodes in a list
-        :param outputVolume: thresholding result
+        :param outputSegmentation: output segmentation to write to
         :param model: one of self.models
         :param cpu: use CPU instead of GPU
         :param waitForCompletion: if True then the method waits for the processing to finish
@@ -1118,10 +1143,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         modelPath = self.modelPath(model)
 
-        segmentationProcessInfo = {}
+        segmentationProcessInfo = SegmentationProcessInfo()
 
-        import time
-        startTime = time.time()
         logging.info("Processing started")
 
         if self.debugSkipInference:
@@ -1176,16 +1199,13 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         else:
             proc = slicer.util.launchConsoleProcess(auto3DSegCommand, updateEnvironment=additionalEnvironmentVariables)
 
-        segmentationProcessInfo["proc"] = proc
-        segmentationProcessInfo["procReturnCode"] = MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN
-        segmentationProcessInfo["cancelRequested"] = False
-        segmentationProcessInfo["startTime"] = startTime
-        segmentationProcessInfo["tempDir"] = tempDir
-        segmentationProcessInfo["inputNodes"] = inputNodes
-        segmentationProcessInfo["outputSegmentation"] = outputSegmentation
-        segmentationProcessInfo["outputSegmentationFile"] = outputSegmentationFile
-        segmentationProcessInfo["model"] = model
-        segmentationProcessInfo["customData"] = customData
+        segmentationProcessInfo.proc = proc
+        segmentationProcessInfo.tempDir = tempDir
+        segmentationProcessInfo.inputNodes = inputNodes
+        segmentationProcessInfo.outputSegmentation = outputSegmentation
+        segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
+        segmentationProcessInfo.model = model
+        segmentationProcessInfo.customData = customData
 
         if proc:
             if waitForCompletion:
@@ -1201,10 +1221,10 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         return segmentationProcessInfo
 
-    def cancelProcessing(self, segmentationProcessInfo):
+    def cancelProcessing(self, segmentationProcessInfo: SegmentationProcessInfo):
         logging.info("Cancel is requested.")
-        segmentationProcessInfo["cancelRequested"] = True
-        proc = segmentationProcessInfo.get("proc")
+        segmentationProcessInfo.cancelRequested = True
+        proc = segmentationProcessInfo.proc
         if proc:
             # Simple proc.kill() would not work, that would only stop the launcher
             import psutil
@@ -1217,15 +1237,15 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             self.onSegmentationProcessCompleted(segmentationProcessInfo)
 
     @staticmethod
-    def _handleProcessOutputThreadProcess(segmentationProcessInfo):
+    def _handleProcessOutputThreadProcess(segmentationProcessInfo: SegmentationProcessInfo):
         # Wait for the process to end and forward output to the log
-        proc = segmentationProcessInfo["proc"]
+        proc = segmentationProcessInfo.proc
         while True:
             try:
                 line = proc.stdout.readline()
                 if not line:
                     break
-                segmentationProcessInfo["procOutputQueue"].put(line.rstrip())
+                segmentationProcessInfo.procOutputQueue.put(line.rstrip())
             except UnicodeDecodeError as e:
                 # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
                 # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
@@ -1233,23 +1253,22 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 pass
         proc.wait()
         retcode = proc.returncode  # non-zero return code means error
-        segmentationProcessInfo["procReturnCode"] = retcode
+        segmentationProcessInfo.procReturnCode = retcode
 
     def startSegmentationProcessMonitoring(self, segmentationProcessInfo):
         import queue
         import threading
 
-        segmentationProcessInfo["procOutputQueue"] = queue.Queue()
-        segmentationProcessInfo["procThread"] = threading.Thread(target=MONAIAuto3DSegLogic._handleProcessOutputThreadProcess, args=[segmentationProcessInfo])
-        segmentationProcessInfo["procThread"].start()
+        segmentationProcessInfo.procThread = threading.Thread(target=MONAIAuto3DSegLogic._handleProcessOutputThreadProcess, args=[segmentationProcessInfo])
+        segmentationProcessInfo.procThread.start()
 
         self.checkSegmentationProcessOutput(segmentationProcessInfo)
 
     def checkSegmentationProcessOutput(self, segmentationProcessInfo):
         import queue
-        outputQueue = segmentationProcessInfo["procOutputQueue"]
+        outputQueue = segmentationProcessInfo.procOutputQueue
         while outputQueue:
-            if segmentationProcessInfo.get("procReturnCode") != MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN:
+            if segmentationProcessInfo.procReturnCode != ExitCode.DID_NOT_RUN:
                 self.onSegmentationProcessCompleted(segmentationProcessInfo)
                 return
             try:
@@ -1261,31 +1280,24 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         # No more outputs to process now, check again later
         qt.QTimer.singleShot(self.processOutputCheckTimerIntervalMsec, lambda: self.checkSegmentationProcessOutput(segmentationProcessInfo=segmentationProcessInfo))
 
-    def onSegmentationProcessCompleted(self, segmentationProcessInfo):
-        startTime = segmentationProcessInfo["startTime"]
-        tempDir = segmentationProcessInfo["tempDir"]
-        inputNodes = segmentationProcessInfo["inputNodes"]
-        outputSegmentation = segmentationProcessInfo["outputSegmentation"]
-        outputSegmentationFile = segmentationProcessInfo["outputSegmentationFile"]
-        model = segmentationProcessInfo["model"]
-        customData = segmentationProcessInfo["customData"]
-        procReturnCode = segmentationProcessInfo["procReturnCode"]
-        cancelRequested = segmentationProcessInfo["cancelRequested"]
-
-        if cancelRequested:
-            procReturnCode = MONAIAuto3DSegLogic.EXIT_CODE_USER_CANCELLED
+    def onSegmentationProcessCompleted(self, segmentationProcessInfo: SegmentationProcessInfo):
+        procReturnCode = segmentationProcessInfo.procReturnCode
+        customData = segmentationProcessInfo.customData
+        if cancelRequested := segmentationProcessInfo.cancelRequested:
+            procReturnCode = ExitCode.USER_CANCELLED
             logging.info(f"Processing was cancelled.")
         else:
             if procReturnCode == 0:
+                outputSegmentation = segmentationProcessInfo.outputSegmentation
                 if self.startResultImportCallback:
                     self.startResultImportCallback(customData)
 
                 try: # Load result
                     logging.info("Importing segmentation results...")
-                    self.readSegmentation(outputSegmentation, outputSegmentationFile, model)
+                    self.readSegmentation(outputSegmentation, segmentationProcessInfo.outputSegmentationFile, segmentationProcessInfo.model)
 
                     # Set source volume - required for DICOM Segmentation export
-                    inputVolume = inputNodes[0]
+                    inputVolume = segmentationProcessInfo.inputNodes[0]
                     if not inputVolume.IsA('vtkMRMLScalarVolumeNode'):
                         raise ValueError("First input node must be a scalar volume")
                     outputSegmentation.SetNodeReferenceID(outputSegmentation.GetReferenceImageGeometryReferenceRole(), inputVolume.GetID())
@@ -1304,6 +1316,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             else:
                 logging.info(f"Processing failed with return code {procReturnCode}")
 
+        tempDir = segmentationProcessInfo.tempDir
         if self.clearOutputFolder:
             logging.info("Cleaning up temporary folder.")
             if os.path.isdir(tempDir):
@@ -1313,10 +1326,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             logging.info(f"Not cleaning up temporary folder: {tempDir}")
 
         # Report total elapsed time
-        import time
-        stopTime = time.time()
-        segmentationProcessInfo["stopTime"] = stopTime
-        elapsedTime = stopTime - startTime
+        elapsedTime = time.time() - segmentationProcessInfo.startTime
         if cancelRequested:
             logging.info(f"Processing was cancelled after {elapsedTime:.2f} seconds.")
         else:
@@ -1448,8 +1458,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
         :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
         """
 
-        import time
-        startTime = time.time()
+        segmentationProcessInfo = SegmentationProcessInfo()
         logging.info("Processing started")
 
         tempDir = slicer.util.tempDirectory()
@@ -1474,9 +1483,6 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                 else:
                     raise ValueError(f"Input node type {inputNode.GetClassName()} is not supported")
 
-            segmentationProcessInfo = {}
-            segmentationProcessInfo["procReturnCode"] = MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN
-
             logging.info(f"Initiating Inference on {self._server_address}")
             files = {}
 
@@ -1494,19 +1500,17 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                         for chunk in r.iter_content(chunk_size=8192):
                             binary_file.write(chunk)
 
-                    segmentationProcessInfo["procReturnCode"] = 0
+                    segmentationProcessInfo.procReturnCode = 0
             finally:
                 for f in files.values():
                     f.close()
 
-        segmentationProcessInfo["cancelRequested"] = False
-        segmentationProcessInfo["startTime"] = startTime
-        segmentationProcessInfo["tempDir"] = tempDir
-        segmentationProcessInfo["inputNodes"] = inputNodes
-        segmentationProcessInfo["outputSegmentation"] = outputSegmentation
-        segmentationProcessInfo["outputSegmentationFile"] = outputSegmentationFile
-        segmentationProcessInfo["model"] = modelId
-        segmentationProcessInfo["customData"] = customData
+        segmentationProcessInfo.tempDir = tempDir
+        segmentationProcessInfo.inputNodes = inputNodes
+        segmentationProcessInfo.outputSegmentation = outputSegmentation
+        segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
+        segmentationProcessInfo.model = modelId
+        segmentationProcessInfo.customData = customData
 
         self.onSegmentationProcessCompleted(segmentationProcessInfo)
 
@@ -1628,7 +1632,6 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                 # Run the segmentation
 
                 self.delayDisplay(f"Running segmentation for {model['title']}...")
-                import time
                 startTime = time.time()
                 logic.process(inputNodes, outputSegmentation, model["id"], forceUseCpu)
                 segmentationTimeSec = time.time() - startTime

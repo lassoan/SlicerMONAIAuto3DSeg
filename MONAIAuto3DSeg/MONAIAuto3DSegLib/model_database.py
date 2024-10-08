@@ -153,6 +153,11 @@ class ModelDatabase:
             import shutil
             shutil.rmtree(self.modelsPath)
 
+    def downloadAllModels(self):
+        for model in self.models:
+            slicer.app.processEvents()
+            self.downloadModel(model["id"])
+
     def downloadModel(self, modelName):
         url = self.model(modelName)["url"]
         import zipfile
