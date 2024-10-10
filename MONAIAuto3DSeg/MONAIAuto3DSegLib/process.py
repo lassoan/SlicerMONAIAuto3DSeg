@@ -213,7 +213,7 @@ class InferenceServer(BackgroundProcess):
 class LocalInference(BackgroundProcess):
     """ Running local inference until finished or cancelled. """
 
-    def __init__(self, processInfo: ProcessInfo = None, logCallback: Callable = None,
+    def __init__(self, processInfo: SegmentationProcessInfo, logCallback: Callable = None,
                  completedCallback: Callable = None, waitForCompletion: bool = True):
         super().__init__(processInfo, logCallback, completedCallback)
         self.waitForCompletion = waitForCompletion
