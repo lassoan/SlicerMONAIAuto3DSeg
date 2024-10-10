@@ -7,7 +7,7 @@ set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}Lib/__init__.py
   ${MODULE_NAME}Lib/dependency_handler.py
   ${MODULE_NAME}Lib/model_database.py
-  ${MODULE_NAME}Lib/server.py
+  ${MODULE_NAME}Lib/process.py
   ${MODULE_NAME}Lib/utils.py
   ${MODULE_NAME}Server/__init__py
   ${MODULE_NAME}Server/main.py

@@ -15,36 +15,9 @@ from slicer.util import VTKObservationMixin
 from MONAIAuto3DSegLib.model_database import ModelDatabase
 from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec
 from MONAIAuto3DSegLib.dependency_handler import SlicerPythonDependencies, RemotePythonDependencies
+from MONAIAuto3DSegLib.process import InferenceServer, LocalInference, ExitCode, SegmentationProcessInfo
 
 
-import subprocess
-import queue
-import threading
-from dataclasses import dataclass
-from typing import Any
-
-from enum import Enum
-
-
-class ExitCode(Enum):
-    USER_CANCELLED = 1001
-    DID_NOT_RUN = 1002
-
-
-@dataclass
-class SegmentationProcessInfo:
-    proc: subprocess.Popen = None
-    startTime: float = time.time()
-    cancelRequested: bool = False
-    tempDir: str = ""
-    inputNodes: list = None
-    outputSegmentation: slicer.vtkMRMLSegmentationNode = None
-    outputSegmentationFile: str = ""
-    model: str = ""
-    procReturnCode: ExitCode = ExitCode.DID_NOT_RUN
-    procOutputQueue: queue.Queue = queue.Queue()
-    procThread: threading.Thread = None
-    customData: Any = None
 
 
 #
@@ -227,7 +200,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._webServer.killProcess()
 
         packageName ="MONAIAuto3DSegLib"
-        submoduleNames = ['dependency_handler', 'model_database', 'server', 'utils']
+        submoduleNames = ['dependency_handler', 'model_database', 'process', 'utils']
         import imp
         f, filename, description = imp.find_module(packageName)
         package = imp.load_module(packageName, f, filename, description)
@@ -623,7 +596,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onCancel(self):
         with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
-            self.logic.cancelProcessing(self._segmentationProcessInfo)
+            # TODO: needed here?? self._segmentationProcessInfo
+            self.logic.cancelProcessing()
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED)
 
     def onProcessImportStarted(self, customData):
@@ -636,7 +610,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         slicer.app.processEvents()
 
     def onProcessingCompleted(self, returnCode, customData):
-        self.addLog("\nProcessing finished.")
+        if returnCode == 0:
+            m = "\nProcessing finished."
+        elif returnCode == ExitCode.USER_CANCELLED:
+            m = "\nProcessing was cancelled."
+        else:
+            m = f"\nProcessing failed with error code {returnCode}."
+        self.addLog(m)
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
         self._segmentationProcessInfo = None
 
@@ -741,6 +721,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         with slicer.util.tryWithErrorDisplay("Failed to start server.", waitCursor=True):
             if toggled:
                 # TODO: improve error reporting if installation of requirements fails
+
+                self.ui.statusLabel.plainText = ""
                 self.logic.setupPythonRequirements()
 
                 if not self._webServer or not self._webServer.isRunning() :
@@ -751,9 +733,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     hostName = platform.node()
                     port = str(self.ui.portSpinBox.value)
 
-                    from MONAIAuto3DSegLib.server import WebServer
-                    self._webServer = WebServer(
-                        logCallback=self.addLog,
+                    self._webServer = InferenceServer(
+                        logCallback=self.addServerLog,
                         completedCallback=self.onServerCompleted
                     )
                     self._webServer.hostName = hostName
@@ -765,9 +746,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self._webServer = None
         self.updateGUIFromParameterNode()
 
-    def onServerCompleted(self, text=None):
-        if text:
-            self.addLog(text)
+    def onServerCompleted(self, processInfo=None):
+        returnCode = processInfo.procReturnCode
+        if returnCode == ExitCode.USER_CANCELLED:
+            m = "\nServer was stopped."
+        else:
+            m = f"\nProcessing failed with error code {returnCode}."
+        self.addLog(m)
         self.ui.serverButton.setChecked(False)
 
     def serverUrl(self):
@@ -982,8 +967,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         self.endResultImportCallback = None
         self.useStandardSegmentNames = True
 
-        # Timer for checking the output of the segmentation process that is running in the background
-        self.processOutputCheckTimerIntervalMsec = 1000
+        self._bgProcess = None
 
         # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
         # where inference result is stored and set self.debugSkipInference to True.
@@ -1094,28 +1078,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         if not parameterNode.GetParameter("ServerPort"):
             parameterNode.SetParameter("ServerPort", str(8891))
 
-    @staticmethod
-    def logProcessOutputUntilCompleted(segmentationProcessInfo: SegmentationProcessInfo):
-        # Wait for the process to end and forward output to the log
-        from subprocess import CalledProcessError
-        proc = segmentationProcessInfo.proc
-        while True:
-            try:
-                line = proc.stdout.readline()
-                if not line:
-                    break
-                logging.info(line.rstrip())
-            except UnicodeDecodeError as e:
-                # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
-                # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
-                # as we only guarantee correct behavior if an UTF8 locale is used.
-                pass
-        proc.wait()
-        retcode = proc.returncode
-        segmentationProcessInfo.procReturnCode = retcode
-        if retcode != 0:
-            raise CalledProcessError(retcode, proc.args, output=proc.stdout, stderr=proc.stderr)
-
     def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None):
         """
         Run the processing algorithm.
@@ -1194,12 +1156,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             additionalEnvironmentVariables = {"CUDA_VISIBLE_DEVICES": "-1"}
             logging.info(f"Additional environment variables: {additionalEnvironmentVariables}")
 
-        if self.debugSkipInference:
-            proc = None
-        else:
-            proc = slicer.util.launchConsoleProcess(auto3DSegCommand, updateEnvironment=additionalEnvironmentVariables)
-
-        segmentationProcessInfo.proc = proc
         segmentationProcessInfo.tempDir = tempDir
         segmentationProcessInfo.inputNodes = inputNodes
         segmentationProcessInfo.outputSegmentation = outputSegmentation
@@ -1207,86 +1163,19 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         segmentationProcessInfo.model = model
         segmentationProcessInfo.customData = customData
 
-        if proc:
-            if waitForCompletion:
-                # Wait for the process to end before returning
-                self.logProcessOutputUntilCompleted(segmentationProcessInfo)
-                self.onSegmentationProcessCompleted(segmentationProcessInfo)
-            else:
-                # Run the process in the background
-                self.startSegmentationProcessMonitoring(segmentationProcessInfo)
-        else:
-            # Debugging
+        self._bgProcess = LocalInference(processInfo=segmentationProcessInfo, completedCallback=self.onSegmentationProcessCompleted)
+        if self.debugSkipInference:
             self.onSegmentationProcessCompleted(segmentationProcessInfo)
+        else:
+            self._bgProcess.run(auto3DSegCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=waitForCompletion)
 
         return segmentationProcessInfo
-
-    def cancelProcessing(self, segmentationProcessInfo: SegmentationProcessInfo):
-        logging.info("Cancel is requested.")
-        segmentationProcessInfo.cancelRequested = True
-        proc = segmentationProcessInfo.proc
-        if proc:
-            # Simple proc.kill() would not work, that would only stop the launcher
-            import psutil
-            psProcess = psutil.Process(proc.pid)
-            for psChildProcess in psProcess.children(recursive=True):
-                psChildProcess.kill()
-            if psProcess.is_running():
-                psProcess.kill()
-        else:
-            self.onSegmentationProcessCompleted(segmentationProcessInfo)
-
-    @staticmethod
-    def _handleProcessOutputThreadProcess(segmentationProcessInfo: SegmentationProcessInfo):
-        # Wait for the process to end and forward output to the log
-        proc = segmentationProcessInfo.proc
-        while True:
-            try:
-                line = proc.stdout.readline()
-                if not line:
-                    break
-                segmentationProcessInfo.procOutputQueue.put(line.rstrip())
-            except UnicodeDecodeError as e:
-                # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
-                # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
-                # as we only guarantee correct behavior if an UTF8 locale is used.
-                pass
-        proc.wait()
-        retcode = proc.returncode  # non-zero return code means error
-        segmentationProcessInfo.procReturnCode = retcode
-
-    def startSegmentationProcessMonitoring(self, segmentationProcessInfo):
-        import queue
-        import threading
-
-        segmentationProcessInfo.procThread = threading.Thread(target=MONAIAuto3DSegLogic._handleProcessOutputThreadProcess, args=[segmentationProcessInfo])
-        segmentationProcessInfo.procThread.start()
-
-        self.checkSegmentationProcessOutput(segmentationProcessInfo)
-
-    def checkSegmentationProcessOutput(self, segmentationProcessInfo):
-        import queue
-        outputQueue = segmentationProcessInfo.procOutputQueue
-        while outputQueue:
-            if segmentationProcessInfo.procReturnCode != ExitCode.DID_NOT_RUN:
-                self.onSegmentationProcessCompleted(segmentationProcessInfo)
-                return
-            try:
-                line = outputQueue.get_nowait()
-                logging.info(line)
-            except queue.Empty:
-                break
-
-        # No more outputs to process now, check again later
-        qt.QTimer.singleShot(self.processOutputCheckTimerIntervalMsec, lambda: self.checkSegmentationProcessOutput(segmentationProcessInfo=segmentationProcessInfo))
 
     def onSegmentationProcessCompleted(self, segmentationProcessInfo: SegmentationProcessInfo):
         procReturnCode = segmentationProcessInfo.procReturnCode
         customData = segmentationProcessInfo.customData
-        if cancelRequested := segmentationProcessInfo.cancelRequested:
-            procReturnCode = ExitCode.USER_CANCELLED
-            logging.info(f"Processing was cancelled.")
-        else:
+        cancelRequested = procReturnCode == ExitCode.USER_CANCELLED
+        if not cancelRequested:
             if procReturnCode == 0:
                 outputSegmentation = segmentationProcessInfo.outputSegmentation
                 if self.startResultImportCallback:
@@ -1337,6 +1226,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         if self.processingCompletedCallback:
             self.processingCompletedCallback(procReturnCode, customData)
+
+    def cancelProcessing(self):
+        if not self._bgProcess:
+            return
+        self._bgProcess.stop()
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
         labelValueToDescription = self.labelDescriptions(model)
