@@ -175,8 +175,8 @@ class InferenceServer(BackgroundProcess):
 
             cmd = [sys.executable, "main.py", "--host", hostName, "--port", port]
 
-            from MONAIAuto3DSegLib.server import WebServer
-            server = WebServer(completedCallback=...)
+            from MONAIAuto3DSegLib.process import InferenceServer
+            server = InferenceServer(completedCallback=...)
             server.start()
 
             ...

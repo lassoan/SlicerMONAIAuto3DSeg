@@ -274,6 +274,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.remoteServerButton.toggled.connect(self.onRemoteServerButtonToggled)
 
         self.ui.serverButton.toggled.connect(self.onServerButtonToggled)
+        self.ui.portSpinBox.valueChanged.connect(self.updateParameterNodeFromGUI)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
