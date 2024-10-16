@@ -1,9 +1,7 @@
-# pip install python-multipart
-# pip install fastapi
-# pip install "uvicorn[standard]"
+# pip install python-multipart fastapi uvicorn[standard]
 
-# usage: uvicorn main:app --reload --host example.com --port 8891
-# usage: uvicorn main:app --reload --host localhost --port 8891
+# usage: uvicorn main:app --host example.com --port 8891
+# usage: uvicorn main:app --host localhost --port 8891
 
 
 import os
@@ -45,7 +43,7 @@ logging.debug(f"Using {dependencyHandler.__class__.__name__} as dependency handl
 
 def upload(file, session_dir, identifier):
     extension = "".join(Path(file.filename).suffixes)
-    file_location = f"{session_dir}/{identifier}{extension}"
+    file_location = str(Path(session_dir) / f"{identifier}{extension}")
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
     return file_location
@@ -82,7 +80,7 @@ async def infer(
 ):
     import tempfile
     session_dir = tempfile.mkdtemp(dir=tempfile.gettempdir())
-    background_tasks.add_task(shutil.rmtree, session_dir)
+    background_tasks.add_task(shutil.rmtree, session_dir, ignore_errors=False)
 
     logging.debug(session_dir)
     inputFiles = list()
@@ -96,7 +94,7 @@ async def infer(
 
     # logging.info("Input Files: ", inputFiles)
 
-    outputSegmentationFile = f"{session_dir}/output-segmentation.nrrd"
+    outputSegmentationFile = str(Path(session_dir) / "output-segmentation.nrrd")
 
     modelPath = modelDB.modelPath(model_name)
     modelPtFile = modelPath.joinpath("model.pt")
@@ -108,7 +106,7 @@ async def infer(
     auto3DSegCommand = [sys.executable, str(inferenceScriptPyFile),
                         "--model-file", str(modelPtFile),
                         "--image-file", inputFiles[0],
-                        "--result-file", str(outputSegmentationFile)]
+                        "--result-file", outputSegmentationFile]
     for inputIndex in range(1, len(inputFiles)):
         auto3DSegCommand.append(f"--image-file-{inputIndex + 1}")
         auto3DSegCommand.append(inputFiles[inputIndex])
@@ -121,6 +119,7 @@ async def infer(
             raise subprocess.CalledProcessError(proc.returncode, " ".join(auto3DSegCommand))
         return FileResponse(outputSegmentationFile, media_type='application/octet-stream', background=background_tasks)
     except Exception as e:
+        logging.info(e)
         shutil.rmtree(session_dir)
         raise HTTPException(status_code=500, detail=f"Failed to run CMD command: {str(e)}")
 
@@ -134,8 +133,8 @@ def main(argv):
     args = parser.parse_args(argv)
 
     import uvicorn
-
-    uvicorn.run("main:app", host=args.host, port=args.port, reload=True, log_level="debug")
+    # NB: reload=True causing issues on Windows (https://stackoverflow.com/a/70570250)
+    uvicorn.run("main:app", host=args.host, port=args.port, log_level="debug", reload=False)
 
 
 if __name__ == "__main__":

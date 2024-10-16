@@ -729,7 +729,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 if not self._webServer or not self._webServer.isRunning() :
                     import platform
                     from pathlib import Path
-                    slicer.util.pip_install("python-multipart fastapi uvicorn[standard]")
+                    slicer.util.pip_install("psutil python-multipart fastapi uvicorn[standard]")
 
                     hostName = platform.node()
                     port = str(self.ui.portSpinBox.value)
@@ -1328,18 +1328,24 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                 https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmentations.html#terminologyentry-tag
                 """
         if not self._server_address:
-            return []
+            return {}
         else:
-            import tempfile
-            with tempfile.NamedTemporaryFile(suffix=".csv") as tmpfile:
-                with requests.get(self._server_address + f"/labelDescriptions?id={modelName}", stream=True) as r:
-                    r.raise_for_status()
+            from pathlib import Path
+            tempDir = slicer.util.tempDirectory()
+            tempDir = Path(tempDir)
+            outfile = tempDir / "labelDescriptions.csv"
+            with requests.get(self._server_address + f"/labelDescriptions?id={modelName}", stream=True) as r:
+                r.raise_for_status()
 
-                    with open(tmpfile.name, 'wb') as f:
-                        for chunk in r.iter_content(chunk_size=8192):
-                            f.write(chunk)
+                with open(outfile, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
 
-                return self._labelDescriptions(tmpfile.name)
+            labelDescriptions = self._labelDescriptions(outfile)
+
+            import shutil
+            shutil.rmtree(tempDir)
+            return labelDescriptions
 
     def process(self, inputNodes, outputSegmentation, modelId=None, cpu=False, waitForCompletion=True, customData=None):
         """

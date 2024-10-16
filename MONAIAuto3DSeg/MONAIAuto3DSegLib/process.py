@@ -1,7 +1,6 @@
 import subprocess
 
 import slicer
-import psutil
 
 import sys
 import logging
@@ -72,6 +71,7 @@ class BackgroundProcess:
 
     @staticmethod
     def getPSProcess(pid):
+        import psutil
         try:
             return psutil.Process(pid)
         except psutil.NoSuchProcess:
