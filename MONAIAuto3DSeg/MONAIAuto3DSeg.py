@@ -179,7 +179,24 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     PROCESSING_STARTING = 1
     PROCESSING_IN_PROGRESS = 2
     PROCESSING_IMPORT_RESULTS = 3
-    PROCESSING_CANCEL_REQUESTED = 4
+    PROCESSING_COMPLETED = 4
+    PROCESSING_CANCEL_REQUESTED = 5
+
+    PROCESSING_STATES = {
+        PROCESSING_IDLE: "Idle",
+        PROCESSING_STARTING: "Starting...",
+        PROCESSING_IN_PROGRESS: "In Progress",
+        PROCESSING_IMPORT_RESULTS: "Importing Results",
+        PROCESSING_COMPLETED: "Processing Finished",
+        PROCESSING_CANCEL_REQUESTED: "Cancelling..."
+    }
+
+    @staticmethod
+    def getHumanReadableProcessingState(state):
+        try:
+            return MONAIAuto3DSegWidget.PROCESSING_STATES[state]
+        except KeyError:
+            return "Unknown State"
 
     def __init__(self, parent=None):
         """
@@ -237,9 +254,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = MONAIAuto3DSegLogic()
-        self.logic.processingCompletedCallback = self.onProcessingCompleted
         self.logic.startResultImportCallback = self.onProcessImportStarted
         self.logic.endResultImportCallback = self.onProcessImportEnded
+        self.logic.processingCompletedCallback = self.onProcessingCompleted
 
         # Connections
 
@@ -281,6 +298,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.updateServerUrlGUIFromSettings()
 
         self.updateGUIFromParameterNode()
+
+        self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
 
         # Make the model search box in focus by default so users can just start typing to find the model they need
         qt.QTimer.singleShot(0, self.ui.modelSearchBox.setFocus)
@@ -459,7 +478,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self.ui.applyButton.enabled = True
 
             elif state == MONAIAuto3DSegWidget.PROCESSING_STARTING:
-                self.ui.applyButton.text = "Starting..."
                 self.ui.applyButton.toolTip = "Please wait while the segmentation is being initialized"
                 self.ui.applyButton.enabled = False
             elif state == MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS:
@@ -467,11 +485,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.applyButton.toolTip = "Cancel in-progress segmentation"
                 self.ui.applyButton.enabled = True
             elif state == MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS:
-                self.ui.applyButton.text = "Importing results..."
                 self.ui.applyButton.toolTip = "Please wait while the segmentation result is being imported"
                 self.ui.applyButton.enabled = False
             elif state == MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED:
-                self.ui.applyButton.text = "Cancelling..."
                 self.ui.applyButton.toolTip = "Please wait for the segmentation to be cancelled"
                 self.ui.applyButton.enabled = False
 
@@ -546,6 +562,17 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # self.ui.statusLabel.appendPlainText(text)
         # slicer.app.processEvents()  # force update
 
+    def updateProgress(self, state):
+        if state == self.PROCESSING_IDLE:
+            qt.QTimer.singleShot(1000, self.ui.progressBar.hide)
+            self.ui.progressBar.setRange(0,0)
+        else:
+            self.ui.progressBar.setRange(0,4)
+            self.ui.progressBar.show()
+            self.ui.progressBar.value = state
+            self.ui.progressBar.setFormat(text := self.getHumanReadableProcessingState(state))
+            self.addLog(text)
+
     def addServerLog(self, *args):
         for arg in args:
             if self.ui.logConsoleCheckBox.checked:
@@ -556,6 +583,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def setProcessingState(self, state):
         self._processingState = state
         self.updateGUIFromParameterNode()
+        self.updateProgress(state)
         slicer.app.processEvents()
 
     def onApplyButton(self):
@@ -597,7 +625,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onCancel(self):
         with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
-            # TODO: needed here?? self._segmentationProcessInfo
             self.logic.cancelProcessing()
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED)
 
@@ -713,9 +740,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.remoteServerButton.text = "Connect"
             self.logic = MONAIAuto3DSegLogic()
 
-        self.logic.processingCompletedCallback = self.onProcessingCompleted
         self.logic.startResultImportCallback = self.onProcessImportStarted
         self.logic.endResultImportCallback = self.onProcessImportEnded
+        self.logic.processingCompletedCallback = self.onProcessingCompleted
         self.updateGUIFromParameterNode()
 
     def onServerButtonToggled(self, toggled):
@@ -963,15 +990,19 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         ScriptedLoadableModuleLogic.__init__(self)
         ModelDatabase.__init__(self)
 
-        self.processingCompletedCallback = None
         self.startResultImportCallback = None
         self.endResultImportCallback = None
+        self.processingCompletedCallback = None
         self.useStandardSegmentNames = True
 
+        # process that will used to run inference either remotely or locally
         self._bgProcess = None
 
         # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
         # where inference result is stored and set self.debugSkipInference to True.
+        # Disabling this flag preserves input and output data after execution is completed,
+        # which can be useful for troubleshooting.
+        self.clearOutputFolder = True
         self.debugSkipInference = False
         self.debugSkipInferenceTempDir = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
 
@@ -1111,6 +1142,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         logging.info("Processing started")
 
         if self.debugSkipInference:
+            self.clearOutputFolder = False
             # For debugging, use a fixed temporary folder
             tempDir = self.debugSkipInferenceTempDir
         else:
@@ -1166,6 +1198,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         self._bgProcess = LocalInference(processInfo=segmentationProcessInfo, completedCallback=self.onSegmentationProcessCompleted)
         if self.debugSkipInference:
+            segmentationProcessInfo.procReturnCode = 0
             self.onSegmentationProcessCompleted(segmentationProcessInfo)
         else:
             self._bgProcess.run(auto3DSegCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=waitForCompletion)

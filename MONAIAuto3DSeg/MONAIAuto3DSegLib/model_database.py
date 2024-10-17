@@ -36,10 +36,6 @@ class ModelDatabase:
     def __init__(self):
         self.fileCachePath = Path.home().joinpath(f"{self.DEFAULT_CACHE_DIR_NAME}")
         self.moduleDir = Path(__file__).parent.parent
-
-        # Disabling this flag preserves input and output data after execution is completed,
-        # which can be useful for troubleshooting.
-        self.clearOutputFolder = True
         self._models = []
 
     def model(self, modelId):
