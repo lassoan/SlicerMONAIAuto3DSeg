@@ -37,6 +37,7 @@ class ModelDatabase:
         self.fileCachePath = Path.home().joinpath(f"{self.DEFAULT_CACHE_DIR_NAME}")
         self.moduleDir = Path(__file__).parent.parent
         self._models = []
+        self._clearTempDownloadFolder = True
 
     def model(self, modelId):
         for model in self.models:
@@ -150,8 +151,9 @@ class ModelDatabase:
             shutil.rmtree(self.modelsPath)
 
     def downloadAllModels(self):
+        # TODO: add some progress here since this could take a while for all models
         for model in self.models:
-            slicer.app.processEvents()
+            #slicer.app.processEvents()
             self.downloadModel(model["id"])
 
     def downloadModel(self, modelName):
@@ -189,7 +191,7 @@ class ModelDatabase:
             except Exception as e:
                 raise e
             finally:
-                if self.clearOutputFolder:
+                if self._clearTempDownloadFolder:
                     logging.info("Cleaning up temporary model download folder...")
                     if os.path.isdir(tempDir):
                         import shutil

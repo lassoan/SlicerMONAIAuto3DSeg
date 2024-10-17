@@ -781,7 +781,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if returnCode == ExitCode.USER_CANCELLED:
             m = "\nServer was stopped."
         else:
-            m = f"\nProcessing failed with error code {returnCode}."
+            m = f"\nProcessing failed with error code {returnCode}. Try again with `Log to GUI` for more details."
         self.addLog(m)
         self.ui.serverButton.setChecked(False)
 
