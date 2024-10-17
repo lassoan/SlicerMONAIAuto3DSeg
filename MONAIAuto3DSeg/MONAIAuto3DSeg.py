@@ -643,7 +643,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         elif returnCode == ExitCode.USER_CANCELLED:
             m = "\nProcessing was cancelled."
         else:
-            m = f"\nProcessing failed with error code {returnCode}."
+            m = f"\nProcessing failed with error code {returnCode}. Please check logs for further information."
         self.addLog(m)
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
         self._segmentationProcessInfo = None
@@ -768,6 +768,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self._webServer.hostName = hostName
                     self._webServer.port = port
                     self._webServer.start()
+                    if self._webServer.isRunning():
+                        self.addLog("Server started")
             else:
                 if self._webServer is not None and self._webServer.isRunning():
                     self._webServer.stop()

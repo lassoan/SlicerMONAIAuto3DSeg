@@ -90,13 +90,13 @@ class BackgroundProcess:
     def __del__(self):
         self._killProcess()
 
+    def handleSubProcessLogging(self, text):
+        logging.info(text)
+
     def cleanup(self):
         if self.procThread:
             self.procThread.join()
         if self.completedCallback:
-            if self.proc.returncode not in [-9, 0]: # killed or stopped cleanly
-                self.addLog(self._err)
-
             self.completedCallback(self.processInfo)
         self.proc = None
         self.procThread = None
@@ -121,9 +121,8 @@ class BackgroundProcess:
             psProcess.kill()
 
     def stop(self):
-        logging.info("Cancel is requested.")
         self._killProcess()
-        self.processInfo.procReturnCode = ExitCode.USER_CANCELLED
+        self._setProcReturnCode(ExitCode.USER_CANCELLED)
 
     def _startHandleProcessOutputThread(self):
         self.procOutputQueue = queue.Queue()
@@ -142,19 +141,19 @@ class BackgroundProcess:
             except UnicodeDecodeError as e:
                 pass
         self.proc.wait()
-        self.processInfo.procReturnCode = self.proc.returncode # non-zero return code means error
+        self._setProcReturnCode(self.proc.returncode) # non-zero return code means error
 
     def checkProcessOutput(self):
         outputQueue = self.procOutputQueue
         while outputQueue:
+            try:
+                line = outputQueue.get_nowait()
+                self.handleSubProcessLogging(line)
+            except queue.Empty:
+                break
             if self.processInfo.procReturnCode != ExitCode.DID_NOT_RUN:
                 self.completedCallback(self.processInfo)
                 return
-            try:
-                line = outputQueue.get_nowait()
-                logging.info(line)
-            except queue.Empty:
-                break
 
         psProcess = self.getPSProcess(self.proc.pid)
         if psProcess and psProcess.is_running(): # No more outputs to process now, check again later
@@ -165,6 +164,13 @@ class BackgroundProcess:
     def addLog(self, text):
         if self.logCallback:
             self.logCallback(text)
+
+    def _setProcReturnCode(self, rcode):
+        # if user cancelled, leave it at that and don't change it
+        if self.processInfo.procReturnCode == ExitCode.USER_CANCELLED:
+            return
+        self.processInfo.procReturnCode = rcode
+
 
 
 class InferenceServer(BackgroundProcess):
@@ -203,11 +209,11 @@ class InferenceServer(BackgroundProcess):
 
         logging.debug(f"Launching process: {cmd}")
         self.proc = slicer.util.launchConsoleProcess(cmd, useStartupEnvironment=False)
-
-        if self.isRunning():
-            self.addLog("Server Started")
-
         self._startHandleProcessOutputThread()
+
+    def handleSubProcessLogging(self, text):
+        # NB: let upper level handle if it should be logged to console or UI
+        self.addLog(text)
 
 
 class LocalInference(BackgroundProcess):
@@ -247,7 +253,7 @@ class LocalInference(BackgroundProcess):
                 pass
         proc.wait()
         retcode = proc.returncode
-        self.processInfo.procReturnCode = retcode
+        self._setProcReturnCode(retcode)
 
         if retcode != 0:
             from subprocess import CalledProcessError
