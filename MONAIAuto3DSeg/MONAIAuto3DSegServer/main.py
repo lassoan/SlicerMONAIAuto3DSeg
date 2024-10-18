@@ -112,12 +112,11 @@ async def infer(
         auto3DSegCommand.append(inputFiles[inputIndex])
 
     try:
-        cmd = ' '.join(f'"{arg}"' for arg in auto3DSegCommand)
-        logging.debug(cmd)
-        proc = await asyncio.create_subprocess_shell(cmd)
+        logging.debug(auto3DSegCommand)
+        proc = await asyncio.create_subprocess_exec(*auto3DSegCommand)
         await proc.wait()
         if proc.returncode != 0:
-            raise subprocess.CalledProcessError(proc.returncode, " ".join(auto3DSegCommand))
+            raise subprocess.CalledProcessError(proc.returncode, auto3DSegCommand)
         return FileResponse(outputSegmentationFile, media_type='application/octet-stream', background=background_tasks)
     except Exception as e:
         logging.info(e)
