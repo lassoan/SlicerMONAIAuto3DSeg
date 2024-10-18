@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>408</width>
+    <width>409</width>
     <height>841</height>
    </rect>
   </property>
@@ -17,151 +17,96 @@
       <string>Inputs</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
-      <item row="3" column="1">
-       <widget class="QListWidget" name="modelComboBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>100</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>100</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="inputNodeLabel0">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_13">
         <property name="text">
-         <string>Input volume 1:</string>
+         <string>Remote processing:</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputNodeSelector0">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="nodeTypes">
-         <stringlist>
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QCheckBox" name="remoteProcessingCheckBox">
+          <property name="text">
+           <string> </string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="serverConnectionFrame">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>Server:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="serverComboBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="remoteServerButton">
+             <property name="styleSheet">
+              <string notr="true">QPushButton:checked {
+    /* Checked style */
+    background-color: green; /* Green background when checked */
+    border-color: darkgreen; /* Darker border color when checked */
+}</string>
+             </property>
+             <property name="text">
+              <string>Connect</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="inputNodeLabel1">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Input volume 2:</string>
+         <string>Segmentation model:</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputNodeSelector1">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="nodeTypes">
-         <stringlist>
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="inputNodeLabel2">
-        <property name="text">
-         <string>Input volume 3:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputNodeSelector2">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="nodeTypes">
-         <stringlist>
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="inputNodeLabel3">
-        <property name="text">
-         <string>Input volume 4:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputNodeSelector3">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="nodeTypes">
-         <stringlist>
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QToolButton" name="downloadSampleDataToolButton">
-        <property name="toolTip">
-         <string>Download sample data set for the current segmentation model</string>
-        </property>
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
+      <item row="1" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="ctkSearchBox" name="modelSearchBox">
@@ -183,45 +128,148 @@
        </layout>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
+       <widget class="QToolButton" name="downloadSampleDataToolButton">
+        <property name="toolTip">
+         <string>Download sample data set for the current segmentation model</string>
+        </property>
         <property name="text">
-         <string>Segmentation model:</string>
+         <string>...</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <layout class="QGridLayout" name="serverSettings">
-        <item row="0" column="1">
-         <widget class="QComboBox" name="serverComboBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="editable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="remoteServerButton">
-          <property name="styleSheet">
-           <string notr="true">QPushButton:checked {
-    /* Checked style */
-    background-color: green; /* Green background when checked */
-    border-color: darkgreen; /* Darker border color when checked */
-}</string>
-          </property>
-          <property name="text">
-           <string>Connect</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="2" column="1">
+       <widget class="QListWidget" name="modelComboBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>100</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>100</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="inputNodeLabel0">
+        <property name="text">
+         <string>Input volume 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector0">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="inputNodeLabel1">
+        <property name="text">
+         <string>Input volume 2:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector1">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="inputNodeLabel2">
+        <property name="text">
+         <string>Input volume 3:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector2">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="inputNodeLabel3">
+        <property name="text">
+         <string>Input volume 4:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputNodeSelector3">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -232,6 +280,9 @@
       <string>Outputs</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="1">
+       <widget class="qMRMLSegmentationShow3DButton" name="segmentationShow3DButton"/>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
@@ -274,9 +325,6 @@
          <string>Create new segmentation on Apply</string>
         </property>
        </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="qMRMLSegmentationShow3DButton" name="segmentationShow3DButton"/>
       </item>
      </layout>
     </widget>
@@ -447,7 +495,7 @@
       <string>Local segmentation server</string>
      </property>
      <property name="collapsed">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
@@ -605,8 +653,8 @@
      <y>132</y>
     </hint>
     <hint type="destinationlabel">
-     <x>388</x>
-     <y>87</y>
+     <x>389</x>
+     <y>227</y>
     </hint>
    </hints>
   </connection>
@@ -621,8 +669,8 @@
      <y>8</y>
     </hint>
     <hint type="destinationlabel">
-     <x>355</x>
-     <y>233</y>
+     <x>389</x>
+     <y>373</y>
     </hint>
    </hints>
   </connection>
@@ -637,8 +685,8 @@
      <y>74</y>
     </hint>
     <hint type="destinationlabel">
-     <x>323</x>
-     <y>104</y>
+     <x>389</x>
+     <y>253</y>
     </hint>
    </hints>
   </connection>
@@ -653,8 +701,8 @@
      <y>133</y>
     </hint>
     <hint type="destinationlabel">
-     <x>383</x>
-     <y>132</y>
+     <x>389</x>
+     <y>279</y>
     </hint>
    </hints>
   </connection>
@@ -669,24 +717,24 @@
      <y>179</y>
     </hint>
     <hint type="destinationlabel">
-     <x>370</x>
-     <y>154</y>
+     <x>389</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>remoteServerButton</sender>
+   <sender>remoteProcessingCheckBox</sender>
    <signal>toggled(bool)</signal>
-   <receiver>serverCollapsibleButton</receiver>
-   <slot>setDisabled(bool)</slot>
+   <receiver>serverConnectionFrame</receiver>
+   <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>356</x>
-     <y>49</y>
+     <x>134</x>
+     <y>53</y>
     </hint>
     <hint type="destinationlabel">
-     <x>203</x>
-     <y>533</y>
+     <x>240</x>
+     <y>44</y>
     </hint>
    </hints>
   </connection>
