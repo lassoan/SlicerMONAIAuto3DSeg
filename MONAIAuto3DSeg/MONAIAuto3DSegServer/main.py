@@ -112,8 +112,9 @@ async def infer(
         auto3DSegCommand.append(inputFiles[inputIndex])
 
     try:
-        # logging.debug(auto3DSegCommand)
-        proc = await asyncio.create_subprocess_shell(" ".join(auto3DSegCommand))
+        cmd = ' '.join(f'"{arg}"' for arg in auto3DSegCommand)
+        logging.debug(cmd)
+        proc = await asyncio.create_subprocess_shell(cmd)
         await proc.wait()
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, " ".join(auto3DSegCommand))
@@ -121,7 +122,7 @@ async def infer(
     except Exception as e:
         logging.info(e)
         shutil.rmtree(session_dir)
-        raise HTTPException(status_code=500, detail=f"Failed to run CMD command: {str(e)}")
+        raise
 
 
 def main(argv):
