@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 
+
 paths = [str(Path(__file__).parent.parent)]
 for path in paths:
     if not path in sys.path:
@@ -21,8 +22,7 @@ import shutil
 import asyncio
 import subprocess
 from fastapi import FastAPI, UploadFile
-from fastapi.responses import FileResponse
-from fastapi import HTTPException
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.background import BackgroundTasks
 
 
@@ -118,10 +118,18 @@ async def infer(
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, auto3DSegCommand)
         return FileResponse(outputSegmentationFile, media_type='application/octet-stream', background=background_tasks)
-    except Exception as e:
-        logging.info(e)
+    except Exception as err:
+        logging.info(err)
         shutil.rmtree(session_dir)
-        raise
+        import traceback
+        return JSONResponse(
+            content={
+                "error": "An unexpected error occurred",
+                "message": str(err),
+                "traceback": traceback.format_exc()
+            },
+            status_code=500
+        )
 
 
 def main(argv):

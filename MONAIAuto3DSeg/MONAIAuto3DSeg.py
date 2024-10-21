@@ -181,6 +181,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     PROCESSING_IMPORT_RESULTS = 3
     PROCESSING_COMPLETED = 4
     PROCESSING_CANCEL_REQUESTED = 5
+    PROCESSING_FAILED = 6
 
     PROCESSING_STATES = {
         PROCESSING_IDLE: "Idle",
@@ -188,7 +189,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         PROCESSING_IN_PROGRESS: "In Progress",
         PROCESSING_IMPORT_RESULTS: "Importing Results",
         PROCESSING_COMPLETED: "Processing Finished",
-        PROCESSING_CANCEL_REQUESTED: "Cancelling..."
+        PROCESSING_CANCEL_REQUESTED: "Cancelling...",
+        PROCESSING_FAILED: "Processing Failed"
     }
 
     @staticmethod
@@ -601,9 +603,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_STARTING)
 
-        try:
-            with slicer.util.tryWithErrorDisplay("Failed to start processing.", waitCursor=True):
-
+        with slicer.util.tryWithErrorDisplay("Processing Failed. Check logs for more information.", waitCursor=True):
+            try:
                 # Create new segmentation node, if not selected yet
                 if not self.ui.outputSegmentationSelector.currentNode():
                     self.ui.outputSegmentationSelector.addNode()
@@ -620,8 +621,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self._segmentationProcessInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
                     self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=False)
 
-        except Exception as e:
-            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
+            except Exception as e:
+                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_FAILED)
+                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
+                raise
 
     def onCancel(self):
         with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
@@ -1422,13 +1425,14 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
             logging.info(f"Initiating Inference on {self._server_address}")
             files = {}
 
-            try:
-                for idx, inputFile in enumerate(inputFiles, start=1):
-                    name = "image_file"
-                    if idx > 1:
-                        name = f"{name}_{idx}"
-                    files[name] = open(inputFile, 'rb')
+            for idx, inputFile in enumerate(inputFiles, start=1):
+                name = "image_file"
+                if idx > 1:
+                    name = f"{name}_{idx}"
+                files[name] = open(inputFile, 'rb')
 
+            r = None
+            try:
                 with requests.post(self._server_address + f"/infer?model_name={modelId}", files=files) as r:
                     r.raise_for_status()
 
@@ -1437,6 +1441,11 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                             binary_file.write(chunk)
 
                     segmentationProcessInfo.procReturnCode = 0
+            except Exception as e:
+                logging.debug(f"Error occurred: {e}")
+                if hasattr(r, "content"):
+                    logging.debug(f"Response content: {r.content}")
+                raise
             finally:
                 for f in files.values():
                     f.close()
