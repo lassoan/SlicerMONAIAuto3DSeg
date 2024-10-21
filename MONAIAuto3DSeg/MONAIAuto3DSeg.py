@@ -760,7 +760,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 if not self._webServer or not self._webServer.isRunning() :
                     import platform
                     from pathlib import Path
-                    slicer.util.pip_install("psutil python-multipart fastapi uvicorn[standard]")
+                    slicer.util.pip_install("psutil python-multipart fastapi slowapi uvicorn[standard]")
 
                     hostName = platform.node()
                     port = str(self.ui.portSpinBox.value)

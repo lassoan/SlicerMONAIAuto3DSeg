@@ -1,4 +1,4 @@
-# pip install python-multipart fastapi uvicorn[standard]
+# pip install python-multipart fastapi slowapi uvicorn[standard]
 
 # usage: uvicorn main:app --host example.com --port 8891
 # usage: uvicorn main:app --host localhost --port 8891
@@ -21,12 +21,17 @@ from MONAIAuto3DSegLib.model_database import ModelDatabase
 import shutil
 import asyncio
 import subprocess
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.background import BackgroundTasks
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
+limiter = Limiter(key_func=lambda request: "request_per_route_per_minute")
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 modelDB = ModelDatabase()
 
 # deciding which dependencies to choose
@@ -70,7 +75,9 @@ def getLabelsFile(id: str):
 
 
 @app.post("/infer")
+@limiter.limit("5/minute")
 async def infer(
+    request: Request,
     background_tasks: BackgroundTasks,
     image_file: UploadFile,
     model_name: str,
