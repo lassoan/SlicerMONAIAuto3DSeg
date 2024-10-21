@@ -3,6 +3,7 @@ import os
 import json
 import sys
 import time
+from urllib.error import HTTPError
 
 import vtk
 
@@ -1442,11 +1443,11 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                             binary_file.write(chunk)
 
                     segmentationProcessInfo.procReturnCode = 0
-            except Exception as e:
-                logging.debug(f"Error occurred: {e}")
-                if hasattr(r, "content"):
-                    logging.debug(f"Response content: {r.content}")
-                raise
+            except requests.exceptions.HTTPError as e:
+                from http import HTTPStatus
+                status = HTTPStatus(e.response.status_code)
+                logging.debug(f"Server response content: {r.content}")
+                raise RuntimeError(status.description)
             finally:
                 for f in files.values():
                     f.close()
