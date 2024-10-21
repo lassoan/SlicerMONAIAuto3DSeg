@@ -99,10 +99,10 @@
               </sizepolicy>
              </property>
              <property name="autoFillBackground">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
              <property name="styleSheet">
-              <string notr="true">QPushButton:checked {
+              <string notr="true">QToolButton:checked {
     /* Checked style */
     background-color: green; /* Green background when checked */
     border-color: darkgreen; /* Darker border color when checked */
