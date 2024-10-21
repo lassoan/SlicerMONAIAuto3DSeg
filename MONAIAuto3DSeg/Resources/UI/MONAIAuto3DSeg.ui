@@ -28,8 +28,14 @@
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
          <widget class="QCheckBox" name="remoteProcessingCheckBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
-           <string> </string>
+           <string/>
           </property>
           <property name="checked">
            <bool>true</bool>
@@ -38,6 +44,13 @@
         </item>
         <item>
          <widget class="QFrame" name="serverConnectionFrame">
+          <property name="styleSheet">
+           <string notr="true">QPushButton:checked {
+    /* Checked style */
+    background-color: green; /* Green background when checked */
+    border-color: darkgreen; /* Darker border color when checked */
+}</string>
+          </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
           </property>
@@ -79,6 +92,15 @@
            </item>
            <item>
             <widget class="QToolButton" name="remoteServerButton">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="autoFillBackground">
+              <bool>true</bool>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton:checked {
     /* Checked style */

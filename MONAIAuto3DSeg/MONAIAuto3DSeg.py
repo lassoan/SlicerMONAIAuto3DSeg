@@ -290,6 +290,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.ui.serverComboBox.lineEdit().setPlaceholderText("Enter server address")
         self.ui.serverComboBox.currentIndexChanged.connect(self.onRemoteServerButtonToggled)
+        self.ui.remoteProcessingCheckBox.toggled.connect(lambda t: self.ui.remoteServerButton.setChecked(False))
         self.ui.remoteServerButton.toggled.connect(self.onRemoteServerButtonToggled)
 
         self.ui.serverButton.toggled.connect(self.onServerButtonToggled)
