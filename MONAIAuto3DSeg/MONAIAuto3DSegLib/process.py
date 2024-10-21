@@ -203,8 +203,9 @@ class InferenceServer(BackgroundProcess):
     def start(self):
         cmd = [
             sys.executable,
-            Path(__file__).parent.parent / "MONAIAuto3DSegServer" / "main.py", "--host",
-            self.hostName, "--port", self.port
+            str(Path(__file__).parent.parent / "MONAIAuto3DSegServer" / "main.py"),
+            "--host", self.hostName,
+            "--port", self.port
         ]
 
         logging.debug(f"Launching process: {cmd}")
