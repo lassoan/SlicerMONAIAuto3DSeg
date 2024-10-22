@@ -1,12 +1,24 @@
 import logging
 import os
-import re
+import json
+import sys
+import time
+from urllib.error import HTTPError
 
 import vtk
 
+import qt
 import slicer
+import requests
+
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
+from MONAIAuto3DSegLib.model_database import ModelDatabase
+from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec
+from MONAIAuto3DSegLib.dependency_handler import SlicerPythonDependencies, RemotePythonDependencies
+from MONAIAuto3DSegLib.process import InferenceServer, LocalInference, ExitCode, SegmentationProcessInfo
+
+
 
 
 #
@@ -24,7 +36,7 @@ class MONAIAuto3DSeg(ScriptedLoadableModule):
         self.parent.title = "MONAI Auto3DSeg"
         self.parent.categories = ["Segmentation"]
         self.parent.dependencies = []
-        self.parent.contributors = ["Andras Lasso (PerkLab, Queen's University)", "Andres Diaz-Pinto (NVIDIA & KCL)", "Rudolf Bumm (KSGR Switzerland)"]
+        self.parent.contributors = ["Andras Lasso (PerkLab, Queen's University)", "Andres Diaz-Pinto (NVIDIA & KCL)", "Rudolf Bumm (KSGR Switzerland), Christian Herz (CHOP)"]
         self.parent.helpText = """
 3D Slicer extension for segmentation using MONAI Auto3DSeg AI model.
 See more information in the <a href="https://github.com/lassoan/SlicerMONAIAuto3DSeg">extension documentation</a>.
@@ -168,7 +180,26 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     PROCESSING_STARTING = 1
     PROCESSING_IN_PROGRESS = 2
     PROCESSING_IMPORT_RESULTS = 3
-    PROCESSING_CANCEL_REQUESTED = 4
+    PROCESSING_COMPLETED = 4
+    PROCESSING_CANCEL_REQUESTED = 5
+    PROCESSING_FAILED = 6
+
+    PROCESSING_STATES = {
+        PROCESSING_IDLE: "Idle",
+        PROCESSING_STARTING: "Starting...",
+        PROCESSING_IN_PROGRESS: "In Progress",
+        PROCESSING_IMPORT_RESULTS: "Importing Results",
+        PROCESSING_COMPLETED: "Processing Finished",
+        PROCESSING_CANCEL_REQUESTED: "Cancelling...",
+        PROCESSING_FAILED: "Processing Failed"
+    }
+
+    @staticmethod
+    def getHumanReadableProcessingState(state):
+        try:
+            return MONAIAuto3DSegWidget.PROCESSING_STATES[state]
+        except KeyError:
+            return "Unknown State"
 
     def __init__(self, parent=None):
         """
@@ -181,6 +212,25 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._updatingGUIFromParameterNode = False
         self._processingState = MONAIAuto3DSegWidget.PROCESSING_IDLE
         self._segmentationProcessInfo = None
+        self._webServer = None
+
+    def onReload(self):
+        logging.debug(f"Reloading {self.moduleName}")
+        if self._webServer:
+            self._webServer.killProcess()
+
+        packageName ="MONAIAuto3DSegLib"
+        submoduleNames = ['dependency_handler', 'model_database', 'process', 'utils']
+        import imp
+        f, filename, description = imp.find_module(packageName)
+        package = imp.load_module(packageName, f, filename, description)
+        for submoduleName in submoduleNames:
+            f, filename, description = imp.find_module(submoduleName, package.__path__)
+            try:
+                imp.load_module(packageName + '.' + submoduleName, f, filename, description)
+            finally:
+                f.close()
+        super().onReload()
 
     def setup(self):
         """
@@ -194,7 +244,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.layout.addWidget(uiWidget)
         self.ui = slicer.util.childWidgetVariables(uiWidget)
 
-        import qt
         self.ui.downloadSampleDataToolButton.setIcon(qt.QIcon(self.resourcePath("Icons/radiology.svg")))
 
         self.inputNodeSelectors = [self.ui.inputNodeSelector0, self.ui.inputNodeSelector1, self.ui.inputNodeSelector2, self.ui.inputNodeSelector3]
@@ -209,9 +258,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # in batch mode, without a graphical user interface.
         self.logic = MONAIAuto3DSegLogic()
         self.logic.logCallback = self.addLog
-        self.logic.processingCompletedCallback = self.onProcessingCompleted
         self.logic.startResultImportCallback = self.onProcessImportStarted
         self.logic.endResultImportCallback = self.onProcessImportEnded
+        self.logic.processingCompletedCallback = self.onProcessingCompleted
+
+        self.ui.remoteProcessingCheckBox.checked = qt.QSettings().value(f"{self.moduleName}/remoteProcessing", False)
+
+        self.ui.progressBar.hide()
 
         # Connections
 
@@ -241,10 +294,21 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.browseToModelsFolderButton.connect("clicked(bool)", self.onBrowseModelsFolder)
         self.ui.deleteAllModelsButton.connect("clicked(bool)", self.onClearModelsFolder)
 
+        self.ui.serverComboBox.lineEdit().setPlaceholderText("Enter server address")
+        self.ui.serverComboBox.currentIndexChanged.connect(self.onRemoteServerButtonToggled)
+        self.ui.remoteProcessingCheckBox.toggled.connect(self.onRemoteProcessingCheckBoxToggled)
+        self.ui.remoteServerButton.toggled.connect(self.onRemoteServerButtonToggled)
+
+        self.ui.serverButton.toggled.connect(self.onServerButtonToggled)
+        self.ui.portSpinBox.valueChanged.connect(self.updateParameterNodeFromGUI)
+
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+        self.updateServerUrlGUIFromSettings()
 
         self.updateGUIFromParameterNode()
+
+        self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
 
         # Make the model search box in focus by default so users can just start typing to find the model they need
         qt.QTimer.singleShot(0, self.ui.modelSearchBox.setFocus)
@@ -253,6 +317,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         Called when the application closes and the module widget is destroyed.
         """
+        if self._webServer:
+            self._webServer.killProcess()
         self.removeObservers()
 
     def enter(self):
@@ -325,15 +391,12 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         This method is called whenever parameter node is changed.
         The module GUI is updated to show the current state of the parameter node.
         """
-        import qt
-
         if self._parameterNode is None or self._updatingGUIFromParameterNode:
             return
 
         # Make sure GUI changes do not call updateParameterNodeFromGUI (it could cause infinite loop)
         self._updatingGUIFromParameterNode = True
         try:
-
             self.ui.modelSearchBox.text = self._parameterNode.GetParameter("ModelSearchText")
 
             searchWords = self._parameterNode.GetParameter("ModelSearchText").lower().split()
@@ -388,6 +451,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if state == MONAIAuto3DSegWidget.PROCESSING_IDLE:
                 self.ui.applyButton.text = "Apply"
                 inputErrorMessages = []  # it will contain text if the inputs are not valid
+                if self.ui.remoteProcessingCheckBox.checked and not self.ui.remoteServerButton.checked:
+                    inputErrorMessages.append("Connect to server or disable remote processing.")
+                    self.ui.modelComboBox.enabled = False
+                else:
+                    self.ui.modelComboBox.enabled = True
                 if modelId:
                     modelInputs = self.logic.model(modelId)["inputs"]
                 else:
@@ -424,7 +492,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self.ui.applyButton.enabled = True
 
             elif state == MONAIAuto3DSegWidget.PROCESSING_STARTING:
-                self.ui.applyButton.text = "Starting..."
                 self.ui.applyButton.toolTip = "Please wait while the segmentation is being initialized"
                 self.ui.applyButton.enabled = False
             elif state == MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS:
@@ -432,14 +499,34 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.applyButton.toolTip = "Cancel in-progress segmentation"
                 self.ui.applyButton.enabled = True
             elif state == MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS:
-                self.ui.applyButton.text = "Importing results..."
                 self.ui.applyButton.toolTip = "Please wait while the segmentation result is being imported"
                 self.ui.applyButton.enabled = False
             elif state == MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED:
-                self.ui.applyButton.text = "Cancelling..."
                 self.ui.applyButton.toolTip = "Please wait for the segmentation to be cancelled"
                 self.ui.applyButton.enabled = False
 
+            remoteConnection = self.ui.remoteServerButton.checked
+
+            # if remoteConnection:
+            #     self.ui.serverCollapsibleButton.collapsed = True
+
+            self.ui.portSpinBox.value = int(self._parameterNode.GetParameter("ServerPort"))
+
+            self.ui.serverAddressTitleLabel.visible = self._webServer is not None
+            self.ui.serverAddressLabel.visible = self._webServer is not None
+            if self._webServer:
+                self.ui.serverAddressLabel.text = self._webServer.getAddressUrl()
+
+            self.ui.browseToModelsFolderButton.enabled = not remoteConnection
+            self.ui.useStandardSegmentNamesCheckBox.enabled = not remoteConnection
+            self.ui.cpuCheckBox.enabled = not remoteConnection
+            self.ui.showAllModelsCheckBox.enabled = not remoteConnection
+            self.ui.deleteAllModelsButton.enabled = not remoteConnection
+            self.ui.packageUpgradeButton.enabled = not remoteConnection
+
+            serverRunning = self._webServer is not None and self._webServer.isRunning()
+            self.ui.serverButton.checked = serverRunning
+            self.ui.serverButton.text = "Running ..." if serverRunning else "Start server"
         finally:
             # All the GUI updates are done
             self._updatingGUIFromParameterNode = False
@@ -470,6 +557,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._parameterNode.SetParameter("ShowAllModels", "true" if self.ui.showAllModelsCheckBox.checked else "false")
             self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.useStandardSegmentNamesCheckBox.checked else "false")
             self._parameterNode.SetNodeReferenceID("OutputSegmentation", self.ui.outputSegmentationSelector.currentNodeID)
+            self._parameterNode.SetParameter("ServerPort", str(self.ui.portSpinBox.value))
 
         finally:
             self._parameterNode.EndModify(wasModified)
@@ -477,12 +565,39 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def addLog(self, text):
         """Append text to log window
         """
-        self.ui.statusLabel.appendPlainText(text)
-        slicer.app.processEvents()  # force update
+        if len(self.ui.statusLabel.html) > 1024 * 256:
+            self.ui.statusLabel.clear()
+            self.ui.statusLabel.insertHtml("Log cleared\n")
+        self.ui.statusLabel.insertHtml(text)
+        self.ui.statusLabel.insertPlainText("\n")
+        self.ui.statusLabel.ensureCursorVisible()
+        self.ui.statusLabel.repaint()
+
+        # self.ui.statusLabel.appendPlainText(text)
+        # slicer.app.processEvents()  # force update
+
+    def updateProgress(self, state):
+        if state == self.PROCESSING_IDLE:
+            qt.QTimer.singleShot(1000, self.ui.progressBar.hide)
+            self.ui.progressBar.setRange(0,0)
+        else:
+            self.ui.progressBar.setRange(0,4)
+            self.ui.progressBar.show()
+            self.ui.progressBar.value = state
+            self.ui.progressBar.setFormat(text := self.getHumanReadableProcessingState(state))
+            self.addLog(text)
+
+    def addServerLog(self, *args):
+        for arg in args:
+            if self.ui.logConsoleCheckBox.checked:
+                print(arg)
+            if self.ui.logGuiCheckBox.checked:
+                self.addLog(arg)
 
     def setProcessingState(self, state):
         self._processingState = state
         self.updateGUIFromParameterNode()
+        self.updateProgress(state)
         slicer.app.processEvents()
 
     def onApplyButton(self):
@@ -500,13 +615,8 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_STARTING)
 
-        if not self.logic.dependenciesInstalled:
-            with slicer.util.tryWithErrorDisplay("Failed to install required dependencies.", waitCursor=True):
-                self.logic.setupPythonRequirements()
-
-        try:
-            with slicer.util.tryWithErrorDisplay("Failed to start processing.", waitCursor=True):
-
+        with slicer.util.tryWithErrorDisplay("Processing Failed. Check logs for more information.", waitCursor=True):
+            try:
                 # Create new segmentation node, if not selected yet
                 if not self.ui.outputSegmentationSelector.currentNode():
                     self.ui.outputSegmentationSelector.addNode()
@@ -518,37 +628,42 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 for inputNodeSelector in self.inputNodeSelectors:
                     if inputNodeSelector.visible:
                         inputNodes.append(inputNodeSelector.currentNode())
+
+                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
                 self._segmentationProcessInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
                     self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=False)
 
-                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
-
-        except Exception as e:
-            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
+            except Exception as e:
+                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_FAILED)
+                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
+                raise
 
     def onCancel(self):
         with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
-            self.logic.cancelProcessing(self._segmentationProcessInfo)
+            self.logic.cancelProcessing()
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED)
 
     def onProcessImportStarted(self, customData):
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS)
-        import qt
         qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
         slicer.app.processEvents()
 
     def onProcessImportEnded(self, customData):
-        import qt
         qt.QApplication.restoreOverrideCursor()
         slicer.app.processEvents()
 
     def onProcessingCompleted(self, returnCode, customData):
-        self.ui.statusLabel.appendPlainText("\nProcessing finished.")
+        if returnCode == 0:
+            m = "\nProcessing finished."
+        elif returnCode == ExitCode.USER_CANCELLED:
+            m = "\nProcessing was cancelled."
+        else:
+            m = f"\nProcessing failed with error code {returnCode}. Please check logs for further information."
+        self.addLog(m)
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
         self._segmentationProcessInfo = None
 
     def _currentModelId(self):
-        import qt
         itemIndex = self.ui.modelComboBox.currentRow
         item = self.ui.modelComboBox.item(itemIndex)
         if not item:
@@ -556,7 +671,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         return item.data(qt.Qt.UserRole)
 
     def _setCurrentModelId(self, modelId):
-        import qt
         for itemIndex in range(self.ui.modelComboBox.count):
             item = self.ui.modelComboBox.item(itemIndex)
             if item.data(qt.Qt.UserRole) == modelId:
@@ -565,7 +679,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         return False
 
     def onDownloadSampleData(self):
-        model = self.logic.model(self._currentModelId())
+        with slicer.util.tryWithErrorDisplay("Failed to retrieve model information", waitCursor=True):
+            model = self.logic.model(self._currentModelId())
+
         sampleDataName = model.get("sampleData")
         if not sampleDataName:
             slicer.util.messageBox("No sample data is available for this model.")
@@ -584,7 +700,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.util.messageBox(f"Failed to load sample data set '{sampleDataName}'.")
             return
 
-        inputNodes = MONAIAuto3DSegLogic.assignInputNodesByName(inputs, loadedSampleNodes)
+        inputNodes = self.logic.assignInputNodesByName(inputs, loadedSampleNodes)
         for inputIndex, inputNode in enumerate(inputNodes):
             if inputNode:
                 self.inputNodeSelectors[inputIndex].setCurrentNode(inputNode)
@@ -592,24 +708,25 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onPackageInfoUpdate(self):
         self.ui.packageInfoTextBrowser.plainText = ""
         with slicer.util.tryWithErrorDisplay("Failed to get MONAI package version information", waitCursor=True):
-            self.ui.packageInfoTextBrowser.plainText = self.logic.installedMONAIPythonPackageInfo().rstrip()
+            self.ui.packageInfoTextBrowser.plainText = self.logic.getMONAIPythonPackageInfo().rstrip()
 
     def onPackageUpgrade(self):
+        restartRequired = True
         with slicer.util.tryWithErrorDisplay("Failed to upgrade MONAI", waitCursor=True):
-            self.logic.setupPythonRequirements(upgrade=True)
+            restartRequired = self.logic.setupPythonRequirements(upgrade=True)
         self.onPackageInfoUpdate()
-        if not slicer.util.confirmOkCancelDisplay(f"This MONAI update requires a 3D Slicer restart.","Press OK to restart."):
-            raise ValueError("Restart was cancelled.")
-        else:
-            slicer.util.restart()
+        if restartRequired:
+            if not slicer.util.confirmOkCancelDisplay(f"This MONAI update requires a 3D Slicer restart.","Press OK to restart."):
+                raise ValueError("Restart was cancelled.")
+            else:
+                slicer.util.restart()
 
     def onBrowseModelsFolder(self):
-        import qt
         self.logic.createModelsDir()
-        qt.QDesktopServices().openUrl(qt.QUrl.fromLocalFile(self.logic.modelsPath()))
+        qt.QDesktopServices().openUrl(qt.QUrl.fromLocalFile(self.logic.modelsPath))
 
     def onClearModelsFolder(self):
-        if not os.path.exists(self.logic.modelsPath()):
+        if not os.path.exists(self.logic.modelsPath):
             slicer.util.messageBox("There are no downloaded models.")
             return
         if not slicer.util.confirmOkCancelDisplay("All downloaded model files will be deleted. The files will be automatically downloaded again as needed."):
@@ -617,11 +734,124 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic.deleteAllModels()
         slicer.util.messageBox("Downloaded models are deleted.")
 
+    def onRemoteServerButtonToggled(self):
+        if self.ui.remoteServerButton.checked and self.ui.serverComboBox.currentText != '':
+            self.ui.remoteServerButton.text = "Connected"
+            self.logic = RemoteMONAIAuto3DSegLogic()
+            self.logic.server_address = self.ui.serverComboBox.currentText
+            try:
+                models = self.logic.models
+                self.addLog(f"Remote Server Connected {self.logic.server_address}. {len(models)} models are available.")
+            except:
+                slicer.util.warningDisplay(
+                    f"Connection to remote server '{self.logic.server_address}' failed. "
+                    f"Please check address, port, and connection."
+                )
+                self.ui.remoteServerButton.checked = False
+                return
+            self.saveServerUrl()
+        else:
+            self.ui.remoteServerButton.checked = False
+            self.ui.remoteServerButton.text = "Connect"
+            self.logic = MONAIAuto3DSegLogic()
+
+        self.logic.startResultImportCallback = self.onProcessImportStarted
+        self.logic.endResultImportCallback = self.onProcessImportEnded
+        self.logic.processingCompletedCallback = self.onProcessingCompleted
+        self.updateGUIFromParameterNode()
+
+    def onServerButtonToggled(self, toggled):
+        with slicer.util.tryWithErrorDisplay("Failed to start server.", waitCursor=True):
+            if toggled:
+                # TODO: improve error reporting if installation of requirements fails
+
+                self.ui.statusLabel.plainText = ""
+                self.logic.setupPythonRequirements()
+
+                if not self._webServer or not self._webServer.isRunning() :
+                    import platform
+                    from pathlib import Path
+                    slicer.util.pip_install("psutil python-multipart fastapi slowapi uvicorn[standard]")
+
+                    hostName = platform.node()
+                    port = str(self.ui.portSpinBox.value)
+
+                    self._webServer = InferenceServer(
+                        logCallback=self.addServerLog,
+                        completedCallback=self.onServerCompleted
+                    )
+                    self._webServer.hostName = hostName
+                    self._webServer.port = port
+                    self._webServer.start()
+                    if self._webServer.isRunning():
+                        self.addLog("Server started")
+            else:
+                if self._webServer is not None and self._webServer.isRunning():
+                    self._webServer.stop()
+                    self._webServer = None
+        self.updateGUIFromParameterNode()
+
+    def onServerCompleted(self, processInfo=None):
+        returnCode = processInfo.procReturnCode
+        if returnCode == ExitCode.USER_CANCELLED:
+            m = "\nServer was stopped."
+        else:
+            m = f"\nProcessing failed with error code {returnCode}. Try again with `Log to GUI` for more details."
+        self.addLog(m)
+        self.ui.serverButton.setChecked(False)
+
+    def serverUrl(self):
+        serverUrl = self.ui.serverComboBox.currentText.strip()
+        if not serverUrl:
+            serverUrl = "http://127.0.0.1:8000"
+        return serverUrl.rstrip("/")
+
+    def saveServerUrl(self):
+        settings = qt.QSettings()
+        serverUrl = self.ui.serverComboBox.currentText
+        settings.setValue(f"{self.moduleName}/serverUrl", serverUrl)
+        serverUrlHistory = self._getServerUrlHistory(serverUrl, settings)
+        serverUrlHistory.insert(0, serverUrl) # Save current server URL to the top of history
+        serverUrlHistory = serverUrlHistory[:10]  # keep up to first 10 elements
+        settings.setValue(f"{self.moduleName}/serverUrlHistory", ";".join(serverUrlHistory))
+        self.updateServerUrlGUIFromSettings()
+
+    def _getServerUrlHistory(self, serverUrl, settings):
+        serverUrlHistory = settings.value(f"{self.moduleName}/serverUrlHistory")
+        if serverUrlHistory:
+            serverUrlHistory = serverUrlHistory.split(";")
+        else:
+            serverUrlHistory = []
+        try:
+            serverUrlHistory.remove(serverUrl)
+        except ValueError:
+            pass
+        return serverUrlHistory
+
+    def updateServerUrlGUIFromSettings(self):
+        settings = qt.QSettings()
+        serverUrlHistory = settings.value(f"{self.moduleName}/serverUrlHistory")
+
+        wasBlocked = self.ui.serverComboBox.blockSignals(True)
+        self.ui.serverComboBox.clear()
+        if serverUrlHistory:
+            self.ui.serverComboBox.addItems(serverUrlHistory.split(";"))
+        self.ui.serverComboBox.setCurrentText(settings.value(f"{self.moduleName}/serverUrl"))
+        self.ui.serverComboBox.blockSignals(wasBlocked)
+
+    def onRemoteProcessingCheckBoxToggled(self, checked):
+        # Disconnect remote server button if remote processing state is changed
+        self.ui.remoteServerButton.setChecked(False)
+        settings = qt.QSettings()
+        settings.setValue(f"{self.moduleName}/remoteProcessing", checked)
+        self.updateGUIFromParameterNode()
+
 #
 # MONAIAuto3DSegLogic
 #
 
-class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
+
+class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
     """This class should implement all the actual
     computation done by your module.  The interface
     should be such that other python code can import
@@ -631,247 +861,81 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
-    EXIT_CODE_USER_CANCELLED = 1001
-    EXIT_CODE_DID_NOT_RUN = 1002
+    DEPENDENCY_HANDLER = SlicerPythonDependencies()
 
-    def __init__(self):
-        """
-        Called when the logic class is instantiated. Can be used for initializing member variables.
-        """
-        from collections import OrderedDict
+    @staticmethod
+    def assignInputNodesByName(inputs, loadedSampleNodes):
 
-        ScriptedLoadableModuleLogic.__init__(self)
+        def findFirstNodeByNamePattern(namePattern, nodes):
+            import fnmatch
+            for node in nodes:
+                if fnmatch.fnmatchcase(node.GetName(), namePattern):
+                    return node
+            return None
 
-        import pathlib
-        self.fileCachePath = pathlib.Path.home().joinpath(".MONAIAuto3DSeg")
+        inputNodes = []
+        for inputIndex, input in enumerate(inputs):
+            namePattern = input.get("namePattern")
+            if namePattern:
+                matchingNode = findFirstNodeByNamePattern(namePattern, loadedSampleNodes)
+            else:
+                matchingNode = loadedSampleNodes[inputIndex] if inputIndex < len(loadedSampleNodes) else \
+                    loadedSampleNodes[0]
+            inputNodes.append(matchingNode)
+        return inputNodes
 
-        self.dependenciesInstalled = False  # we don't know yet if dependencies have been installed
+    @staticmethod
+    def getLoadedTerminologyNames():
+        import vtk
+        terminologyNames = vtk.vtkStringArray()
+        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
+        terminologiesLogic.GetLoadedTerminologyNames(terminologyNames)
 
-        self.moduleDir = os.path.dirname(slicer.util.getModule('MONAIAuto3DSeg').path)
+        return [terminologyNames.GetValue(idx) for idx in range(terminologyNames.GetNumberOfValues())]
 
-        self.logCallback = None
-        self.processingCompletedCallback = None
-        self.startResultImportCallback = None
-        self.endResultImportCallback = None
-        self.useStandardSegmentNames = True
+    @staticmethod
+    def getLoadedAnatomicContextNames():
+        import vtk
+        anatomicContextNames = vtk.vtkStringArray()
+        terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
+        terminologiesLogic.GetLoadedAnatomicContextNames(anatomicContextNames)
 
-        # List of property type codes that are specified by in the MONAIAuto3DSeg terminology.
+        return [anatomicContextNames.GetValue(idx) for idx in range(anatomicContextNames.GetNumberOfValues())]
+
+    @staticmethod
+    def _terminologyPropertyTypes(terminologyName):
+        """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
+        Terminology entries are either in DICOM or MONAI Auto3DSeg "Segmentation category and type".
+
+        # List of property type codes that are specified by in the terminology.
         #
         # Codes are stored as a list of strings containing coding scheme designator and code value of the property type,
         # separated by "^" character. For example "SCT^123456".
-        #
-        # If property the code is found in this list then the MONAIAuto3DSeg terminology will be used,
-        # otherwise the DICOM terminology will be used. This is necessary because the DICOM terminology
-        # does not contain all the necessary items and some items are incomplete (e.g., don't have color or 3D Slicer label).
-        #
-        self.MONAIAuto3DSegTerminologyPropertyTypes = self._MONAIAuto3DSegTerminologyPropertyTypes()
 
-        # List of anatomic regions that are specified by MONAIAuto3DSeg.
-        self.MONAIAuto3DSegAnatomicRegions = self._MONAIAuto3DSegAnatomicRegions()
-
-        # Segmentation models specified by in models.json file
-        self.models = self.loadModelsDescription()
-        self.defaultModel = self.models[0]["id"]
-
-        # Timer for checking the output of the segmentation process that is running in the background
-        self.processOutputCheckTimerIntervalMsec = 1000
-
-        # Disabling this flag preserves input and output data after execution is completed,
-        # which can be useful for troubleshooting.
-        self.clearOutputFolder = True
-
-        # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
-        # where inference result is stored and set self.debugSkipInference to True.
-        self.debugSkipInference = False
-        self.debugSkipInferenceTempDir = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
-
-
-    def model(self, modelId):
-        for model in self.models:
-            if model["id"] == modelId:
-                return model
-        raise RuntimeError(f"Model {modelId} not found")
-
-
-    def modelsDescriptionJsonFilePath(self):
-        return os.path.join(self.moduleDir, "Resources", "Models.json")
-
-    def loadModelsDescription(self):
-        modelsJsonFilePath = self.modelsDescriptionJsonFilePath()
-        try:
-            models = []
-            import json
-            import re
-            with open(modelsJsonFilePath) as f:
-                modelsTree = json.load(f)["models"]
-            for model in modelsTree:
-                deprecated = False
-                for version in model["versions"]:
-                    url = version["url"]
-                    # URL format: <path>/<filename>-v<version>.zip
-                    # Example URL: https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-v1.0.3.zip
-                    match = re.search(r"(?P<filename>[^/]+)-v(?P<version>\d+\.\d+\.\d+)", url)
-                    if match:
-                        filename = match.group("filename")
-                        version = match.group("version")
-                    else:
-                        logging.error(f"Failed to extract model id and version from url: {url}")
-                    if "inputs" in model:
-                        # Contains a list of dict. One dict for each input.
-                        # Currently, only "title" (user-displayable name) and "namePattern" of the input are specified.
-                        # In the future, inputs could have additional properties, such as name, type, optional, ...
-                        inputs = model["inputs"]
-                    else:
-                        # Inputs are not defined, use default (single input volume)
-                        inputs = [{"title": "Input volume"}]
-                    segmentNames = model.get('segmentNames')
-                    if not segmentNames:
-                        segmentNames = "N/A"
-                    models.append({
-                        "id": f"{filename}-v{version}",
-                        "title": model['title'],
-                        "version": version,
-                        "inputs": inputs,
-                        "imagingModality": model["imagingModality"],
-                        "description": model["description"],
-                        "sampleData": model.get("sampleData"),
-                        "segmentNames": model.get("segmentNames"),
-                        "details":
-                            f"<p><b>Model:</b> {model['title']} (v{version})"
-                            f"<p><b>Description:</b> {model['description']}\n"
-                            f"<p><b>Computation time on GPU:</b> {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model.get('segmentationTimeSecGPU'))}\n"
-                            f"<br><b>Computation time on CPU:</b> {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model.get('segmentationTimeSecCPU'))}\n"
-                            f"<p><b>Imaging modality:</b> {model['imagingModality']}\n"
-                            f"<p><b>Subject:</b> {model['subject']}\n"
-                            f"<p><b>Segments:</b> {', '.join(segmentNames)}",
-                        "url": url,
-                        "deprecated": deprecated
-                        })
-                    # First version is not deprecated, all subsequent versions are deprecated
-                    deprecated = True
-            return models
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            raise RuntimeError(f"Failed to load models description from {modelsJsonFilePath}")
-
-    @staticmethod
-    def humanReadableTimeFromSec(seconds):
-        import math
-        if not seconds:
-            return "N/A"
-        if seconds < 55:
-            # if less than a minute, round up to the nearest 5 seconds
-            return f"{math.ceil(seconds/5) * 5} sec"
-        elif seconds < 60 * 60:
-            # if less then 1 hour, round up to the nearest minute
-            return f"{math.ceil(seconds/60)} min"
-        # Otherwise round up to the nearest 0.1 hour
-        return f"{seconds/3600:.1f} h"
-
-    def modelsPath(self):
-        import pathlib
-        return self.fileCachePath.joinpath("models")
-
-    def createModelsDir(self):
-        modelsDir = self.modelsPath()
-        if not os.path.exists(modelsDir):
-            os.makedirs(modelsDir)
-
-    def modelPath(self, modelName):
-        import pathlib
-        modelRoot = self.modelsPath().joinpath(modelName)
-        # find labels.csv file within the modelRoot folder and subfolders
-        for path in pathlib.Path(modelRoot).rglob("labels.csv"):
-            return path.parent
-        raise RuntimeError(f"Model {modelName} path not found")
-
-    def deleteAllModels(self):
-        if self.modelsPath().exists():
-            import shutil
-            shutil.rmtree(self.modelsPath())
-
-    def downloadAllModels(self):
-        for model in self.models:
-            slicer.app.processEvents()
-            self.downloadModel(model["id"])
-
-    def downloadModel(self, modelName):
-
-        url = self.model(modelName)["url"]
-
-        import zipfile
-        import requests
-        import pathlib
-
-        tempDir = pathlib.Path(slicer.util.tempDirectory())
-        modelDir = self.modelsPath().joinpath(modelName)
-        if not os.path.exists(modelDir):
-            os.makedirs(modelDir)
-
-        modelZipFile = tempDir.joinpath("autoseg3d_model.zip")
-        self.log(f"Downloading model '{modelName}' from {url}...")
-        logging.debug(f"Downloading from {url} to {modelZipFile}...")
-
-        try:
-            with open(modelZipFile, 'wb') as f:
-                with requests.get(url, stream=True) as r:
-                    r.raise_for_status()
-                    total_size = int(r.headers.get('content-length', 0))
-                    reporting_increment_percent = 1.0
-                    last_reported_download_percent = -reporting_increment_percent
-                    downloaded_size = 0
-                    for chunk in r.iter_content(chunk_size=8192 * 16):
-                        f.write(chunk)
-                        downloaded_size += len(chunk)
-                        downloaded_percent = 100.0 * downloaded_size / total_size
-                        if downloaded_percent - last_reported_download_percent > reporting_increment_percent:
-                            self.log(f"Downloading model: {downloaded_size/1024/1024:.1f}MB / {total_size/1024/1024:.1f}MB ({downloaded_percent:.1f}%)")
-                            last_reported_download_percent = downloaded_percent
-
-            self.log(f"Download finished. Extracting to {modelDir}...")
-            with zipfile.ZipFile(modelZipFile, 'r') as zip_f:
-                zip_f.extractall(modelDir)
-        except Exception as e:
-            raise e
-        finally:
-            if self.clearOutputFolder:
-                self.log("Cleaning up temporary model download folder...")
-                if os.path.isdir(tempDir):
-                    import shutil
-                    shutil.rmtree(tempDir)
-            else:
-                self.log(f"Not cleaning up temporary model download folder: {tempDir}")
-
-
-    def _MONAIAuto3DSegTerminologyPropertyTypes(self):
-        """Get label terminology property types defined in from MONAI Auto3DSeg terminology.
-        Terminology entries are either in DICOM or MONAI Auto3DSeg "Segmentation category and type".
         """
-
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
-        MONAIAuto3DSegTerminologyName = slicer.modules.MONAIAuto3DSegInstance.terminologyName
+        terminologyPropertyTypes = []
 
         # Get anatomicalStructureCategory from the MONAI Auto3DSeg terminology
         anatomicalStructureCategory = slicer.vtkSlicerTerminologyCategory()
-        numberOfCategories = terminologiesLogic.GetNumberOfCategoriesInTerminology(MONAIAuto3DSegTerminologyName)
-        for i in range(numberOfCategories):
-            terminologiesLogic.GetNthCategoryInTerminology(MONAIAuto3DSegTerminologyName, i, anatomicalStructureCategory)
-            if anatomicalStructureCategory.GetCodingSchemeDesignator() == "SCT" and anatomicalStructureCategory.GetCodeValue() == "123037004":
-                # Found the (123037004, SCT, "Anatomical Structure") category within DICOM master list
-                break
+        numberOfCategories = terminologiesLogic.GetNumberOfCategoriesInTerminology(terminologyName)
+        for cIdx in range(numberOfCategories):
+            terminologiesLogic.GetNthCategoryInTerminology(terminologyName, cIdx, anatomicalStructureCategory)
 
-        # Retrieve all anatomicalStructureCategory property type codes
-        terminologyPropertyTypes = []
-        terminologyType = slicer.vtkSlicerTerminologyType()
-        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(MONAIAuto3DSegTerminologyName, anatomicalStructureCategory)
-        for i in range(numberOfTypes):
-            if terminologiesLogic.GetNthTypeInTerminologyCategory(MONAIAuto3DSegTerminologyName, anatomicalStructureCategory, i, terminologyType):
-                terminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
+            # Retrieve all anatomicalStructureCategory property type codes
+            terminologyType = slicer.vtkSlicerTerminologyType()
+            numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(terminologyName,
+                                                                                     anatomicalStructureCategory)
+            for tIdx in range(numberOfTypes):
+                if terminologiesLogic.GetNthTypeInTerminologyCategory(terminologyName, anatomicalStructureCategory, tIdx,
+                                                                      terminologyType):
+                    terminologyPropertyTypes.append(
+                        terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
 
         return terminologyPropertyTypes
 
-    def _MONAIAuto3DSegAnatomicRegions(self):
+    @staticmethod
+    def _anatomicRegions(anatomicContextName):
         """Get anatomic regions defined in from MONAI Auto3DSeg terminology.
         Terminology entries are either in DICOM or MONAI Auto3DSeg "Anatomic codes".
         """
@@ -884,17 +948,99 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             # when editing the terminology on the GUI)
             return anatomicRegions
 
-        MONAIAuto3DSegAnatomicContextName = slicer.modules.MONAIAuto3DSegInstance.anatomicContextName
-
         # Retrieve all anatomical region codes
-
         regionObject = slicer.vtkSlicerTerminologyType()
-        numberOfRegions = terminologiesLogic.GetNumberOfRegionsInAnatomicContext(MONAIAuto3DSegAnatomicContextName)
+        numberOfRegions = terminologiesLogic.GetNumberOfRegionsInAnatomicContext(anatomicContextName)
         for i in range(numberOfRegions):
-            if terminologiesLogic.GetNthRegionInAnatomicContext(MONAIAuto3DSegAnatomicContextName, i, regionObject):
+            if terminologiesLogic.GetNthRegionInAnatomicContext(anatomicContextName, i, regionObject):
                 anatomicRegions.append(regionObject.GetCodingSchemeDesignator() + "^" + regionObject.GetCodeValue())
 
         return anatomicRegions
+
+    @staticmethod
+    def getSegmentLabelColor(terminologyEntryStr):
+        """Get segment label and color from terminology"""
+
+        def labelColorFromTypeObject(typeObject):
+            """typeObject is a terminology type or type modifier"""
+            label = typeObject.GetSlicerLabel() if typeObject.GetSlicerLabel() else typeObject.GetCodeMeaning()
+            rgb = typeObject.GetRecommendedDisplayRGBValue()
+            return label, (rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
+
+        tlogic = slicer.modules.terminologies.logic()
+
+        terminologyEntry = slicer.vtkSlicerTerminologyEntry()
+        if not tlogic.DeserializeTerminologyEntry(terminologyEntryStr, terminologyEntry):
+            raise RuntimeError(f"Failed to deserialize terminology string: {terminologyEntryStr}")
+
+        numberOfTypes = tlogic.GetNumberOfTypesInTerminologyCategory(terminologyEntry.GetTerminologyContextName(),
+                                                                     terminologyEntry.GetCategoryObject())
+        foundTerminologyEntry = slicer.vtkSlicerTerminologyEntry()
+        for typeIndex in range(numberOfTypes):
+            tlogic.GetNthTypeInTerminologyCategory(terminologyEntry.GetTerminologyContextName(),
+                                                   terminologyEntry.GetCategoryObject(), typeIndex,
+                                                   foundTerminologyEntry.GetTypeObject())
+            if terminologyEntry.GetTypeObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeObject().GetCodingSchemeDesignator():
+                continue
+            if terminologyEntry.GetTypeObject().GetCodeValue() != foundTerminologyEntry.GetTypeObject().GetCodeValue():
+                continue
+            if terminologyEntry.GetTypeModifierObject() and terminologyEntry.GetTypeModifierObject().GetCodeValue():
+                # Type has a modifier, get the color from there
+                numberOfModifiers = tlogic.GetNumberOfTypeModifiersInTerminologyType(
+                    terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(),
+                    terminologyEntry.GetTypeObject())
+                foundMatchingModifier = False
+                for modifierIndex in range(numberOfModifiers):
+                    tlogic.GetNthTypeModifierInTerminologyType(terminologyEntry.GetTerminologyContextName(),
+                                                               terminologyEntry.GetCategoryObject(),
+                                                               terminologyEntry.GetTypeObject(),
+                                                               modifierIndex,
+                                                               foundTerminologyEntry.GetTypeModifierObject())
+                    if terminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator():
+                        continue
+                    if terminologyEntry.GetTypeModifierObject().GetCodeValue() != foundTerminologyEntry.GetTypeModifierObject().GetCodeValue():
+                        continue
+                    return labelColorFromTypeObject(foundTerminologyEntry.GetTypeModifierObject())
+                continue
+            return labelColorFromTypeObject(foundTerminologyEntry.GetTypeObject())
+
+        raise RuntimeError(f"Color was not found for terminology {terminologyEntryStr}")
+
+    def __init__(self):
+        """
+        Called when the logic class is instantiated. Can be used for initializing member variables.
+        """
+        ScriptedLoadableModuleLogic.__init__(self)
+        ModelDatabase.__init__(self)
+
+        self.logCallback = None
+        self.startResultImportCallback = None
+        self.endResultImportCallback = None
+        self.processingCompletedCallback = None
+        self.useStandardSegmentNames = True
+
+        # process that will used to run inference either remotely or locally
+        self._bgProcess = None
+
+        # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
+        # where inference result is stored and set self.debugSkipInference to True.
+        # Disabling this flag preserves input and output data after execution is completed,
+        # which can be useful for troubleshooting.
+        self.clearOutputFolder = True
+        self.debugSkipInference = False
+        self.debugSkipInferenceTempDir = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
+
+    def log(self, text):
+        logging.info(text)
+        if self.logCallback:
+            self.logCallback(text)
+
+    def getMONAIPythonPackageInfo(self):
+        return self.DEPENDENCY_HANDLER.installedMONAIPythonPackageInfo()
+
+    def setupPythonRequirements(self, upgrade=False):
+        self.DEPENDENCY_HANDLER.setupPythonRequirements(upgrade)
+        return True
 
     def labelDescriptions(self, modelName):
         """Return mapping from label value to label description.
@@ -902,7 +1048,10 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         Terminology string uses Slicer terminology entry format - see specification at
         https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmentations.html#terminologyentry-tag
         """
+        labelsFilePath = self.modelPath(modelName).joinpath("labels.csv")
+        return self._labelDescriptions(labelsFilePath)
 
+    def _labelDescriptions(self, labelsFilePath):
         # Helper function to get code string from CSV file row
         def getCodeString(field, columnNames, row):
             columnValues = []
@@ -917,172 +1066,67 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             return columnValues
 
         labelDescriptions = {}
-        labelsFilePath = self.modelPath(modelName).joinpath("labels.csv")
         import csv
         with open(labelsFilePath, "r") as f:
             reader = csv.reader(f)
             columnNames = next(reader)
-            data = {}
             # Loop through the rows of the csv file
             for row in reader:
-
                 # Determine segmentation category (DICOM or MONAIAuto3DSeg)
                 terminologyPropertyTypeStr = (  # Example: SCT^23451007
-                    row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator")]
-                    + "^" + row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodeValue")])
-                if terminologyPropertyTypeStr in self.MONAIAuto3DSegTerminologyPropertyTypes:
-                    terminologyName = slicer.modules.MONAIAuto3DSegInstance.terminologyName
-                else:
+                  row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator")]
+                  + "^" + row[columnNames.index("SegmentedPropertyTypeCodeSequence.CodeValue")])
+                terminologyName = None
+
+                # If property the code is found in this list then the terminology will be used,
+                for tName in self.getLoadedTerminologyNames():
+                    propertyTypes = self._terminologyPropertyTypes(tName)
+                    if terminologyPropertyTypeStr in propertyTypes:
+                        terminologyName = tName
+                        break
+
+                # NB: DICOM terminology will be used otherwise. Note: the DICOM terminology does not contain all the
+                # necessary items and some items are incomplete (e.g., don't have color or 3D Slicer label).
+                if not terminologyName:
                     terminologyName = "Segmentation category and type - DICOM master list"
 
                 # Determine the anatomic context name (DICOM or MONAIAuto3DSeg)
                 anatomicRegionStr = (  # Example: SCT^279245009
-                    row[columnNames.index("AnatomicRegionSequence.CodingSchemeDesignator")]
-                    + "^" + row[columnNames.index("AnatomicRegionSequence.CodeValue")])
-                if anatomicRegionStr in self.MONAIAuto3DSegAnatomicRegions:
-                    anatomicContextName = slicer.modules.MONAIAuto3DSegInstance.anatomicContextName
-                else:
+                  row[columnNames.index("AnatomicRegionSequence.CodingSchemeDesignator")]
+                  + "^" + row[columnNames.index("AnatomicRegionSequence.CodeValue")])
+                anatomicContextName = None
+                for aName in self.getLoadedAnatomicContextNames():
+                    if anatomicRegionStr in self._anatomicRegions(aName):
+                        anatomicContextName = aName
+                if not anatomicContextName:
                     anatomicContextName = "Anatomic codes - DICOM master list"
 
                 terminologyEntryStr = (
-                    terminologyName
-                    +"~"
-                    # Property category: "SCT^123037004^Anatomical Structure" or "SCT^49755003^Morphologically Altered Structure"
-                    + "^".join(getCodeString("SegmentedPropertyCategoryCodeSequence", columnNames, row))
-                    + "~"
-                    # Property type: "SCT^23451007^Adrenal gland", "SCT^367643001^Cyst", ...
-                    + "^".join(getCodeString("SegmentedPropertyTypeCodeSequence", columnNames, row))
-                    + "~"
-                    # Property type modifier: "SCT^7771000^Left", ...
-                    + "^".join(getCodeString("SegmentedPropertyTypeModifierCodeSequence", columnNames, row))
-                    + "~"
-                    + anatomicContextName
-                    + "~"
-                    # Anatomic region (set if category is not anatomical structure): "SCT^64033007^Kidney", ...
-                    + "^".join(getCodeString("AnatomicRegionSequence", columnNames, row))
-                    + "~"
-                    # Anatomic region modifier: "SCT^7771000^Left", ...
-                    + "^".join(getCodeString("AnatomicRegionModifierSequence", columnNames, row))
-                    )
+                  terminologyName
+                  + "~"
+                  # Property category: "SCT^123037004^Anatomical Structure" or "SCT^49755003^Morphologically Altered Structure"
+                  + "^".join(getCodeString("SegmentedPropertyCategoryCodeSequence", columnNames, row))
+                  + "~"
+                  # Property type: "SCT^23451007^Adrenal gland", "SCT^367643001^Cyst", ...
+                  + "^".join(getCodeString("SegmentedPropertyTypeCodeSequence", columnNames, row))
+                  + "~"
+                  # Property type modifier: "SCT^7771000^Left", ...
+                  + "^".join(getCodeString("SegmentedPropertyTypeModifierCodeSequence", columnNames, row))
+                  + "~"
+                  + anatomicContextName
+                  + "~"
+                  # Anatomic region (set if category is not anatomical structure): "SCT^64033007^Kidney", ...
+                  + "^".join(getCodeString("AnatomicRegionSequence", columnNames, row))
+                  + "~"
+                  # Anatomic region modifier: "SCT^7771000^Left", ...
+                  + "^".join(getCodeString("AnatomicRegionModifierSequence", columnNames, row))
+                )
 
                 # Store the terminology string for this structure
                 labelValue = int(row[columnNames.index("LabelValue")])
                 name = row[columnNames.index("Name")]
-                labelDescriptions[labelValue] = { "name": name, "terminology": terminologyEntryStr }
-
+                labelDescriptions[labelValue] = {"name": name, "terminology": terminologyEntryStr}
         return labelDescriptions
-
-    def getSegmentLabelColor(self, terminologyEntryStr):
-        """Get segment label and color from terminology"""
-
-        def labelColorFromTypeObject(typeObject):
-            """typeObject is a terminology type or type modifier"""
-            label = typeObject.GetSlicerLabel() if typeObject.GetSlicerLabel() else typeObject.GetCodeMeaning()
-            rgb = typeObject.GetRecommendedDisplayRGBValue()
-            return label, (rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
-
-        tlogic = slicer.modules.terminologies.logic()
-
-        terminologyEntry = slicer.vtkSlicerTerminologyEntry()
-        if not tlogic.DeserializeTerminologyEntry(terminologyEntryStr, terminologyEntry):
-            raise RuntimeError(f"Failed to deserialize terminology string: {terminologyEntryStr}")
-
-        numberOfTypes = tlogic.GetNumberOfTypesInTerminologyCategory(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject())
-        foundTerminologyEntry = slicer.vtkSlicerTerminologyEntry()
-        for typeIndex in range(numberOfTypes):
-            tlogic.GetNthTypeInTerminologyCategory(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(), typeIndex, foundTerminologyEntry.GetTypeObject())
-            if terminologyEntry.GetTypeObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeObject().GetCodingSchemeDesignator():
-                continue
-            if terminologyEntry.GetTypeObject().GetCodeValue() != foundTerminologyEntry.GetTypeObject().GetCodeValue():
-                continue
-            if terminologyEntry.GetTypeModifierObject() and terminologyEntry.GetTypeModifierObject().GetCodeValue():
-                # Type has a modifier, get the color from there
-                numberOfModifiers = tlogic.GetNumberOfTypeModifiersInTerminologyType(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(), terminologyEntry.GetTypeObject())
-                foundMatchingModifier = False
-                for modifierIndex in range(numberOfModifiers):
-                    tlogic.GetNthTypeModifierInTerminologyType(terminologyEntry.GetTerminologyContextName(), terminologyEntry.GetCategoryObject(), terminologyEntry.GetTypeObject(),
-                        modifierIndex, foundTerminologyEntry.GetTypeModifierObject())
-                    if terminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator() != foundTerminologyEntry.GetTypeModifierObject().GetCodingSchemeDesignator():
-                        continue
-                    if terminologyEntry.GetTypeModifierObject().GetCodeValue() != foundTerminologyEntry.GetTypeModifierObject().GetCodeValue():
-                        continue
-                    return labelColorFromTypeObject(foundTerminologyEntry.GetTypeModifierObject())
-                continue
-            return labelColorFromTypeObject(foundTerminologyEntry.GetTypeObject())
-
-        raise RuntimeError(f"Color was not found for terminology {terminologyEntryStr}")
-
-    @staticmethod
-    def _findFirstNodeBynamePattern(namePattern, nodes):
-        import fnmatch
-        for node in nodes:
-            if fnmatch.fnmatchcase(node.GetName(), namePattern):
-                return node
-        return None
-
-    @staticmethod
-    def assignInputNodesByName(inputs, loadedSampleNodes):
-        inputNodes = []
-        for inputIndex, input in enumerate(inputs):
-            namePattern = input.get("namePattern")
-            if namePattern:
-                matchingNode = MONAIAuto3DSegLogic._findFirstNodeBynamePattern(namePattern, loadedSampleNodes)
-            else:
-                matchingNode = loadedSampleNodes[inputIndex] if inputIndex < len(loadedSampleNodes) else loadedSampleNodes[0]
-            inputNodes.append(matchingNode)
-        return inputNodes
-
-    def log(self, text):
-        logging.info(text)
-        if self.logCallback:
-            self.logCallback(text)
-
-    def installedMONAIPythonPackageInfo(self):
-        import shutil
-        import subprocess
-        versionInfo = subprocess.check_output([shutil.which("PythonSlicer"), "-m", "pip", "show", "MONAI"]).decode()
-        return versionInfo
-
-    def setupPythonRequirements(self, upgrade=False):
-        import importlib.metadata
-        import importlib.util
-        import packaging
-
-        # Install PyTorch
-        try:
-          import PyTorchUtils
-        except ModuleNotFoundError as e:
-          raise RuntimeError("This module requires PyTorch extension. Install it from the Extensions Manager.")
-
-        self.log("Initializing PyTorch...")
-        minimumTorchVersion = "1.12"
-        torchLogic = PyTorchUtils.PyTorchUtilsLogic()
-        if not torchLogic.torchInstalled():
-            self.log("PyTorch Python package is required. Installing... (it may take several minutes)")
-            torch = torchLogic.installTorch(askConfirmation=True, torchVersionRequirement = f">={minimumTorchVersion}")
-            if torch is None:
-                raise ValueError("PyTorch extension needs to be installed to use this module.")
-        else:
-            # torch is installed, check version
-            from packaging import version
-            if version.parse(torchLogic.torch.__version__) < version.parse(minimumTorchVersion):
-                raise ValueError(f"PyTorch version {torchLogic.torch.__version__} is not compatible with this module."
-                                 + f" Minimum required version is {minimumTorchVersion}. You can use 'PyTorch Util' module to install PyTorch"
-                                 + f" with version requirement set to: >={minimumTorchVersion}")
-
-        # Install MONAI with required components
-        self.log("Initializing MONAI...")
-        # Specify minimum version 1.3, as this is a known working version (it is possible that an earlier version works, too).
-        # Without this, for some users monai-0.9.0 got installed, which failed with this error:
-        # "ImportError: cannot import name ‘MetaKeys’ from 'monai.utils'"
-        monaiInstallString = "monai[fire,pyyaml,nibabel,pynrrd,psutil,tensorboard,skimage,itk,tqdm]>=1.3"
-        if upgrade:
-            monaiInstallString += " --upgrade"
-        slicer.util.pip_install(monaiInstallString)
-
-        self.dependenciesInstalled = True
-        self.log("Dependencies are set up successfully.")
-
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -1092,40 +1136,24 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             parameterNode.SetParameter("Model", self.defaultModel)
         if not parameterNode.GetParameter("UseStandardSegmentNames"):
             parameterNode.SetParameter("UseStandardSegmentNames", "true")
-
-    def logProcessOutputUntilCompleted(self, segmentationProcessInfo):
-        # Wait for the process to end and forward output to the log
-        from subprocess import CalledProcessError
-        proc = segmentationProcessInfo["proc"]
-        while True:
-            try:
-                line = proc.stdout.readline()
-                if not line:
-                    break
-                self.log(line.rstrip())
-            except UnicodeDecodeError as e:
-                # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
-                # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
-                # as we only guarantee correct behavior if an UTF8 locale is used.
-                pass
-        proc.wait()
-        retcode = proc.returncode
-        segmentationProcessInfo["procReturnCode"] = retcode
-        if retcode != 0:
-            raise CalledProcessError(retcode, proc.args, output=proc.stdout, stderr=proc.stderr)
+        if not parameterNode.GetParameter("ServerPort"):
+            parameterNode.SetParameter("ServerPort", str(8891))
 
     def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None):
-
         """
         Run the processing algorithm.
         Can be used without GUI widget.
         :param inputNodes: input nodes in a list
-        :param outputVolume: thresholding result
+        :param outputSegmentation: output segmentation to write to
         :param model: one of self.models
         :param cpu: use CPU instead of GPU
         :param waitForCompletion: if True then the method waits for the processing to finish
         :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
         """
+
+        if not self.DEPENDENCY_HANDLER.dependenciesInstalled:
+            with slicer.util.tryWithErrorDisplay("Failed to install required dependencies.", waitCursor=True):
+                self.DEPENDENCY_HANDLER.setupPythonRequirements()
 
         if not inputNodes:
             raise ValueError("Input nodes are invalid")
@@ -1133,30 +1161,22 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         if not outputSegmentation:
             raise ValueError("Output segmentation is invalid")
 
-        if model == None:
+        if model is None:
             model = self.defaultModel
 
-        try:
-            modelPath = self.modelPath(model)
-        except:
-            self.downloadModel(model)
-            modelPath = self.modelPath(model)
+        modelPath = self.modelPath(model)
 
-        segmentationProcessInfo = {}
+        segmentationProcessInfo = SegmentationProcessInfo()
 
-        import time
-        startTime = time.time()
-        self.log("Processing started")
+        logging.info("Processing started")
 
         if self.debugSkipInference:
+            self.clearOutputFolder = False
             # For debugging, use a fixed temporary folder
             tempDir = self.debugSkipInferenceTempDir
         else:
             # Create new empty folder
             tempDir = slicer.util.tempDirectory()
-
-        import pathlib
-        tempDirPath = pathlib.Path(tempDir)
 
         # Get Python executable path
         import shutil
@@ -1169,7 +1189,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
         for inputIndex, inputNode in enumerate(inputNodes):
             if inputNode.IsA('vtkMRMLScalarVolumeNode'):
                 inputImageFile = tempDir + f"/input-volume{inputIndex}.nrrd"
-                self.log(f"Writing input file to {inputImageFile}")
+                logging.info(f"Writing input file to {inputImageFile}")
                 volumeStorageNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLVolumeArchetypeStorageNode")
                 volumeStorageNode.SetFileName(inputImageFile)
                 volumeStorageNode.UseCompressionOff()
@@ -1190,141 +1210,46 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
             auto3DSegCommand.append(f"--image-file-{inputIndex+1}")
             auto3DSegCommand.append(inputFiles[inputIndex])
 
-        self.log("Creating segmentations with MONAIAuto3DSeg AI...")
-        self.log(f"Auto3DSeg command: {auto3DSegCommand}")
+        logging.info("Creating segmentations with MONAIAuto3DSeg AI...")
+        logging.info(f"Auto3DSeg command: {auto3DSegCommand}")
 
         additionalEnvironmentVariables = None
         if cpu:
             additionalEnvironmentVariables = {"CUDA_VISIBLE_DEVICES": "-1"}
-            self.log(f"Additional environment variables: {additionalEnvironmentVariables}")
+            logging.info(f"Additional environment variables: {additionalEnvironmentVariables}")
 
+        segmentationProcessInfo.tempDir = tempDir
+        segmentationProcessInfo.inputNodes = inputNodes
+        segmentationProcessInfo.outputSegmentation = outputSegmentation
+        segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
+        segmentationProcessInfo.model = model
+        segmentationProcessInfo.customData = customData
+
+        self._bgProcess = LocalInference(processInfo=segmentationProcessInfo, logCallback=self.log, completedCallback=self.onSegmentationProcessCompleted)
         if self.debugSkipInference:
-            proc = None
-        else:
-            proc = slicer.util.launchConsoleProcess(auto3DSegCommand, updateEnvironment=additionalEnvironmentVariables)
-
-        segmentationProcessInfo["proc"] = proc
-        segmentationProcessInfo["procReturnCode"] = MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN
-        segmentationProcessInfo["cancelRequested"] = False
-        segmentationProcessInfo["startTime"] = startTime
-        segmentationProcessInfo["tempDir"] = tempDir
-        segmentationProcessInfo["segmentationProcess"] = proc
-        segmentationProcessInfo["inputNodes"] = inputNodes
-        segmentationProcessInfo["outputSegmentation"] = outputSegmentation
-        segmentationProcessInfo["outputSegmentationFile"] = outputSegmentationFile
-        segmentationProcessInfo["model"] = model
-        segmentationProcessInfo["customData"] = customData
-
-        if proc:
-            if waitForCompletion:
-                # Wait for the process to end before returning
-                self.logProcessOutputUntilCompleted(segmentationProcessInfo)
-                self.onSegmentationProcessCompleted(segmentationProcessInfo)
-            else:
-                # Run the process in the background
-                self.startSegmentationProcessMonitoring(segmentationProcessInfo)
-        else:
-            # Debugging
+            segmentationProcessInfo.procReturnCode = 0
             self.onSegmentationProcessCompleted(segmentationProcessInfo)
+        else:
+            self._bgProcess.run(auto3DSegCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=waitForCompletion)
 
         return segmentationProcessInfo
 
-    def cancelProcessing(self, segmentationProcessInfo):
-        self.log("Cancel is requested.")
-        segmentationProcessInfo["cancelRequested"] = True
-        proc = segmentationProcessInfo.get("proc")
-        if proc:
-            # Simple proc.kill() would not work, that would only stop the launcher
-            import psutil
-            psProcess = psutil.Process(proc.pid)
-            for psChildProcess in psProcess.children(recursive=True):
-                psChildProcess.kill()
-            if psProcess.is_running():
-                psProcess.kill()
-        else:
-            self.onSegmentationProcessCompleted(segmentationProcessInfo)
-
-    @staticmethod
-    def _handleProcessOutputThreadProcess(segmentationProcessInfo):
-        # Wait for the process to end and forward output to the log
-        proc = segmentationProcessInfo["proc"]
-        from subprocess import CalledProcessError
-        while True:
-            try:
-                line = proc.stdout.readline()
-                if not line:
-                    break
-                segmentationProcessInfo["procOutputQueue"].put(line.rstrip())
-            except UnicodeDecodeError as e:
-                # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
-                # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
-                # as we only guarantee correct behavior if an UTF8 locale is used.
-                pass
-        proc.wait()
-        retcode = proc.returncode  # non-zero return code means error
-        segmentationProcessInfo["procReturnCode"] = retcode
-
-
-    def startSegmentationProcessMonitoring(self, segmentationProcessInfo):
-        import queue
-        import sys
-        import threading
-
-        segmentationProcessInfo["procOutputQueue"] = queue.Queue()
-        segmentationProcessInfo["procThread"] = threading.Thread(target=MONAIAuto3DSegLogic._handleProcessOutputThreadProcess, args=[segmentationProcessInfo])
-        segmentationProcessInfo["procThread"].start()
-
-        self.checkSegmentationProcessOutput(segmentationProcessInfo)
-
-
-    def checkSegmentationProcessOutput(self, segmentationProcessInfo):
-
-        import queue
-        outputQueue = segmentationProcessInfo["procOutputQueue"]
-        while outputQueue:
-            if segmentationProcessInfo.get("procReturnCode") != MONAIAuto3DSegLogic.EXIT_CODE_DID_NOT_RUN:
-                self.onSegmentationProcessCompleted(segmentationProcessInfo)
-                return
-            try:
-                line = outputQueue.get_nowait()
-                self.log(line)
-            except queue.Empty:
-                break
-
-        # No more outputs to process now, check again later
-        import qt
-        qt.QTimer.singleShot(self.processOutputCheckTimerIntervalMsec, lambda segmentationProcessInfo=segmentationProcessInfo: self.checkSegmentationProcessOutput(segmentationProcessInfo))
-
-
-    def onSegmentationProcessCompleted(self, segmentationProcessInfo):
-
-        startTime = segmentationProcessInfo["startTime"]
-        tempDir = segmentationProcessInfo["tempDir"]
-        inputNodes = segmentationProcessInfo["inputNodes"]
-        outputSegmentation = segmentationProcessInfo["outputSegmentation"]
-        outputSegmentationFile = segmentationProcessInfo["outputSegmentationFile"]
-        model = segmentationProcessInfo["model"]
-        customData = segmentationProcessInfo["customData"]
-        procReturnCode = segmentationProcessInfo["procReturnCode"]
-        cancelRequested = segmentationProcessInfo["cancelRequested"]
-
-        if cancelRequested:
-            procReturnCode = MONAIAuto3DSegLogic.EXIT_CODE_USER_CANCELLED
-            self.log(f"Processing was cancelled.")
-        else:
+    def onSegmentationProcessCompleted(self, segmentationProcessInfo: SegmentationProcessInfo):
+        procReturnCode = segmentationProcessInfo.procReturnCode
+        customData = segmentationProcessInfo.customData
+        cancelRequested = procReturnCode == ExitCode.USER_CANCELLED
+        if not cancelRequested:
             if procReturnCode == 0:
-
+                outputSegmentation = segmentationProcessInfo.outputSegmentation
                 if self.startResultImportCallback:
                     self.startResultImportCallback(customData)
 
-                try:
-
-                    # Load result
-                    self.log("Importing segmentation results...")
-                    self.readSegmentation(outputSegmentation, outputSegmentationFile, model)
+                try: # Load result
+                    logging.info("Importing segmentation results...")
+                    self.readSegmentation(outputSegmentation, segmentationProcessInfo.outputSegmentationFile, segmentationProcessInfo.model)
 
                     # Set source volume - required for DICOM Segmentation export
-                    inputVolume = inputNodes[0]
+                    inputVolume = segmentationProcessInfo.inputNodes[0]
                     if not inputVolume.IsA('vtkMRMLScalarVolumeNode'):
                         raise ValueError("First input node must be a scalar volume")
                     outputSegmentation.SetNodeReferenceID(outputSegmentation.GetReferenceImageGeometryReferenceRole(), inputVolume.GetID())
@@ -1338,40 +1263,39 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                     shNode.SetItemParent(segmentationShItem, studyShItem)
 
                 finally:
-
                     if self.endResultImportCallback:
                         self.endResultImportCallback(customData)
-
             else:
-                self.log(f"Processing failed with return code {procReturnCode}")
+                logging.info(f"Processing failed with return code {procReturnCode}")
 
+        tempDir = segmentationProcessInfo.tempDir
         if self.clearOutputFolder:
-            self.log("Cleaning up temporary folder.")
+            logging.info("Cleaning up temporary folder.")
             if os.path.isdir(tempDir):
                 import shutil
                 shutil.rmtree(tempDir)
         else:
-            self.log(f"Not cleaning up temporary folder: {tempDir}")
+            logging.info(f"Not cleaning up temporary folder: {tempDir}")
 
         # Report total elapsed time
-        import time
-        stopTime = time.time()
-        segmentationProcessInfo["stopTime"] = stopTime
-        elapsedTime = stopTime - startTime
+        elapsedTime = time.time() - segmentationProcessInfo.startTime
         if cancelRequested:
-            self.log(f"Processing was cancelled after {elapsedTime:.2f} seconds.")
+            logging.info(f"Processing was cancelled after {elapsedTime:.2f} seconds.")
         else:
             if procReturnCode == 0:
-                self.log(f"Processing was completed in {elapsedTime:.2f} seconds.")
+                logging.info(f"Processing was completed in {elapsedTime:.2f} seconds.")
             else:
-                self.log(f"Processing failed after {elapsedTime:.2f} seconds.")
+                logging.info(f"Processing failed after {elapsedTime:.2f} seconds.")
 
         if self.processingCompletedCallback:
             self.processingCompletedCallback(procReturnCode, customData)
 
+    def cancelProcessing(self):
+        if not self._bgProcess:
+            return
+        self._bgProcess.stop()
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
-
         labelValueToDescription = self.labelDescriptions(model)
 
         # Get label descriptions
@@ -1405,12 +1329,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
 
         # Set terminology and color
         for labelValue in labelValueToDescription:
-            segmentName = labelValueToDescription[labelValue]["name"]
             terminologyEntryStr = labelValueToDescription[labelValue]["terminology"]
-            segmentId = segmentName
-            self.setTerminology(outputSegmentation, segmentName, segmentId, terminologyEntryStr)
+            segmentId = labelValueToDescription[labelValue]["name"]
+            self.setTerminology(outputSegmentation, segmentId, terminologyEntryStr)
 
-    def setTerminology(self, segmentation, segmentName, segmentId, terminologyEntryStr):
+    def setTerminology(self, segmentation, segmentId, terminologyEntryStr):
         segment = segmentation.GetSegmentation().GetSegment(segmentId)
         if not segment:
             # Segment is not present in this segmentation
@@ -1423,31 +1346,145 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic):
                     segment.SetName(label)
                 segment.SetColor(color)
             except RuntimeError as e:
-                self.log(str(e))
+                logging.info(str(e))
 
-    def updateModelsDescriptionJsonFilePathFromTestResults(self, modelsTestResultsJsonFilePath):
-        import json
 
-        modelsDescriptionJsonFilePath = self.modelsDescriptionJsonFilePath()
+class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
 
-        with open(modelsTestResultsJsonFilePath) as f:
-            modelsTestResults = json.load(f)
+    DEPENDENCY_HANDLER = RemotePythonDependencies()
 
-        with open(modelsDescriptionJsonFilePath) as f:
-            modelsDescription = json.load(f)
+    @property
+    def server_address(self):
+        return self._server_address
 
-        for model in modelsDescription["models"]:
-            title = model["title"]
-            for modelTestResult in modelsTestResults:
-                if modelTestResult["title"] == title:
-                    for fieldName in ["segmentationTimeSecGPU", "segmentationTimeSecCPU", "segmentNames"]:
-                        fieldValue = modelTestResult.get(fieldName)
-                        if fieldValue:
-                            model[fieldName] = fieldValue
-                    break
+    @server_address.setter
+    def server_address(self, address):
+        self.DEPENDENCY_HANDLER.server_address = address
+        self._server_address = address
+        self._models = []
 
-        with open(modelsDescriptionJsonFilePath, 'w', newline="\n") as f:
-            json.dump(modelsDescription, f, indent=2)
+    def __init__(self):
+        self._server_address = None
+        MONAIAuto3DSegLogic.__init__(self)
+        self._models = []
+
+    def getMONAIPythonPackageInfo(self):
+        return self.DEPENDENCY_HANDLER.installedMONAIPythonPackageInfo()
+
+    def setupPythonRequirements(self, upgrade=False):
+        self.DEPENDENCY_HANDLER.setupPythonRequirements(upgrade)
+        return False
+
+    def loadModelsDescription(self):
+        if not self._server_address:
+            return []
+        else:
+            response = requests.get(self._server_address + "/models")
+            json_data = json.loads(response.text)
+            return json_data
+
+    def labelDescriptions(self, modelName):
+        """Return mapping from label value to label description.
+                Label description is a dict containing "name" and "terminology".
+                Terminology string uses Slicer terminology entry format - see specification at
+                https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmentations.html#terminologyentry-tag
+                """
+        if not self._server_address:
+            return {}
+        else:
+            from pathlib import Path
+            tempDir = slicer.util.tempDirectory()
+            tempDir = Path(tempDir)
+            outfile = tempDir / "labelDescriptions.csv"
+            with requests.get(self._server_address + f"/labelDescriptions?id={modelName}", stream=True) as r:
+                r.raise_for_status()
+
+                with open(outfile, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+
+            labelDescriptions = self._labelDescriptions(outfile)
+
+            import shutil
+            shutil.rmtree(tempDir)
+            return labelDescriptions
+
+    def process(self, inputNodes, outputSegmentation, modelId=None, cpu=False, waitForCompletion=True, customData=None):
+        """
+        Run the processing algorithm.
+        Can be used without GUI widget.
+        :param inputNodes: input nodes in a list
+        :param outputVolume: thresholding result
+        :param modelId: one of self.models
+        :param cpu: use CPU instead of GPU
+        :param waitForCompletion: if True then the method waits for the processing to finish
+        :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
+        """
+
+        segmentationProcessInfo = SegmentationProcessInfo()
+        logging.info("Processing started")
+
+        tempDir = slicer.util.tempDirectory()
+        outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
+
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory(dir=tempDir) as temp_dir:
+            # Write input volume to file
+            from pathlib import Path
+            tempDir = Path(temp_dir)
+            inputFiles = []
+            for inputIndex, inputNode in enumerate(inputNodes):
+                if inputNode.IsA('vtkMRMLScalarVolumeNode'):
+                    inputImageFile = tempDir / f"input-volume{inputIndex}.nrrd"
+                    logging.info(f"Writing input file to {inputImageFile}")
+                    volumeStorageNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLVolumeArchetypeStorageNode")
+                    volumeStorageNode.SetFileName(inputImageFile)
+                    volumeStorageNode.UseCompressionOff()
+                    volumeStorageNode.WriteData(inputNode)
+                    slicer.mrmlScene.RemoveNode(volumeStorageNode)
+                    inputFiles.append(inputImageFile)
+                else:
+                    raise ValueError(f"Input node type {inputNode.GetClassName()} is not supported")
+
+            logging.info(f"Initiating Inference on {self._server_address}")
+            files = {}
+
+            for idx, inputFile in enumerate(inputFiles, start=1):
+                name = "image_file"
+                if idx > 1:
+                    name = f"{name}_{idx}"
+                files[name] = open(inputFile, 'rb')
+
+            r = None
+            try:
+                with requests.post(self._server_address + f"/infer?model_name={modelId}", files=files) as r:
+                    r.raise_for_status()
+
+                    with open(outputSegmentationFile, "wb") as binary_file:
+                        for chunk in r.iter_content(chunk_size=8192):
+                            binary_file.write(chunk)
+
+                    segmentationProcessInfo.procReturnCode = 0
+            except requests.exceptions.HTTPError as e:
+                from http import HTTPStatus
+                status = HTTPStatus(e.response.status_code)
+                logging.debug(f"Server response content: {r.content}")
+                raise RuntimeError(status.description)
+            finally:
+                for f in files.values():
+                    f.close()
+
+        segmentationProcessInfo.tempDir = tempDir
+        segmentationProcessInfo.inputNodes = inputNodes
+        segmentationProcessInfo.outputSegmentation = outputSegmentation
+        segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
+        segmentationProcessInfo.model = modelId
+        segmentationProcessInfo.customData = customData
+
+        self.onSegmentationProcessCompleted(segmentationProcessInfo)
+
+        return segmentationProcessInfo
+
 
 #
 # MONAIAuto3DSegTest
@@ -1556,17 +1593,14 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                     raise RuntimeError(f"Failed to load sample data set '{sampleDataName}'.")
 
                 # Set model inputs
-
-                inputNodes = []
                 inputs = model.get("inputs")
-                inputNodes = MONAIAuto3DSegLogic.assignInputNodesByName(inputs, loadedSampleNodes)
+                inputNodes = logic.assignInputNodesByName(inputs, loadedSampleNodes)
 
                 outputSegmentation = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
 
                 # Run the segmentation
 
                 self.delayDisplay(f"Running segmentation for {model['title']}...")
-                import time
                 startTime = time.time()
                 logic.process(inputNodes, outputSegmentation, model["id"], forceUseCpu)
                 segmentationTimeSec = time.time() - startTime
@@ -1684,14 +1718,12 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
         return sliceScreenshotFilename, rotate3dScreenshotFilename
 
     def _writeTestResultsToMarkdown(self, modelsTestResultsJsonFilePath, modelsTestResultsMarkdownFilePath=None, screenshotUrlBase=None):
-
         if modelsTestResultsMarkdownFilePath is None:
             modelsTestResultsMarkdownFilePath = modelsTestResultsJsonFilePath.replace(".json", ".md")
         if screenshotUrlBase is None:
             screenshotUrlBase = "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/ModelsTestResults/"
 
         import json
-        from MONAIAuto3DSeg import MONAIAuto3DSegLogic
         with open(modelsTestResultsJsonFilePath) as f:
             modelsTestResults = json.load(f)
 
@@ -1718,7 +1750,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                 title = f"{model['title']} (v{model['version']})"
                 f.write(f"## {title}\n")
                 f.write(f"{model['description']}\n\n")
-                f.write(f"Processing time: {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model['segmentationTimeSecGPU'])} on GPU, {MONAIAuto3DSegLogic.humanReadableTimeFromSec(model['segmentationTimeSecCPU'])} on CPU\n\n")
+                f.write(f"Processing time: {humanReadableTimeFromSec(model['segmentationTimeSecGPU'])} on GPU, {humanReadableTimeFromSec(model['segmentationTimeSecCPU'])} on CPU\n\n")
                 f.write(f"Segment names: {', '.join(model['segmentNames'])}\n\n")
                 f.write(f"![2D view]({screenshotUrlBase}{model['segmentationResultsScreenshot2D']})\n")
                 f.write(f"![3D view]({screenshotUrlBase}{model['segmentationResultsScreenshot3D']})\n")
