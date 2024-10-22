@@ -262,6 +262,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic.endResultImportCallback = self.onProcessImportEnded
         self.logic.processingCompletedCallback = self.onProcessingCompleted
 
+        self.ui.remoteProcessingCheckBox.checked = qt.QSettings().value(f"{self.moduleName}/remoteProcessing", False)
+
+        self.ui.progressBar.hide()
+
         # Connections
 
         # These connections ensure that we update parameter node when scene is closed
@@ -292,7 +296,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.ui.serverComboBox.lineEdit().setPlaceholderText("Enter server address")
         self.ui.serverComboBox.currentIndexChanged.connect(self.onRemoteServerButtonToggled)
-        self.ui.remoteProcessingCheckBox.toggled.connect(lambda t: self.ui.remoteServerButton.setChecked(False))
+        self.ui.remoteProcessingCheckBox.toggled.connect(self.onRemoteProcessingCheckBoxToggled)
         self.ui.remoteServerButton.toggled.connect(self.onRemoteServerButtonToggled)
 
         self.ui.serverButton.toggled.connect(self.onServerButtonToggled)
@@ -447,6 +451,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if state == MONAIAuto3DSegWidget.PROCESSING_IDLE:
                 self.ui.applyButton.text = "Apply"
                 inputErrorMessages = []  # it will contain text if the inputs are not valid
+                if self.ui.remoteProcessingCheckBox.checked and not self.ui.remoteServerButton.checked:
+                    inputErrorMessages.append("Connect to server or disable remote processing.")
+                    self.ui.modelComboBox.enabled = False
+                else:
+                    self.ui.modelComboBox.enabled = True
                 if modelId:
                     modelInputs = self.logic.model(modelId)["inputs"]
                 else:
@@ -830,6 +839,12 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.serverComboBox.setCurrentText(settings.value(f"{self.moduleName}/serverUrl"))
         self.ui.serverComboBox.blockSignals(wasBlocked)
 
+    def onRemoteProcessingCheckBoxToggled(self, checked):
+        # Disconnect remote server button if remote processing state is changed
+        self.ui.remoteServerButton.setChecked(False)
+        settings = qt.QSettings()
+        settings.setValue(f"{self.moduleName}/remoteProcessing", checked)
+        self.updateGUIFromParameterNode()
 
 #
 # MONAIAuto3DSegLogic
