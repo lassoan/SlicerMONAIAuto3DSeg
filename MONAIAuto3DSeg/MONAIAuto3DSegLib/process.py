@@ -238,6 +238,10 @@ class LocalInference(BackgroundProcess):
         else:
             self._startHandleProcessOutputThread()
 
+    def handleSubProcessLogging(self, text):
+        self.addLog(text)
+        logging.info(text)
+
     def logProcessOutputUntilCompleted(self):
         # Wait for the process to end and forward output to the log
         proc = self.proc

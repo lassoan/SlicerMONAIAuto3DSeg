@@ -257,6 +257,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = MONAIAuto3DSegLogic()
+        self.logic.logCallback = self.addLog
         self.logic.startResultImportCallback = self.onProcessImportStarted
         self.logic.endResultImportCallback = self.onProcessImportEnded
         self.logic.processingCompletedCallback = self.onProcessingCompleted
@@ -997,6 +998,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         ScriptedLoadableModuleLogic.__init__(self)
         ModelDatabase.__init__(self)
 
+        self.logCallback = None
         self.startResultImportCallback = None
         self.endResultImportCallback = None
         self.processingCompletedCallback = None
@@ -1012,6 +1014,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         self.clearOutputFolder = True
         self.debugSkipInference = False
         self.debugSkipInferenceTempDir = r"c:\Users\andra\AppData\Local\Temp\Slicer\__SlicerTemp__2024-01-16_15+26+25.624"
+
+    def log(self, text):
+        logging.info(text)
+        if self.logCallback:
+            self.logCallback(text)
 
     def getMONAIPythonPackageInfo(self):
         return self.DEPENDENCY_HANDLER.installedMONAIPythonPackageInfo()
@@ -1203,7 +1210,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         segmentationProcessInfo.model = model
         segmentationProcessInfo.customData = customData
 
-        self._bgProcess = LocalInference(processInfo=segmentationProcessInfo, completedCallback=self.onSegmentationProcessCompleted)
+        self._bgProcess = LocalInference(processInfo=segmentationProcessInfo, logCallback=self.log, completedCallback=self.onSegmentationProcessCompleted)
         if self.debugSkipInference:
             segmentationProcessInfo.procReturnCode = 0
             self.onSegmentationProcessCompleted(segmentationProcessInfo)
