@@ -36,6 +36,9 @@ class SegmentationProcessInfo(ProcessInfo):
     outputSegmentation: slicer.vtkMRMLSegmentationNode = None
     outputSegmentationFile: str = ""
     model: str = ""
+    cpu: bool = False
+    waitForCompletion: bool = False
+    sequenceBrowserNode: slicer.vtkMRMLSequenceBrowserNode = None
     customData: Any = None
 
 

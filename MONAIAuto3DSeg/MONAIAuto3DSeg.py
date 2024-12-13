@@ -280,6 +280,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.cpuCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.showAllModelsCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
         self.ui.useStandardSegmentNamesCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
+        self.ui.autoShow3DCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
 
         self.ui.modelSearchBox.connect("textChanged(QString)", self.updateParameterNodeFromGUI)
         self.ui.modelComboBox.currentTextChanged.connect(self.updateParameterNodeFromGUI)
@@ -445,6 +446,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.cpuCheckBox.checked = self._parameterNode.GetParameter("CPU") == "true"
             self.ui.showAllModelsCheckBox.checked = showAllModels
             self.ui.useStandardSegmentNamesCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
+            self.ui.autoShow3DCheckBox.checked = self._parameterNode.GetParameter("AutoShow3D") == "true"
             self.ui.outputSegmentationSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputSegmentation"))
 
             state = self._processingState
@@ -556,6 +558,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._parameterNode.SetParameter("CPU", "true" if self.ui.cpuCheckBox.checked else "false")
             self._parameterNode.SetParameter("ShowAllModels", "true" if self.ui.showAllModelsCheckBox.checked else "false")
             self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.useStandardSegmentNamesCheckBox.checked else "false")
+            self._parameterNode.SetParameter("AutoShow3D", "true" if self.ui.autoShow3DCheckBox.checked else "false")
             self._parameterNode.SetNodeReferenceID("OutputSegmentation", self.ui.outputSegmentationSelector.currentNodeID)
             self._parameterNode.SetParameter("ServerPort", str(self.ui.portSpinBox.value))
 
@@ -613,6 +616,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onApply(self):
         self.ui.statusLabel.plainText = ""
 
+        sequenceBrowserNode = slicer.modules.sequences.logic().GetFirstBrowserNodeForProxyNode(self.inputNodeSelectors[0].currentNode())
+        if sequenceBrowserNode:
+            if not slicer.util.confirmYesNoDisplay("The first input volume you provided are part of a sequence. Do you want to segment all frames of that sequence?"):
+                sequenceBrowserNode = None
+
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_STARTING)
 
         with slicer.util.tryWithErrorDisplay("Processing Failed. Check logs for more information.", waitCursor=True):
@@ -622,6 +630,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self.ui.outputSegmentationSelector.addNode()
 
                 self.logic.useStandardSegmentNames = self.ui.useStandardSegmentNamesCheckBox.checked
+                self.logic.autoShow3D = self.ui.autoShow3DCheckBox.checked
 
                 # Compute output
                 inputNodes = []
@@ -630,8 +639,12 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         inputNodes.append(inputNodeSelector.currentNode())
 
                 self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
+
+                # For now, background processing is not supported (not working well yet) for sequences
+                waitForCompletion = (sequenceBrowserNode is not None)
+
                 self._segmentationProcessInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
-                    self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=False)
+                    self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=waitForCompletion, sequenceBrowserNode = sequenceBrowserNode)
 
             except Exception as e:
                 self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_FAILED)
@@ -1018,6 +1031,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         self.endResultImportCallback = None
         self.processingCompletedCallback = None
         self.useStandardSegmentNames = True
+        self.autoShow3D = True
 
         # process that will used to run inference either remotely or locally
         self._bgProcess = None
@@ -1136,12 +1150,14 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             parameterNode.SetParameter("Model", self.defaultModel)
         if not parameterNode.GetParameter("UseStandardSegmentNames"):
             parameterNode.SetParameter("UseStandardSegmentNames", "true")
+        if not parameterNode.GetParameter("AutoShow3D"):
+            parameterNode.SetParameter("AutoShow3D", "true")
         if not parameterNode.GetParameter("ServerPort"):
             parameterNode.SetParameter("ServerPort", str(8891))
 
-    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None):
+    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None, sequenceBrowserNode=None):
         """
-        Run the processing algorithm.
+        Run the processing algorithm on a volume or a sequence of volumes.
         Can be used without GUI widget.
         :param inputNodes: input nodes in a list
         :param outputSegmentation: output segmentation to write to
@@ -1149,6 +1165,47 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         :param cpu: use CPU instead of GPU
         :param waitForCompletion: if True then the method waits for the processing to finish
         :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
+        :param sequenceBrowserNode: if specified then all frames of the inputVolume sequence will be segmented
+        """
+
+        inputSequence = None
+        if sequenceBrowserNode:
+            inputSequence = sequenceBrowserNode.GetMasterSequenceNode()
+
+        if inputSequence is None:
+            # Segment a single item
+            segmentationProcessInfo = self.processSingle(inputNodes, outputSegmentation, model, cpu, waitForCompletion, customData)
+        else:
+            # Segment all frames of the input sequence
+
+            # If the volume already has a sequence in the current browser node then use that
+            segmentationSequence = sequenceBrowserNode.GetSequenceNode(outputSegmentation)
+            if not segmentationSequence:
+                segmentationSequence = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSequenceNode", outputSegmentation.GetName())
+                sequenceBrowserNode.AddProxyNode(outputSegmentation, segmentationSequence, False)
+
+            selectedItemNumber = sequenceBrowserNode.GetSelectedItemNumber()
+            sequenceBrowserNode.PlaybackActiveOff()
+            sequenceBrowserNode.SelectFirstItem()
+            sequenceBrowserNode.SetRecording(segmentationSequence, True)
+            sequenceBrowserNode.SetSaveChanges(segmentationSequence, True)
+
+            segmentationProcessInfo = SegmentationProcessInfo()
+            segmentationProcessInfo.sequenceBrowserNode = sequenceBrowserNode
+            segmentationProcessInfo = self.processSingle(inputNodes, outputSegmentation, model, cpu, waitForCompletion, customData, segmentationProcessInfo=segmentationProcessInfo)
+
+
+    def processSingle(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None, completedCallback=None, segmentationProcessInfo=None):
+        """
+        Run the processing algorithm on a single item of a sequence.
+        Can be used without GUI widget.
+        :param inputNodes: input nodes in a list
+        :param outputSegmentation: output segmentation to write to
+        :param model: one of self.models
+        :param cpu: use CPU instead of GPU
+        :param waitForCompletion: if True then the method waits for the processing to finish
+        :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
+        :param sequenceBrowserNode: if specified then all frames of the inputVolume sequence will be segmented
         """
 
         if not self.DEPENDENCY_HANDLER.dependenciesInstalled:
@@ -1166,7 +1223,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         modelPath = self.modelPath(model)
 
-        segmentationProcessInfo = SegmentationProcessInfo()
+        if not segmentationProcessInfo:
+            segmentationProcessInfo = SegmentationProcessInfo()
 
         logging.info("Processing started")
 
@@ -1223,6 +1281,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         segmentationProcessInfo.outputSegmentation = outputSegmentation
         segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
         segmentationProcessInfo.model = model
+        segmentationProcessInfo.cpu = cpu
+        segmentationProcessInfo.waitForCompletion = waitForCompletion
         segmentationProcessInfo.customData = customData
 
         self._bgProcess = LocalInference(processInfo=segmentationProcessInfo, logCallback=self.log, completedCallback=self.onSegmentationProcessCompleted)
@@ -1262,6 +1322,9 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                     segmentationShItem = shNode.GetItemByDataNode(outputSegmentation)
                     shNode.SetItemParent(segmentationShItem, studyShItem)
 
+                    if self.autoShow3D:
+                        outputSegmentation.CreateClosedSurfaceRepresentation()
+
                 finally:
                     if self.endResultImportCallback:
                         self.endResultImportCallback(customData)
@@ -1287,6 +1350,18 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             else:
                 logging.info(f"Processing failed after {elapsedTime:.2f} seconds.")
 
+        if segmentationProcessInfo.sequenceBrowserNode:
+            # Segmenting a sequence
+            itemIndex = segmentationProcessInfo.sequenceBrowserNode.GetSelectedItemNumber()
+            numberOfItems = segmentationProcessInfo.sequenceBrowserNode.GetNumberOfItems()
+            if  itemIndex < numberOfItems - 1:
+                # We are not done yet
+                segmentationProcessInfo.sequenceBrowserNode.SelectNextItem()
+                self.log(f"Segmenting sequence item {itemIndex+1}/{numberOfItems}")
+                self.processSingle(segmentationProcessInfo.inputNodes, segmentationProcessInfo.outputSegmentation, segmentationProcessInfo.model, segmentationProcessInfo.cpu, segmentationProcessInfo.waitForCompletion, segmentationProcessInfo.customData, segmentationProcessInfo=segmentationProcessInfo)
+                return
+
+        # We are done
         if self.processingCompletedCallback:
             self.processingCompletedCallback(procReturnCode, customData)
 
@@ -1409,9 +1484,9 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
             shutil.rmtree(tempDir)
             return labelDescriptions
 
-    def process(self, inputNodes, outputSegmentation, modelId=None, cpu=False, waitForCompletion=True, customData=None):
+    def processSingle(self, inputNodes, outputSegmentation, modelId=None, cpu=False, waitForCompletion=True, customData=None):
         """
-        Run the processing algorithm.
+        Run the processing algorithm on a single item of a sequence.
         Can be used without GUI widget.
         :param inputNodes: input nodes in a list
         :param outputVolume: thresholding result
@@ -1419,9 +1494,12 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
         :param cpu: use CPU instead of GPU
         :param waitForCompletion: if True then the method waits for the processing to finish
         :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
+        :param sequenceBrowserNode: if specified then all frames of the inputVolume sequence will be segmented
         """
 
-        segmentationProcessInfo = SegmentationProcessInfo()
+        if not segmentationProcessInfo:
+            segmentationProcessInfo = SegmentationProcessInfo()
+
         logging.info("Processing started")
 
         tempDir = slicer.util.tempDirectory()
@@ -1479,6 +1557,8 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
         segmentationProcessInfo.outputSegmentation = outputSegmentation
         segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
         segmentationProcessInfo.model = modelId
+        segmentationProcessInfo.cpu = cpu
+        segmentationProcessInfo.waitForCompletion = waitForCompletion
         segmentationProcessInfo.customData = customData
 
         self.onSegmentationProcessCompleted(segmentationProcessInfo)
