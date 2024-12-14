@@ -16,7 +16,7 @@ from slicer.util import VTKObservationMixin
 from MONAIAuto3DSegLib.model_database import ModelDatabase
 from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec
 from MONAIAuto3DSegLib.dependency_handler import SlicerPythonDependencies, RemotePythonDependencies
-from MONAIAuto3DSegLib.process import InferenceServer, LocalInference, ExitCode, SegmentationProcessInfo
+from MONAIAuto3DSegLib.process import InferenceServer, LocalInference, BackgroundProcess, EventCode, ExitCode, SegmentationTaskListInfo, SegmentationTaskInfo
 
 
 
@@ -186,11 +186,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     PROCESSING_STATES = {
         PROCESSING_IDLE: "Idle",
-        PROCESSING_STARTING: "Starting...",
-        PROCESSING_IN_PROGRESS: "In Progress",
+        PROCESSING_STARTING: "Initializing",
+        PROCESSING_IN_PROGRESS: "Segmenting",
         PROCESSING_IMPORT_RESULTS: "Importing Results",
         PROCESSING_COMPLETED: "Processing Finished",
-        PROCESSING_CANCEL_REQUESTED: "Cancelling...",
+        PROCESSING_CANCEL_REQUESTED: "Cancelling",
         PROCESSING_FAILED: "Processing Failed"
     }
 
@@ -211,7 +211,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._parameterNode = None
         self._updatingGUIFromParameterNode = False
         self._processingState = MONAIAuto3DSegWidget.PROCESSING_IDLE
-        self._segmentationProcessInfo = None
+
+        # For progress reporting
+        self._segmentationTaskListInfo = None
+
         self._webServer = None
 
     def onReload(self):
@@ -258,9 +261,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # in batch mode, without a graphical user interface.
         self.logic = MONAIAuto3DSegLogic()
         self.logic.logCallback = self.addLog
-        self.logic.startResultImportCallback = self.onProcessImportStarted
-        self.logic.endResultImportCallback = self.onProcessImportEnded
-        self.logic.processingCompletedCallback = self.onProcessingCompleted
 
         self.ui.remoteProcessingCheckBox.checked = qt.QSettings().value(f"{self.moduleName}/remoteProcessing", False)
 
@@ -584,10 +584,30 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             qt.QTimer.singleShot(1000, self.ui.progressBar.hide)
             self.ui.progressBar.setRange(0,0)
         else:
-            self.ui.progressBar.setRange(0,4)
+            displayedText = self.getHumanReadableProcessingState(state)
+            if state == self.PROCESSING_STARTING:
+                self.ui.progressBar.setRange(0, 1)
+                progressValue = 0
+            else:                
+                sequenceItemsTotal = 1
+                if self._segmentationTaskListInfo and self._segmentationTaskListInfo.sequenceBrowserNode:
+                    sequenceItemsTotal = self._segmentationTaskListInfo.sequenceBrowserNode.GetNumberOfItems()
+                sequenceItemsCompleted = 0
+                if self._segmentationTaskListInfo:
+                    sequenceItemsCompleted = sum(task.resultsImported for task in self._segmentationTaskListInfo.segmentationTasks)
+
+                # Progress steps: initialize + 2 (process, import results) for each sequence item
+                self.ui.progressBar.setRange(0, sequenceItemsTotal * 2 + 1)
+                progressValue = 2 * sequenceItemsCompleted + 1
+                if state == self.PROCESSING_IMPORT_RESULTS:
+                    progressValue += 1
+
+                if sequenceItemsTotal > 1:
+                    displayedText += f" ({sequenceItemsCompleted + 1}/{sequenceItemsTotal})"
+
             self.ui.progressBar.show()
-            self.ui.progressBar.value = state
-            self.ui.progressBar.setFormat(text := self.getHumanReadableProcessingState(state))
+            self.ui.progressBar.value = progressValue
+            self.ui.progressBar.setFormat(text := displayedText)
             self.addLog(text)
 
     def addServerLog(self, *args):
@@ -638,13 +658,14 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     if inputNodeSelector.visible:
                         inputNodes.append(inputNodeSelector.currentNode())
 
-                self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
+                # Do processing in the background
+                waitForCompletion = False
 
-                # For now, background processing is not supported (not working well yet) for sequences
-                waitForCompletion = (sequenceBrowserNode is not None)
-
-                self._segmentationProcessInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
-                    self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=waitForCompletion, sequenceBrowserNode = sequenceBrowserNode)
+                self._segmentationTaskListInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
+                    self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=waitForCompletion,
+                    sequenceBrowserNode = sequenceBrowserNode,
+                    eventCallback=self.onTaskEvent
+                    )
 
             except Exception as e:
                 self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_FAILED)
@@ -653,28 +674,41 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onCancel(self):
         with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
-            self.logic.cancelProcessing()
+            self.logic.cancelProcessing(self._segmentationTaskListInfo)
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED)
 
-    def onProcessImportStarted(self, customData):
-        self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS)
-        qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    def onTaskEvent(self, eventCode: EventCode, segmentationTaskInfo):
+        # Cache current segmentationTaskListInfo for progress reporting
+        self._segmentationTaskListInfo = segmentationTaskInfo
+        if eventCode == EventCode.TASK_PROCESSING_STARTED:
+            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
+        elif eventCode == EventCode.TASK_PROCESSING_ENDED:
+            #self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
+            pass
+        elif eventCode == EventCode.TASK_IMPORTING_RESULTS_STARTED:
+            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS)
+            qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+        elif eventCode == EventCode.TASK_IMPORTING_RESULTS_ENDED:
+            #self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS)
+            qt.QApplication.restoreOverrideCursor()
+        elif eventCode == EventCode.TASKLIST_PROCESSING_ENDED:
+            allSuccessful = all(task.backgroundProcess.procReturnCode == 0 for task in segmentationTaskInfo.segmentationTasks)
+            wasCancelled = any(task.backgroundProcess.procReturnCode == ExitCode.USER_CANCELLED for task in segmentationTaskInfo.segmentationTasks)
+            if allSuccessful:
+                m = "\nProcessing finished."
+            elif wasCancelled:
+                m = "\nProcessing was cancelled."
+            else:
+                # Get all error codes that are not 0 or USER_CANCELLED
+                errorCodes = [task.backgroundProcess.procReturnCode for task in segmentationTaskInfo.segmentationTasks if task.backgroundProcess.procReturnCode != 0 and task.backgroundProcess.procReturnCode != ExitCode.USER_CANCELLED]
+                errorCodesString = ", ".join(str(errorCode) for errorCode in errorCodes)
+                m = f"\nProcessing failed with error code [{errorCodesString}]. Please check logs for further information."
+            self.addLog(m)
+            self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
+            self._segmentationTaskListInfo = None
+        
         slicer.app.processEvents()
-
-    def onProcessImportEnded(self, customData):
-        qt.QApplication.restoreOverrideCursor()
-        slicer.app.processEvents()
-
-    def onProcessingCompleted(self, returnCode, customData):
-        if returnCode == 0:
-            m = "\nProcessing finished."
-        elif returnCode == ExitCode.USER_CANCELLED:
-            m = "\nProcessing was cancelled."
-        else:
-            m = f"\nProcessing failed with error code {returnCode}. Please check logs for further information."
-        self.addLog(m)
-        self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
-        self._segmentationProcessInfo = None
+        
 
     def _currentModelId(self):
         itemIndex = self.ui.modelComboBox.currentRow
@@ -768,9 +802,6 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.remoteServerButton.text = "Connect"
             self.logic = MONAIAuto3DSegLogic()
 
-        self.logic.startResultImportCallback = self.onProcessImportStarted
-        self.logic.endResultImportCallback = self.onProcessImportEnded
-        self.logic.processingCompletedCallback = self.onProcessingCompleted
         self.updateGUIFromParameterNode()
 
     def onServerButtonToggled(self, toggled):
@@ -1027,14 +1058,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         ModelDatabase.__init__(self)
 
         self.logCallback = None
-        self.startResultImportCallback = None
-        self.endResultImportCallback = None
-        self.processingCompletedCallback = None
         self.useStandardSegmentNames = True
         self.autoShow3D = True
-
-        # process that will used to run inference either remotely or locally
-        self._bgProcess = None
 
         # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
         # where inference result is stored and set self.debugSkipInference to True.
@@ -1155,7 +1180,10 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         if not parameterNode.GetParameter("ServerPort"):
             parameterNode.SetParameter("ServerPort", str(8891))
 
-    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None, sequenceBrowserNode=None):
+    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True,
+                sequenceBrowserNode=None,
+                eventCallback=None,
+                customEventCallbackData=None):
         """
         Run the processing algorithm on a volume or a sequence of volumes.
         Can be used without GUI widget.
@@ -1164,67 +1192,80 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         :param model: one of self.models
         :param cpu: use CPU instead of GPU
         :param waitForCompletion: if True then the method waits for the processing to finish
-        :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
         :param sequenceBrowserNode: if specified then all frames of the inputVolume sequence will be segmented
+        :param eventCallback: function to call when an event occurs
+        :param customEventCallbackData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
         """
 
-        inputSequence = None
         if sequenceBrowserNode:
             inputSequence = sequenceBrowserNode.GetMasterSequenceNode()
+            if not inputSequence:
+                sequenceBrowserNode = None
 
-        if inputSequence is None:
-            # Segment a single item
-            segmentationProcessInfo = self.processSingle(inputNodes, outputSegmentation, model, cpu, waitForCompletion, customData)
-        else:
-            # Segment all frames of the input sequence
+        segmentationTaskListInfo = SegmentationTaskListInfo()
+        segmentationTaskListInfo.inputNodes = inputNodes
+        segmentationTaskListInfo.outputSegmentation = outputSegmentation
+        segmentationTaskListInfo.model = model
+        segmentationTaskListInfo.cpu = cpu
+        segmentationTaskListInfo.waitForCompletion = waitForCompletion
+        segmentationTaskListInfo.sequenceBrowserNode = sequenceBrowserNode
+        segmentationTaskListInfo.eventCallback = eventCallback
+        segmentationTaskListInfo.customEventCallbackData = customEventCallbackData
 
+        self._processSingle(segmentationTaskListInfo)
+
+        return segmentationTaskListInfo
+
+    def _prepareProcessSingle(self, segmentationTaskListInfo):
+
+        if segmentationTaskListInfo.eventCallback:
+            segmentationTaskListInfo.eventCallback(EventCode.TASK_PROCESSING_STARTED, segmentationTaskListInfo)
+
+        sequenceItemIndex = 0
+        sequenceBrowserNode = segmentationTaskListInfo.sequenceBrowserNode
+        if sequenceBrowserNode:
             # If the volume already has a sequence in the current browser node then use that
-            segmentationSequence = sequenceBrowserNode.GetSequenceNode(outputSegmentation)
+            segmentationSequence = sequenceBrowserNode.GetSequenceNode(segmentationTaskListInfo.outputSegmentation)
             if not segmentationSequence:
-                segmentationSequence = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSequenceNode", outputSegmentation.GetName())
-                sequenceBrowserNode.AddProxyNode(outputSegmentation, segmentationSequence, False)
+                segmentationSequence = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSequenceNode", segmentationTaskListInfo.outputSegmentation.GetName())
+                sequenceBrowserNode.AddProxyNode(segmentationTaskListInfo.outputSegmentation, segmentationSequence, False)
 
-            selectedItemNumber = sequenceBrowserNode.GetSelectedItemNumber()
+            sequenceItemIndex = len(segmentationTaskListInfo.segmentationTasks)
+            if sequenceItemIndex >= sequenceBrowserNode.GetNumberOfItems():
+                raise ValueError("No more sequence items available")
+
             sequenceBrowserNode.PlaybackActiveOff()
-            sequenceBrowserNode.SelectFirstItem()
+            sequenceBrowserNode.SetSelectedItemNumber(sequenceItemIndex)
             sequenceBrowserNode.SetRecording(segmentationSequence, True)
             sequenceBrowserNode.SetSaveChanges(segmentationSequence, True)
 
-            segmentationProcessInfo = SegmentationProcessInfo()
-            segmentationProcessInfo.sequenceBrowserNode = sequenceBrowserNode
-            segmentationProcessInfo = self.processSingle(inputNodes, outputSegmentation, model, cpu, waitForCompletion, customData, segmentationProcessInfo=segmentationProcessInfo)
+        if not segmentationTaskListInfo.inputNodes:
+            raise ValueError("Input nodes are invalid")
 
+        if not segmentationTaskListInfo.outputSegmentation:
+            raise ValueError("Output segmentation is invalid")
+        
+        return sequenceItemIndex
 
-    def processSingle(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, customData=None, completedCallback=None, segmentationProcessInfo=None):
+    def _processSingle(self, segmentationTaskListInfo, completedCallback=None):
         """
         Run the processing algorithm on a single item of a sequence.
         Can be used without GUI widget.
-        :param inputNodes: input nodes in a list
-        :param outputSegmentation: output segmentation to write to
-        :param model: one of self.models
-        :param cpu: use CPU instead of GPU
-        :param waitForCompletion: if True then the method waits for the processing to finish
-        :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
-        :param sequenceBrowserNode: if specified then all frames of the inputVolume sequence will be segmented
+        :param segmentationTaskListInfo: SegmentationTaskListInfo object, describing the segmentation task
+        :param completedCallback: function to call when processing is completed
         """
 
         if not self.DEPENDENCY_HANDLER.dependenciesInstalled:
             with slicer.util.tryWithErrorDisplay("Failed to install required dependencies.", waitCursor=True):
                 self.DEPENDENCY_HANDLER.setupPythonRequirements()
 
-        if not inputNodes:
-            raise ValueError("Input nodes are invalid")
+        sequenceItemIndex = self._prepareProcessSingle(segmentationTaskListInfo)
 
-        if not outputSegmentation:
-            raise ValueError("Output segmentation is invalid")
-
+        model = segmentationTaskListInfo.model
         if model is None:
             model = self.defaultModel
 
         modelPath = self.modelPath(model)
-
-        if not segmentationProcessInfo:
-            segmentationProcessInfo = SegmentationProcessInfo()
 
         logging.info("Processing started")
 
@@ -1244,7 +1285,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         # Write input volume to file
         inputFiles = []
-        for inputIndex, inputNode in enumerate(inputNodes):
+        for inputIndex, inputNode in enumerate(segmentationTaskListInfo.inputNodes):
             if inputNode.IsA('vtkMRMLScalarVolumeNode'):
                 inputImageFile = tempDir + f"/input-volume{inputIndex}.nrrd"
                 logging.info(f"Writing input file to {inputImageFile}")
@@ -1272,44 +1313,51 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         logging.info(f"Auto3DSeg command: {auto3DSegCommand}")
 
         additionalEnvironmentVariables = None
-        if cpu:
+        if segmentationTaskListInfo.cpu:
             additionalEnvironmentVariables = {"CUDA_VISIBLE_DEVICES": "-1"}
             logging.info(f"Additional environment variables: {additionalEnvironmentVariables}")
 
-        segmentationProcessInfo.tempDir = tempDir
-        segmentationProcessInfo.inputNodes = inputNodes
-        segmentationProcessInfo.outputSegmentation = outputSegmentation
-        segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
-        segmentationProcessInfo.model = model
-        segmentationProcessInfo.cpu = cpu
-        segmentationProcessInfo.waitForCompletion = waitForCompletion
-        segmentationProcessInfo.customData = customData
+        segmentationTaskInfo = SegmentationTaskInfo()
+        segmentationTaskInfo.tempDir = tempDir
+        segmentationTaskInfo.outputSegmentationFile = outputSegmentationFile
+        segmentationTaskInfo.sequenceItemIndex = sequenceItemIndex
+        segmentationTaskInfo.segmentationTaskListInfo = segmentationTaskListInfo
+        segmentationTaskListInfo.segmentationTasks.append(segmentationTaskInfo)
 
-        self._bgProcess = LocalInference(processInfo=segmentationProcessInfo, logCallback=self.log, completedCallback=self.onSegmentationProcessCompleted)
+        segmentationTaskInfo.backgroundProcess = LocalInference(taskInfo=segmentationTaskInfo, logCallback=self.log, completedCallback=self.onSegmentationProcessCompleted)
+
         if self.debugSkipInference:
-            segmentationProcessInfo.procReturnCode = 0
-            self.onSegmentationProcessCompleted(segmentationProcessInfo)
-        else:
-            self._bgProcess.run(auto3DSegCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=waitForCompletion)
+            segmentationTaskInfo.backgroundProcess.procReturnCode = 0
+            self.onSegmentationProcessCompleted(segmentationTaskInfo)
+            return
+        
+        segmentationTaskInfo.backgroundProcess.run(auto3DSegCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=segmentationTaskListInfo.waitForCompletion)
 
-        return segmentationProcessInfo
 
-    def onSegmentationProcessCompleted(self, segmentationProcessInfo: SegmentationProcessInfo):
-        procReturnCode = segmentationProcessInfo.procReturnCode
-        customData = segmentationProcessInfo.customData
+    def onSegmentationProcessCompleted(self, segmentationTaskInfo: SegmentationTaskInfo):
+        if segmentationTaskInfo.segmentationTaskListInfo.eventCallback:
+            segmentationTaskInfo.segmentationTaskListInfo.eventCallback(EventCode.TASK_PROCESSING_ENDED, segmentationTaskInfo.segmentationTaskListInfo)
+        procReturnCode = segmentationTaskInfo.backgroundProcess.procReturnCode
         cancelRequested = procReturnCode == ExitCode.USER_CANCELLED
         if not cancelRequested:
             if procReturnCode == 0:
-                outputSegmentation = segmentationProcessInfo.outputSegmentation
-                if self.startResultImportCallback:
-                    self.startResultImportCallback(customData)
+                outputSegmentation = segmentationTaskInfo.segmentationTaskListInfo.outputSegmentation
+                if segmentationTaskInfo.segmentationTaskListInfo.eventCallback:
+                    segmentationTaskInfo.segmentationTaskListInfo.eventCallback(EventCode.TASK_IMPORTING_RESULTS_STARTED, segmentationTaskInfo.segmentationTaskListInfo)
 
                 try: # Load result
                     logging.info("Importing segmentation results...")
-                    self.readSegmentation(outputSegmentation, segmentationProcessInfo.outputSegmentationFile, segmentationProcessInfo.model)
+
+                    # Switch to the result sequence item (user may have navigated to a different time point)
+                    sequenceBrowserNode = segmentationTaskInfo.segmentationTaskListInfo.sequenceBrowserNode
+                    if sequenceBrowserNode:
+                        sequenceBrowserNode.PlaybackActiveOff()
+                        sequenceBrowserNode.SetSelectedItemNumber(segmentationTaskInfo.sequenceItemIndex)
+
+                    self.readSegmentation(outputSegmentation, segmentationTaskInfo.outputSegmentationFile, segmentationTaskInfo.segmentationTaskListInfo.model)
 
                     # Set source volume - required for DICOM Segmentation export
-                    inputVolume = segmentationProcessInfo.inputNodes[0]
+                    inputVolume = segmentationTaskInfo.segmentationTaskListInfo.inputNodes[0]
                     if not inputVolume.IsA('vtkMRMLScalarVolumeNode'):
                         raise ValueError("First input node must be a scalar volume")
                     outputSegmentation.SetNodeReferenceID(outputSegmentation.GetReferenceImageGeometryReferenceRole(), inputVolume.GetID())
@@ -1326,12 +1374,14 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                         outputSegmentation.CreateClosedSurfaceRepresentation()
 
                 finally:
-                    if self.endResultImportCallback:
-                        self.endResultImportCallback(customData)
+                    segmentationTaskInfo.resultsImported = True
+                    if segmentationTaskInfo.segmentationTaskListInfo.eventCallback:
+                        segmentationTaskInfo.segmentationTaskListInfo.eventCallback(EventCode.TASK_IMPORTING_RESULTS_ENDED, segmentationTaskInfo.segmentationTaskListInfo)
+
             else:
                 logging.info(f"Processing failed with return code {procReturnCode}")
 
-        tempDir = segmentationProcessInfo.tempDir
+        tempDir = segmentationTaskInfo.tempDir
         if self.clearOutputFolder:
             logging.info("Cleaning up temporary folder.")
             if os.path.isdir(tempDir):
@@ -1341,7 +1391,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             logging.info(f"Not cleaning up temporary folder: {tempDir}")
 
         # Report total elapsed time
-        elapsedTime = time.time() - segmentationProcessInfo.startTime
+        elapsedTime = time.time() - segmentationTaskInfo.backgroundProcess.startTime
         if cancelRequested:
             logging.info(f"Processing was cancelled after {elapsedTime:.2f} seconds.")
         else:
@@ -1349,26 +1399,26 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 logging.info(f"Processing was completed in {elapsedTime:.2f} seconds.")
             else:
                 logging.info(f"Processing failed after {elapsedTime:.2f} seconds.")
+            
+            sequenceBrowserNode = segmentationTaskInfo.segmentationTaskListInfo.sequenceBrowserNode
+            if sequenceBrowserNode:
+                # We are segmenting a sequence
+                numberOfProcessedItems = len(segmentationTaskInfo.segmentationTaskListInfo.segmentationTasks)
+                numberOfItems = sequenceBrowserNode.GetNumberOfItems()
+                if numberOfProcessedItems < numberOfItems:
+                    # We are not done yet
+                    self.log(f"Segmenting sequence item {numberOfProcessedItems+1}/{numberOfItems}")
+                    self._processSingle(segmentationTaskInfo.segmentationTaskListInfo)
+                    return
 
-        if segmentationProcessInfo.sequenceBrowserNode:
-            # Segmenting a sequence
-            itemIndex = segmentationProcessInfo.sequenceBrowserNode.GetSelectedItemNumber()
-            numberOfItems = segmentationProcessInfo.sequenceBrowserNode.GetNumberOfItems()
-            if  itemIndex < numberOfItems - 1:
-                # We are not done yet
-                segmentationProcessInfo.sequenceBrowserNode.SelectNextItem()
-                self.log(f"Segmenting sequence item {itemIndex+1}/{numberOfItems}")
-                self.processSingle(segmentationProcessInfo.inputNodes, segmentationProcessInfo.outputSegmentation, segmentationProcessInfo.model, segmentationProcessInfo.cpu, segmentationProcessInfo.waitForCompletion, segmentationProcessInfo.customData, segmentationProcessInfo=segmentationProcessInfo)
-                return
+        # We are done with the entire task list
+        if segmentationTaskInfo.segmentationTaskListInfo.eventCallback:
+            segmentationTaskInfo.segmentationTaskListInfo.eventCallback(EventCode.TASKLIST_PROCESSING_ENDED, segmentationTaskInfo.segmentationTaskListInfo)
 
-        # We are done
-        if self.processingCompletedCallback:
-            self.processingCompletedCallback(procReturnCode, customData)
-
-    def cancelProcessing(self):
-        if not self._bgProcess:
-            return
-        self._bgProcess.stop()
+    def cancelProcessing(self, segmentationTaskListInfo):
+        for segmentationTaskInfo in segmentationTaskListInfo.segmentationTasks:
+            if segmentationTaskInfo.backgroundProcess:
+                segmentationTaskInfo.backgroundProcess.stop()
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
         labelValueToDescription = self.labelDescriptions(model)
@@ -1484,21 +1534,15 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
             shutil.rmtree(tempDir)
             return labelDescriptions
 
-    def processSingle(self, inputNodes, outputSegmentation, modelId=None, cpu=False, waitForCompletion=True, customData=None):
+    def _processSingle(self, segmentationTaskListInfo: SegmentationTaskListInfo):
         """
         Run the processing algorithm on a single item of a sequence.
         Can be used without GUI widget.
-        :param inputNodes: input nodes in a list
-        :param outputVolume: thresholding result
-        :param modelId: one of self.models
-        :param cpu: use CPU instead of GPU
-        :param waitForCompletion: if True then the method waits for the processing to finish
-        :param customData: any custom data to identify or describe this processing request, it will be returned in the process completed callback when waitForCompletion is False
-        :param sequenceBrowserNode: if specified then all frames of the inputVolume sequence will be segmented
+        :param segmentationTaskListInfo: SegmentationTaskListInfo object, describing the segmentation task
+        :param completedCallback: function to call when processing is completed
         """
 
-        if not segmentationProcessInfo:
-            segmentationProcessInfo = SegmentationProcessInfo()
+        sequenceItemIndex = self._prepareProcessSingle(segmentationTaskListInfo)
 
         logging.info("Processing started")
 
@@ -1511,7 +1555,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
             from pathlib import Path
             tempDir = Path(temp_dir)
             inputFiles = []
-            for inputIndex, inputNode in enumerate(inputNodes):
+            for inputIndex, inputNode in enumerate(segmentationTaskListInfo.inputNodes):
                 if inputNode.IsA('vtkMRMLScalarVolumeNode'):
                     inputImageFile = tempDir / f"input-volume{inputIndex}.nrrd"
                     logging.info(f"Writing input file to {inputImageFile}")
@@ -1533,16 +1577,24 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                     name = f"{name}_{idx}"
                 files[name] = open(inputFile, 'rb')
 
+            segmentationTaskInfo = SegmentationTaskInfo()
+            segmentationTaskInfo.tempDir = tempDir
+            segmentationTaskInfo.sequenceItemIndex = sequenceItemIndex
+            segmentationTaskInfo.outputSegmentationFile = outputSegmentationFile
+            segmentationTaskInfo.segmentationTaskListInfo = segmentationTaskListInfo
+            segmentationTaskInfo.backgroundProcess = BackgroundProcess()  # we don't actually start a new process (we could do it in the future for background processing)
+            segmentationTaskListInfo.segmentationTasks.append(segmentationTaskInfo)
+
             r = None
             try:
-                with requests.post(self._server_address + f"/infer?model_name={modelId}", files=files) as r:
+                
+                with requests.post(self._server_address + f"/infer?model_name={segmentationTaskListInfo.model}", files=files) as r:
                     r.raise_for_status()
-
                     with open(outputSegmentationFile, "wb") as binary_file:
                         for chunk in r.iter_content(chunk_size=8192):
                             binary_file.write(chunk)
 
-                    segmentationProcessInfo.procReturnCode = 0
+                    segmentationTaskInfo.backgroundProcess.procReturnCode = 0
             except requests.exceptions.HTTPError as e:
                 from http import HTTPStatus
                 status = HTTPStatus(e.response.status_code)
@@ -1552,18 +1604,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
                 for f in files.values():
                     f.close()
 
-        segmentationProcessInfo.tempDir = tempDir
-        segmentationProcessInfo.inputNodes = inputNodes
-        segmentationProcessInfo.outputSegmentation = outputSegmentation
-        segmentationProcessInfo.outputSegmentationFile = outputSegmentationFile
-        segmentationProcessInfo.model = modelId
-        segmentationProcessInfo.cpu = cpu
-        segmentationProcessInfo.waitForCompletion = waitForCompletion
-        segmentationProcessInfo.customData = customData
-
-        self.onSegmentationProcessCompleted(segmentationProcessInfo)
-
-        return segmentationProcessInfo
+        self.onSegmentationProcessCompleted(segmentationTaskInfo)
 
 
 #
@@ -1683,6 +1724,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
                 self.delayDisplay(f"Running segmentation for {model['title']}...")
                 startTime = time.time()
                 logic.process(inputNodes, outputSegmentation, model["id"], forceUseCpu)
+
                 segmentationTimeSec = time.time() - startTime
 
                 # Save segmentation time (rounded to 0.1 sec) into model description

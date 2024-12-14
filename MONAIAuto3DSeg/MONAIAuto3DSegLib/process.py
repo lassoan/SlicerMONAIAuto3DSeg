@@ -15,62 +15,44 @@ from dataclasses import dataclass, field
 
 from enum import Enum
 
+@dataclass
+class SegmentationTaskInfo:
+    tempDir: str = ""
+    outputSegmentationFile: str = ""
+    backgroundProcess = None
+    segmentationTaskListInfo = None
+    sequenceItemIndex: int = 0
+    resultsImported: bool = False
+
+class EventCode(Enum):
+    TASKLIST_PROCESSING_STARTED = 1
+    TASK_PROCESSING_STARTED = 2
+    TASK_PROCESSING_ENDED = 3
+    TASK_IMPORTING_RESULTS_STARTED = 4
+    TASK_IMPORTING_RESULTS_ENDED = 5
+    TASKLIST_PROCESSING_ENDED = 6
 
 class ExitCode(Enum):
     USER_CANCELLED = 1001
     DID_NOT_RUN = 1002
 
-
 @dataclass
-class ProcessInfo:
-    proc: subprocess.Popen = None
-    startTime: float = field(default_factory=time.time)
-    procReturnCode: ExitCode = ExitCode.DID_NOT_RUN
-    procOutputQueue: queue.Queue = queue.Queue()
-    procThread: threading.Thread = None
-
-
-class SegmentationProcessInfo(ProcessInfo):
-    tempDir: str = ""
+class SegmentationTaskListInfo:
     inputNodes: list = None
     outputSegmentation: slicer.vtkMRMLSegmentationNode = None
-    outputSegmentationFile: str = ""
     model: str = ""
     cpu: bool = False
     waitForCompletion: bool = False
     sequenceBrowserNode: slicer.vtkMRMLSequenceBrowserNode = None
-    customData: Any = None
-
+    segmentationTasks: list = field(default_factory=list) # list of SegmentationTaskInfo objects, one for each sequence item
+    eventCallback: Callable = None
+    customEventCallbackData: Any = None
 
 class BackgroundProcess:
     """ Any kind of process with threads and continuous checking until stopped"""
 
     # Timer for checking the output of the process that is running in the background
     CHECK_TIMER_INTERVAL = 1000
-
-    @property
-    def proc(self):
-        return self.processInfo.proc
-
-    @proc.setter
-    def proc(self, proc):
-        self.processInfo.proc = proc
-
-    @property
-    def procThread(self):
-        return self.processInfo.procThread
-
-    @procThread.setter
-    def procThread(self, procThread):
-        self.processInfo.procThread = procThread
-
-    @property
-    def procOutputQueue(self):
-        return self.processInfo.procOutputQueue
-
-    @procOutputQueue.setter
-    def procOutputQueue(self, procOutputQueue):
-        self.processInfo.procOutputQueue = procOutputQueue
 
     @staticmethod
     def getPSProcess(pid):
@@ -80,15 +62,19 @@ class BackgroundProcess:
         except psutil.NoSuchProcess:
             return None
 
-    def __init__(self, processInfo: ProcessInfo = None, logCallback: Callable = None, completedCallback: Callable = None):
-        self.processInfo = processInfo if processInfo else ProcessInfo()
+    def __init__(self,
+                 taskInfo: SegmentationTaskInfo = None,
+                 logCallback: Callable = None,
+                 completedCallback: Callable = None):
+        self.startTime = time.time()
+        self.proc = None  # subprocess.Popen object
+        self.procReturnCode: ExitCode = ExitCode.DID_NOT_RUN
+        self.procOutputQueue = queue.Queue()
+        self.procThread = None # threading.Thread object
+
         self.logCallback = logCallback
         self.completedCallback = completedCallback
-
-        # NB: making sure that the following values were not set previously
-        self.proc = None
-        self.procThread = None
-        self.procOutputQueue = None
+        self.taskInfo = taskInfo
 
     def __del__(self):
         self._killProcess()
@@ -100,17 +86,19 @@ class BackgroundProcess:
         if self.procThread:
             self.procThread.join()
         if self.completedCallback:
-            self.completedCallback(self.processInfo)
+            self.completedCallback(self.taskInfo)
         self.proc = None
         self.procThread = None
         self.procOutputQueue = None
 
     def isRunning(self):
-        if self.proc is not None:
-            psProcess = self.getPSProcess(self.proc.pid)
-            if psProcess:
-                return psProcess.is_running()
-        return False
+        if self.proc is None:
+            return False
+        psProcess = self.getPSProcess(self.proc.pid)
+        if psProcess:
+            return psProcess.is_running()
+        else:
+            return False
 
     def _killProcess(self):
         if not self.proc:
@@ -154,8 +142,8 @@ class BackgroundProcess:
                 self.handleSubProcessLogging(line)
             except queue.Empty:
                 break
-            if self.processInfo.procReturnCode != ExitCode.DID_NOT_RUN:
-                self.completedCallback(self.processInfo)
+            if self.procReturnCode != ExitCode.DID_NOT_RUN:
+                self.completedCallback(self.taskInfo)
                 return
 
         psProcess = self.getPSProcess(self.proc.pid)
@@ -170,9 +158,9 @@ class BackgroundProcess:
 
     def _setProcReturnCode(self, rcode):
         # if user cancelled, leave it at that and don't change it
-        if self.processInfo.procReturnCode == ExitCode.USER_CANCELLED:
+        if self.procReturnCode == ExitCode.USER_CANCELLED:
             return
-        self.processInfo.procReturnCode = rcode
+        self.procReturnCode = rcode
 
 
 
@@ -194,9 +182,11 @@ class InferenceServer(BackgroundProcess):
 
     """
 
-    def __init__(self, processInfo: ProcessInfo = None, logCallback: Callable = None,
+    def __init__(self,
+                 taskInfo: SegmentationTaskInfo = None,
+                 logCallback: Callable = None,
                  completedCallback: Callable = None):
-        super().__init__(processInfo, logCallback, completedCallback)
+        super().__init__(taskInfo, logCallback, completedCallback)
         self.hostName = "127.0.0.1"
         self.port = 8891
 
@@ -223,9 +213,12 @@ class InferenceServer(BackgroundProcess):
 class LocalInference(BackgroundProcess):
     """ Running local inference until finished or cancelled. """
 
-    def __init__(self, processInfo: SegmentationProcessInfo, logCallback: Callable = None,
-                 completedCallback: Callable = None, waitForCompletion: bool = True):
-        super().__init__(processInfo, logCallback, completedCallback)
+    def __init__(self,
+                 taskInfo: SegmentationTaskInfo = None,
+                 logCallback: Callable = None,
+                 completedCallback: Callable = None,
+                 waitForCompletion: bool = True):
+        super().__init__(taskInfo, logCallback, completedCallback)
         self.waitForCompletion = waitForCompletion
 
     def run(self, cmd, additionalEnvironmentVariables=None, waitForCompletion=True):
@@ -237,7 +230,7 @@ class LocalInference(BackgroundProcess):
 
         if waitForCompletion:
             self.logProcessOutputUntilCompleted()
-            self.completedCallback(self.processInfo)
+            self.completedCallback(self.taskInfo)
         else:
             self._startHandleProcessOutputThread()
 
