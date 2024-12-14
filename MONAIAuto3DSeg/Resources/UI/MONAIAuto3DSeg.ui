@@ -514,13 +514,13 @@
       <item row="1" column="1">
        <widget class="QCheckBox" name="autoShow3DCheckBox">
         <property name="toolTip">
-         <string>If enabled (default) then the segmentation will be shown in 3D by default (takes extra time).</string>
+         <string>If enabled then the segmentation will be shown in 3D by default (takes extra time).</string>
         </property>
         <property name="text">
          <string/>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>

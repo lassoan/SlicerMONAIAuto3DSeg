@@ -1059,7 +1059,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         self.logCallback = None
         self.useStandardSegmentNames = True
-        self.autoShow3D = True
+        self.autoShow3D = False
 
         # For testing the logic without actually running inference, set self.debugSkipInferenceTempDir to the location
         # where inference result is stored and set self.debugSkipInference to True.
@@ -1176,7 +1176,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         if not parameterNode.GetParameter("UseStandardSegmentNames"):
             parameterNode.SetParameter("UseStandardSegmentNames", "true")
         if not parameterNode.GetParameter("AutoShow3D"):
-            parameterNode.SetParameter("AutoShow3D", "true")
+            parameterNode.SetParameter("AutoShow3D", "false")
         if not parameterNode.GetParameter("ServerPort"):
             parameterNode.SetParameter("ServerPort", str(8891))
 
@@ -1645,7 +1645,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
 
         # Logic testing is disabled by default to not overload automatic build machines (pytorch is a huge package and computation
         # on CPU takes 5-10 minutes). Set testLogic to True to enable testing.
-        testLogic = True
+        testLogic = False
 
         if not testLogic:
             self.delayDisplay("Logic testing is disabled. Set testLogic to True to enable it.")
@@ -1686,7 +1686,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
 
             for modelIndex, model in enumerate(models):
                 if model.get("deprecated"):
-                    # Do not teset deprecated models
+                    # Do not test deprecated models
                     continue
 
                 segmentationTimePropertyName = "segmentationTimeSec"+configurationName
