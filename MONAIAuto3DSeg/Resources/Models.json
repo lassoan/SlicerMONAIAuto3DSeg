@@ -1635,6 +1635,28 @@
         "Edema in Edema",
         "Necrosis in Necrosis"
       ]
+    },
+    {
+      "title": "KiTS 2023 Challenge Model - 1/5 model",
+      "license": "CC BY 4.0",
+      "description": "Kidney, tumor and cyst segmentation model. Input image is abdominal CT.",
+      "subject": "human",
+      "imagingModality": "CT",
+      "sampleData": [
+        "KiTS23"
+      ],
+      "versions": [
+        {
+          "url": "https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/kits23-v1.0.0.zip"
+        }
+      ],
+      "segmentationTimeSecGPU": 15.3,
+      "segmentationTimeSecCPU": 42.0,
+      "segmentNames": [
+        "Kidney",
+        "Tumor",
+        "Cyst"
+      ]
     }
   ]
 }
