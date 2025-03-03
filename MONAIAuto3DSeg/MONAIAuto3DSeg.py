@@ -935,7 +935,16 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
         terminologiesLogic.GetLoadedTerminologyNames(terminologyNames)
 
-        return [terminologyNames.GetValue(idx) for idx in range(terminologyNames.GetNumberOfValues())]
+        terminologyNamesList = [terminologyNames.GetValue(idx) for idx in range(terminologyNames.GetNumberOfValues())]
+
+        # Move "Segmentation category and type - MONAI Auto3DSeg" to the top of the list
+        # (there are some improvements specifically from MONAI Auto3DSeg models compared to built-in terminologies)
+        preferredTerminologyName = "Segmentation category and type - MONAI Auto3DSeg"
+        if preferredTerminologyName in terminologyNamesList:
+            terminologyNamesList.remove(preferredTerminologyName)
+            terminologyNamesList.insert(0, preferredTerminologyName)
+
+        return terminologyNamesList
 
     @staticmethod
     def getLoadedAnatomicContextNames():
