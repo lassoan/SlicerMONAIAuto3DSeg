@@ -242,11 +242,6 @@ def main(model_file,
                 EnsureTyped(keys="image", data_type="tensor", dtype=torch.float, allow_missing_keys=True)
             ])
 
-        if config.get("orientation_ras", False):
-            print('Using orientation_ras')
-            # we assume LPS physical coordinate system orientation
-            # This code is only tested with NRRD files that use LPS space
-            ts.append(Orientationd(keys="image", axcodes="RAS"))  # reorient #
         if config.get("crop_foreground", True):
             print('Using crop_foreground')
             ts.append(CropForegroundd(keys="image", source_key="image1", margin=10, allow_smaller=True))  # subcrop
