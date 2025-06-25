@@ -11,6 +11,8 @@ import qt
 import slicer
 import requests
 
+from slicer.i18n import tr as _
+from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 from MONAIAuto3DSegLib.model_database import ModelDatabase
@@ -33,18 +35,18 @@ class MONAIAuto3DSeg(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = "MONAI Auto3DSeg"
-        self.parent.categories = ["Segmentation"]
+        self.parent.title = _("MONAI Auto3DSeg")
+        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Segmentation")]
         self.parent.dependencies = []
         self.parent.contributors = ["Andras Lasso (PerkLab, Queen's University)", "Andres Diaz-Pinto (NVIDIA & KCL)", "Rudolf Bumm (KSGR Switzerland), Christian Herz (CHOP)"]
-        self.parent.helpText = """
+        self.parent.helpText = _("""
 3D Slicer extension for segmentation using MONAI Auto3DSeg AI model.
 See more information in the <a href="https://github.com/lassoan/SlicerMONAIAuto3DSeg">extension documentation</a>.
-"""
-        self.parent.acknowledgementText = """
+""")
+        self.parent.acknowledgementText = _("""
 This file was originally developed by Andras Lasso (PerkLab, Queen's University).
 The module uses <a href="https://github.com/Project-MONAI/tutorials/blob/main/MONAIAuto3DSeg/README.md">MONAI Auto3DSeg model</a>.
-"""
+""")
 
         self.terminologyName = None
         self.anatomicContextName = None
@@ -451,10 +453,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             state = self._processingState
             if state == MONAIAuto3DSegWidget.PROCESSING_IDLE:
-                self.ui.applyButton.text = "Apply"
+                self.ui.applyButton.text = _("Apply")
                 inputErrorMessages = []  # it will contain text if the inputs are not valid
                 if self.ui.remoteProcessingCheckBox.checked and not self.ui.remoteServerButton.checked:
-                    inputErrorMessages.append("Connect to server or disable remote processing.")
+                    inputErrorMessages.append(_("Connect to server or disable remote processing."))
                     self.ui.modelComboBox.enabled = False
                 else:
                     self.ui.modelComboBox.enabled = True
@@ -462,7 +464,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     modelInputs = self.logic.model(modelId)["inputs"]
                 else:
                     modelInputs = []
-                    inputErrorMessages.append("Select a model.")
+                    inputErrorMessages.append(_("Select a model."))
                 inputNodes = []  # list of output nodes so far, for checking for duplicates
                 for inputIndex in range(len(self.inputNodeSelectors)):
                     inputNodeSelector = self.inputNodeSelectors[inputIndex]
@@ -477,10 +479,10 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         if inputIndex == 0 and inputNode:
                             self.ui.outputSegmentationSelector.baseName = inputNode.GetName() + " segmentation"
                         if not inputNode:
-                            inputErrorMessages.append(f"Select {inputTitle}.")
+                            inputErrorMessages.append(_("Select {input_title}.").format(input_title=inputTitle))
                         else:
                             if inputNode in inputNodes:
-                                inputErrorMessages.append(f"'{inputTitle}' does not have a unique input ('{inputNode.GetName()}' is already used as another input).")
+                                inputErrorMessages.append(_("'{input_title}' does not have a unique input ('{already_in_input}' is already used as another input).").format(input_title=inputTitle, already_in_input=inputNode.GetName()))
                             inputNodes.append(inputNode)
                     else:
                         inputNodeLabel.visible = False
@@ -490,21 +492,21 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self.ui.applyButton.toolTip = "\n".join(inputErrorMessages)
                     self.ui.applyButton.enabled = False
                 else:
-                    self.ui.applyButton.toolTip = "Start segmentation"
+                    self.ui.applyButton.toolTip = _("Start segmentation")
                     self.ui.applyButton.enabled = True
 
             elif state == MONAIAuto3DSegWidget.PROCESSING_STARTING:
-                self.ui.applyButton.toolTip = "Please wait while the segmentation is being initialized"
+                self.ui.applyButton.toolTip = _("Please wait while the segmentation is being initialized")
                 self.ui.applyButton.enabled = False
             elif state == MONAIAuto3DSegWidget.PROCESSING_IN_PROGRESS:
-                self.ui.applyButton.text = "Cancel"
-                self.ui.applyButton.toolTip = "Cancel in-progress segmentation"
+                self.ui.applyButton.text = _("Cancel")
+                self.ui.applyButton.toolTip = _("Cancel in-progress segmentation")
                 self.ui.applyButton.enabled = True
             elif state == MONAIAuto3DSegWidget.PROCESSING_IMPORT_RESULTS:
-                self.ui.applyButton.toolTip = "Please wait while the segmentation result is being imported"
+                self.ui.applyButton.toolTip = _("Please wait while the segmentation result is being imported")
                 self.ui.applyButton.enabled = False
             elif state == MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED:
-                self.ui.applyButton.toolTip = "Please wait for the segmentation to be cancelled"
+                self.ui.applyButton.toolTip = _("Please wait for the segmentation to be cancelled")
                 self.ui.applyButton.enabled = False
 
             remoteConnection = self.ui.remoteServerButton.checked
@@ -528,7 +530,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             serverRunning = self._webServer is not None and self._webServer.isRunning()
             self.ui.serverButton.checked = serverRunning
-            self.ui.serverButton.text = "Running ..." if serverRunning else "Start server"
+            self.ui.serverButton.text = _("Running ...") if serverRunning else _("Start server")
         finally:
             # All the GUI updates are done
             self._updatingGUIFromParameterNode = False
@@ -570,7 +572,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         if len(self.ui.statusLabel.html) > 1024 * 256:
             self.ui.statusLabel.clear()
-            self.ui.statusLabel.insertHtml("Log cleared\n")
+            self.ui.statusLabel.insertHtml(_("Log cleared") + "\n")
         self.ui.statusLabel.insertHtml(text)
         self.ui.statusLabel.insertPlainText("\n")
         self.ui.statusLabel.ensureCursorVisible()
@@ -638,12 +640,12 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         sequenceBrowserNode = slicer.modules.sequences.logic().GetFirstBrowserNodeForProxyNode(self.inputNodeSelectors[0].currentNode())
         if sequenceBrowserNode:
-            if not slicer.util.confirmYesNoDisplay("The first input volume you provided are part of a sequence. Do you want to segment all frames of that sequence?"):
+            if not slicer.util.confirmYesNoDisplay(_("The first input volume you provided are part of a sequence. Do you want to segment all frames of that sequence?")):
                 sequenceBrowserNode = None
 
         self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_STARTING)
 
-        with slicer.util.tryWithErrorDisplay("Processing Failed. Check logs for more information.", waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Processing Failed. Check logs for more information."), waitCursor=True):
             try:
                 # Create new segmentation node, if not selected yet
                 if not self.ui.outputSegmentationSelector.currentNode():
@@ -673,7 +675,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 raise
 
     def onCancel(self):
-        with slicer.util.tryWithErrorDisplay("Failed to cancel processing.", waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Failed to cancel processing."), waitCursor=True):
             self.logic.cancelProcessing(self._segmentationTaskListInfo)
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_CANCEL_REQUESTED)
 
@@ -695,15 +697,19 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             allSuccessful = all(task.backgroundProcess.procReturnCode == 0 for task in segmentationTaskInfo.segmentationTasks)
             wasCancelled = any(task.backgroundProcess.procReturnCode == ExitCode.USER_CANCELLED for task in segmentationTaskInfo.segmentationTasks)
             if allSuccessful:
-                m = "\nProcessing finished."
+                m = _("Processing finished.")
+
             elif wasCancelled:
-                m = "\nProcessing was cancelled."
+                m = _("Processing was cancelled.")
+
             else:
                 # Get all error codes that are not 0 or USER_CANCELLED
                 errorCodes = [task.backgroundProcess.procReturnCode for task in segmentationTaskInfo.segmentationTasks if task.backgroundProcess.procReturnCode != 0 and task.backgroundProcess.procReturnCode != ExitCode.USER_CANCELLED]
                 errorCodesString = ", ".join(str(errorCode) for errorCode in errorCodes)
-                m = f"\nProcessing failed with error code [{errorCodesString}]. Please check logs for further information."
-            self.addLog(m)
+                m = _("Processing failed with error code [{error_codes_string}]. Please check logs for further information.").format(error_codes_string=errorCodesString)
+
+            self.addLog("\n" + m)
+
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
             self._segmentationTaskListInfo = None
         
@@ -726,25 +732,25 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         return False
 
     def onDownloadSampleData(self):
-        with slicer.util.tryWithErrorDisplay("Failed to retrieve model information", waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Failed to retrieve model information"), waitCursor=True):
             model = self.logic.model(self._currentModelId())
 
         sampleDataName = model.get("sampleData")
         if not sampleDataName:
-            slicer.util.messageBox("No sample data is available for this model.")
+            slicer.util.messageBox(_("No sample data is available for this model."))
             return
 
         if type(sampleDataName) == list:
             # For now, always just use the first data set if multiple data sets are provided
             sampleDataName = sampleDataName[0]
 
-        with slicer.util.tryWithErrorDisplay("Failed to download sample data", waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Failed to download sample data"), waitCursor=True):
             import SampleData
             loadedSampleNodes = SampleData.SampleDataLogic().downloadSamples(sampleDataName)
             inputs = model.get("inputs")
 
         if not loadedSampleNodes:
-            slicer.util.messageBox(f"Failed to load sample data set '{sampleDataName}'.")
+            slicer.util.messageBox(_("Failed to load sample data set '{sample_data_name}'.").format(sample_data_name=sampleDataName))
             return
 
         inputNodes = self.logic.assignInputNodesByName(inputs, loadedSampleNodes)
@@ -754,16 +760,16 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onPackageInfoUpdate(self):
         self.ui.packageInfoTextBrowser.plainText = ""
-        with slicer.util.tryWithErrorDisplay("Failed to get MONAI package version information", waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Failed to get MONAI package version information"), waitCursor=True):
             self.ui.packageInfoTextBrowser.plainText = self.logic.getMONAIPythonPackageInfo().rstrip()
 
     def onPackageUpgrade(self):
         restartRequired = True
-        with slicer.util.tryWithErrorDisplay("Failed to upgrade MONAI", waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Failed to upgrade MONAI"), waitCursor=True):
             restartRequired = self.logic.setupPythonRequirements(upgrade=True)
         self.onPackageInfoUpdate()
         if restartRequired:
-            if not slicer.util.confirmOkCancelDisplay(f"This MONAI update requires a 3D Slicer restart.","Press OK to restart."):
+            if not slicer.util.confirmOkCancelDisplay(_("This MONAI update requires a 3D Slicer restart."),_("Press OK to restart.")):
                 raise ValueError("Restart was cancelled.")
             else:
                 slicer.util.restart()
@@ -774,38 +780,37 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onClearModelsFolder(self):
         if not os.path.exists(self.logic.modelsPath):
-            slicer.util.messageBox("There are no downloaded models.")
+            slicer.util.messageBox(_("There are no downloaded models."))
             return
-        if not slicer.util.confirmOkCancelDisplay("All downloaded model files will be deleted. The files will be automatically downloaded again as needed."):
+        if not slicer.util.confirmOkCancelDisplay(_("All downloaded model files will be deleted. The files will be automatically downloaded again as needed.")):
             return
         self.logic.deleteAllModels()
-        slicer.util.messageBox("Downloaded models are deleted.")
+        slicer.util.messageBox(_("Downloaded models are deleted."))
 
     def onRemoteServerButtonToggled(self):
         if self.ui.remoteServerButton.checked and self.ui.serverComboBox.currentText != '':
-            self.ui.remoteServerButton.text = "Connected"
+            self.ui.remoteServerButton.text = _("Connected")
             self.logic = RemoteMONAIAuto3DSegLogic()
             self.logic.server_address = self.ui.serverComboBox.currentText
             try:
                 models = self.logic.models
-                self.addLog(f"Remote Server Connected {self.logic.server_address}. {len(models)} models are available.")
+                self.addLog(_("Remote Server Connected {server_address}. {models_len} models are available.").format(server_address=self.logic.server_address, models_len=len(models)))
             except:
                 slicer.util.warningDisplay(
-                    f"Connection to remote server '{self.logic.server_address}' failed. "
-                    f"Please check address, port, and connection."
+                    _("Connection to remote server '{server_address}' failed. \nPlease check address, port, and connection.").format(server_address=self.logic.server_address)
                 )
                 self.ui.remoteServerButton.checked = False
                 return
             self.saveServerUrl()
         else:
             self.ui.remoteServerButton.checked = False
-            self.ui.remoteServerButton.text = "Connect"
+            self.ui.remoteServerButton.text = _("Connect")
             self.logic = MONAIAuto3DSegLogic()
 
         self.updateGUIFromParameterNode()
 
     def onServerButtonToggled(self, toggled):
-        with slicer.util.tryWithErrorDisplay("Failed to start server.", waitCursor=True):
+        with slicer.util.tryWithErrorDisplay(_("Failed to start server."), waitCursor=True):
             if toggled:
                 # TODO: improve error reporting if installation of requirements fails
 
@@ -828,7 +833,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self._webServer.port = port
                     self._webServer.start()
                     if self._webServer.isRunning():
-                        self.addLog("Server started")
+                        self.addLog(_("Server started"))
             else:
                 if self._webServer is not None and self._webServer.isRunning():
                     self._webServer.stop()
@@ -838,10 +843,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onServerCompleted(self, processInfo=None):
         returnCode = processInfo.procReturnCode
         if returnCode == ExitCode.USER_CANCELLED:
-            m = "\nServer was stopped."
+            m = _("Server was stopped.")
+
         else:
-            m = f"\nProcessing failed with error code {returnCode}. Try again with `Log to GUI` for more details."
-        self.addLog(m)
+            m = _("Processing failed with error code {return_code}. Try again with `Log to GUI` for more details.").format(return_code=returnCode)
+
+        self.addLog("\n" + m)
+
         self.ui.serverButton.setChecked(False)
 
     def serverUrl(self):
@@ -1416,7 +1424,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 numberOfItems = sequenceBrowserNode.GetNumberOfItems()
                 if numberOfProcessedItems < numberOfItems:
                     # We are not done yet
-                    self.log(f"Segmenting sequence item {numberOfProcessedItems+1}/{numberOfItems}")
+                    self.log(_("Segmenting sequence item {number_of_processed_items}/{number_of_items}").format(number_of_processed_items=numberOfProcessedItems+1, number_of_items=numberOfItems))
                     self._processSingle(segmentationTaskInfo.segmentationTaskListInfo)
                     return
 
