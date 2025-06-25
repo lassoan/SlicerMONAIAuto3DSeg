@@ -572,7 +572,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         if len(self.ui.statusLabel.html) > 1024 * 256:
             self.ui.statusLabel.clear()
-            self.ui.statusLabel.insertHtml(_("Log cleared\n"))
+            self.ui.statusLabel.insertHtml(_("Log cleared") + "\n")
         self.ui.statusLabel.insertHtml(text)
         self.ui.statusLabel.insertPlainText("\n")
         self.ui.statusLabel.ensureCursorVisible()
@@ -697,15 +697,19 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             allSuccessful = all(task.backgroundProcess.procReturnCode == 0 for task in segmentationTaskInfo.segmentationTasks)
             wasCancelled = any(task.backgroundProcess.procReturnCode == ExitCode.USER_CANCELLED for task in segmentationTaskInfo.segmentationTasks)
             if allSuccessful:
-                m = _("\nProcessing finished.")
+                m = _("Processing finished.")
+
             elif wasCancelled:
-                m = _("\nProcessing was cancelled.")
+                m = _("Processing was cancelled.")
+
             else:
                 # Get all error codes that are not 0 or USER_CANCELLED
                 errorCodes = [task.backgroundProcess.procReturnCode for task in segmentationTaskInfo.segmentationTasks if task.backgroundProcess.procReturnCode != 0 and task.backgroundProcess.procReturnCode != ExitCode.USER_CANCELLED]
                 errorCodesString = ", ".join(str(errorCode) for errorCode in errorCodes)
-                m = _("\nProcessing failed with error code [{error_codes_string}]. Please check logs for further information.").format(error_codes_string=errorCodesString)
-            self.addLog(m)
+                m = _("Processing failed with error code [{error_codes_string}]. Please check logs for further information.").format(error_codes_string=errorCodesString)
+
+            self.addLog("\n" + m)
+
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
             self._segmentationTaskListInfo = None
         
@@ -839,10 +843,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onServerCompleted(self, processInfo=None):
         returnCode = processInfo.procReturnCode
         if returnCode == ExitCode.USER_CANCELLED:
-            m = _("\nServer was stopped.")
+            m = _("Server was stopped.")
+
         else:
-            m = _("\nProcessing failed with error code {return_code}. Try again with `Log to GUI` for more details.").format(return_code=returnCode)
-        self.addLog(m)
+            m = _("Processing failed with error code {return_code}. Try again with `Log to GUI` for more details.").format(return_code=returnCode)
+
+        self.addLog("\n" + m)
+
         self.ui.serverButton.setChecked(False)
 
     def serverUrl(self):
