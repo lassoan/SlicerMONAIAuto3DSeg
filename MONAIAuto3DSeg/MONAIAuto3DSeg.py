@@ -389,6 +389,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Initial GUI update
         self.updateGUIFromParameterNode()
 
+    def _modelTranslate(self, text):
+        if not text:
+            return ""
+        return translate("Models", text)
+
     def updateGUIFromParameterNode(self, caller=None, event=None):
         """
         This method is called whenever parameter node is changed.
@@ -410,19 +415,20 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
                 if model.get("deprecated"):
                     if showAllModels:
-                        modelTitle = f"{model['title']} (v{model['version']}) -- deprecated"
+                        modelTitle = f"{self._modelTranslate(model['title'])} (v{model['version']}) -- deprecated"
                     else:
                         # Do not show deprecated models
                         continue
                 else:
                     if showAllModels:
-                        modelTitle = f"{model['title']} (v{model['version']})"
+                        modelTitle = f"{self._modelTranslate(model['title'])} (v{model['version']})"
                     else:
-                        modelTitle = model['title']
+                        modelTitle = self._modelTranslate(model['title'])
 
                 if searchWords:
                     textToSearchIn = modelTitle.lower()
                     if fullTextSearch:
+                        textToSearchIn += " " + translate('Models', model.get("description")).lower() + " " + translate('Models', model.get("imagingModality")).lower()
                         textToSearchIn += " " + model.get("description").lower() + " " + model.get("imagingModality").lower()
                         segmentNames = model.get("segmentNames")
                         if segmentNames:
@@ -471,13 +477,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     inputNodeLabel = self.inputNodeLabels[inputIndex]
                     if inputIndex < len(modelInputs):
                         inputNodeLabel.visible = True
-                        inputTitle = modelInputs[inputIndex]["title"]
-                        inputNodeLabel.text = f"{inputTitle}:"
+                        inputTitle = self._modelTranslate(modelInputs[inputIndex]["title"])
+                        inputNodeLabel.text = _("{input_title}:").format(input_title=inputTitle)
                         inputNodeSelector.visible = True
                         inputNode = self._parameterNode.GetNodeReference("InputNode" + str(inputIndex))
                         inputNodeSelector.setCurrentNode(inputNode)
                         if inputIndex == 0 and inputNode:
-                            self.ui.outputSegmentationSelector.baseName = inputNode.GetName() + " segmentation"
+                            self.ui.outputSegmentationSelector.baseName = _("{image_name} segmentation").format(image_name=inputNode.GetName())
                         if not inputNode:
                             inputErrorMessages.append(_("Select {input_title}.").format(input_title=inputTitle))
                         else:

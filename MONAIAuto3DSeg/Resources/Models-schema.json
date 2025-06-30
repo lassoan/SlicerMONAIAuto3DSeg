@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Segmentation Model List",
+  "description": "Schema describing a collection of medical image segmentation models, including metadata, input types, and versions.",
+  "type": "object",
+  "properties": {
+    "models": {
+      "type": "array",
+      "description": "List of segmentation models.",
+      "items": {
+        "type": "object",
+        "description": "Metadata and configuration of a single model.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Human-readable name of the model.",
+            "example": "Abdominal organs TS2 - quick",
+            "translatable": true
+          },
+          "license": {
+            "type": "string",
+            "description": "License under which the model is distributed.",
+            "example": "CC BY 4.0"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the model and its intended use.",
+            "example": "Low-resolution (3mm) for quick preview.",
+            "translatable": true
+          },
+          "subject": {
+            "type": "string",
+            "description": "The target subject of the model (e.g., human, animal).",
+            "example": "human",
+            "translatable": true
+          },
+          "imagingModality": {
+            "type": "string",
+            "description": "Type of medical imaging the model was trained on.",
+            "example": "CT",
+            "translatable": true
+          },
+          "sampleData": {
+            "type": "array",
+            "description": "Example dataset identifiers the model is compatible with.",
+            "items": {
+              "type": "string"
+            },
+            "example": ["CTLiver"]
+          },
+          "inputs": {
+            "type": "array",
+            "description": "List of input image specifications (used for multi-sequence models).",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Display name of the required input volume.",
+                  "example": "Input T2 volume",
+                  "translatable": true
+                },
+                "namePattern": {
+                  "type": "string",
+                  "description": "Glob-style filename pattern for matching input images.",
+                  "example": "*t2*"
+                }
+              },
+              "required": ["title", "namePattern"]
+            }
+          },
+          "versions": {
+            "type": "array",
+            "description": "List of downloadable versions of the model.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Download URL for the model archive.",
+                  "example": "https://github.com/example/model-v1.0.0.zip"
+                }
+              },
+              "required": ["url"]
+            }
+          },
+          "segmentationTimeSecGPU": {
+            "type": "number",
+            "description": "Time in seconds for segmentation using a GPU.",
+            "example": 64.6
+          },
+          "segmentationTimeSecCPU": {
+            "type": "number",
+            "description": "Time in seconds for segmentation using a CPU.",
+            "example": 73.2
+          },
+          "segmentNames": {
+            "type": "array",
+            "description": "List of anatomical structures segmented by the model.",
+            "items": {
+              "type": "string",
+              "translatable": true
+            },
+            "example": [
+              "Liver",
+              "Spleen",
+              "Left Kidney",
+              "Right Kidney"
+            ]
+          }
+        },
+        "required": ["title", "description", "subject", "imagingModality", "versions", "segmentNames"]
+      }
+    }
+  },
+  "required": ["models"]
+}
