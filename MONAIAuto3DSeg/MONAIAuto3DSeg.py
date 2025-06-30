@@ -187,13 +187,13 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     PROCESSING_FAILED = 6
 
     PROCESSING_STATES = {
-        PROCESSING_IDLE: "Idle",
-        PROCESSING_STARTING: "Initializing",
-        PROCESSING_IN_PROGRESS: "Segmenting",
-        PROCESSING_IMPORT_RESULTS: "Importing Results",
-        PROCESSING_COMPLETED: "Processing Finished",
-        PROCESSING_CANCEL_REQUESTED: "Cancelling",
-        PROCESSING_FAILED: "Processing Failed"
+        PROCESSING_IDLE: _("Idle"),
+        PROCESSING_STARTING: _("Initializing"),
+        PROCESSING_IN_PROGRESS: _("Segmenting"),
+        PROCESSING_IMPORT_RESULTS: _("Importing Results"),
+        PROCESSING_COMPLETED: _("Processing Finished"),
+        PROCESSING_CANCEL_REQUESTED: _("Cancelling"),
+        PROCESSING_FAILED: _("Processing Failed")
     }
 
     @staticmethod
@@ -590,7 +590,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if state == self.PROCESSING_STARTING:
                 self.ui.progressBar.setRange(0, 1)
                 progressValue = 0
-            else:                
+            else:
                 sequenceItemsTotal = 1
                 if self._segmentationTaskListInfo and self._segmentationTaskListInfo.sequenceBrowserNode:
                     sequenceItemsTotal = self._segmentationTaskListInfo.sequenceBrowserNode.GetNumberOfItems()
@@ -712,9 +712,9 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             self.setProcessingState(MONAIAuto3DSegWidget.PROCESSING_IDLE)
             self._segmentationTaskListInfo = None
-        
+
         slicer.app.processEvents()
-        
+
 
     def _currentModelId(self):
         itemIndex = self.ui.modelComboBox.currentRow
@@ -1261,7 +1261,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
         if not segmentationTaskListInfo.outputSegmentation:
             raise ValueError("Output segmentation is invalid")
-        
+
         return sequenceItemIndex
 
     def _processSingle(self, segmentationTaskListInfo, completedCallback=None):
@@ -1347,7 +1347,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             segmentationTaskInfo.backgroundProcess.procReturnCode = 0
             self.onSegmentationProcessCompleted(segmentationTaskInfo)
             return
-        
+
         segmentationTaskInfo.backgroundProcess.run(auto3DSegCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=segmentationTaskListInfo.waitForCompletion)
 
 
@@ -1416,7 +1416,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 logging.info(f"Processing was completed in {elapsedTime:.2f} seconds.")
             else:
                 logging.info(f"Processing failed after {elapsedTime:.2f} seconds.")
-            
+
             sequenceBrowserNode = segmentationTaskInfo.segmentationTaskListInfo.sequenceBrowserNode
             if sequenceBrowserNode:
                 # We are segmenting a sequence
@@ -1604,7 +1604,7 @@ class RemoteMONAIAuto3DSegLogic(MONAIAuto3DSegLogic):
 
             r = None
             try:
-                
+
                 with requests.post(self._server_address + f"/infer?model_name={segmentationTaskListInfo.model}", files=files) as r:
                     r.raise_for_status()
                     with open(outputSegmentationFile, "wb") as binary_file:
