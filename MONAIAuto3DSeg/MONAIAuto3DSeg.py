@@ -1009,11 +1009,6 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         anatomicRegions = []
 
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
-        if not hasattr(terminologiesLogic, "GetNumberOfRegionsInRegionContext"):
-            # This Slicer version does not have GetNumberOfRegionsInRegionContext method,
-            # do not add the region modifier (the only impact is that the modifier will not be selectable
-            # when editing the terminology on the GUI)
-            return anatomicRegions
 
         # Retrieve all anatomical region codes
         regionObject = slicer.vtkSlicerTerminologyType()
