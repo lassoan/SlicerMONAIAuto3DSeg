@@ -963,11 +963,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
     @staticmethod
     def getLoadedAnatomicContextNames():
         import vtk
-        regionContextNames = vtk.vtkStringArray()
+        anatomicContextNames = vtk.vtkStringArray()
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
-        terminologiesLogic.GetLoadedRegionContextNames(regionContextNames)
+        terminologiesLogic.GetLoadedAnatomicContextNames(anatomicContextNames)
 
-        return [regionContextNames.GetValue(idx) for idx in range(regionContextNames.GetNumberOfValues())]
+        return [anatomicContextNames.GetValue(idx) for idx in range(anatomicContextNames.GetNumberOfValues())]
 
     @staticmethod
     def _terminologyPropertyTypes(terminologyName):
@@ -1009,17 +1009,17 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         anatomicRegions = []
 
         terminologiesLogic = slicer.util.getModuleLogic("Terminologies")
-        if not hasattr(terminologiesLogic, "GetNumberOfRegionsInRegionContext"):
-            # This Slicer version does not have GetNumberOfRegionsInRegionContext method,
+        if not hasattr(terminologiesLogic, "GetNumberOfRegionsInAnatomicContext"):
+            # This Slicer version does not have GetNumberOfRegionsInAnatomicContext method,
             # do not add the region modifier (the only impact is that the modifier will not be selectable
             # when editing the terminology on the GUI)
             return anatomicRegions
 
         # Retrieve all anatomical region codes
         regionObject = slicer.vtkSlicerTerminologyType()
-        numberOfRegions = terminologiesLogic.GetNumberOfRegionsInRegionContext(anatomicContextName)
+        numberOfRegions = terminologiesLogic.GetNumberOfRegionsInAnatomicContext(anatomicContextName)
         for i in range(numberOfRegions):
-            if terminologiesLogic.GetNthRegionInRegionContext(anatomicContextName, i, regionObject):
+            if terminologiesLogic.GetNthRegionInAnatomicContext(anatomicContextName, i, regionObject):
                 anatomicRegions.append(regionObject.GetCodingSchemeDesignator() + "^" + regionObject.GetCodeValue())
 
         return anatomicRegions
