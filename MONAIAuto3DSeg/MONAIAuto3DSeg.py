@@ -60,7 +60,7 @@ The module uses <a href="https://github.com/Project-MONAI/tutorials/blob/main/MO
         anatomicContextFilePath = os.path.join(moduleDir, "Resources", "AnatomicRegionAndModifier-MONAIAuto3DSeg.term.json")
         tlogic = slicer.modules.terminologies.logic()
         self.terminologyName = tlogic.LoadTerminologyFromFile(terminologyFilePath)
-        self.anatomicContextName = tlogic.LoadAnatomicContextFromFile(anatomicContextFilePath)
+        self.anatomicContextName = tlogic.LoadRegionContextFromFile(anatomicContextFilePath)
 
     def registerSampleData(self):
         """
