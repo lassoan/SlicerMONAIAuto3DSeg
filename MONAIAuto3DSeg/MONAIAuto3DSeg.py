@@ -1112,6 +1112,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmentations.html#terminologyentry-tag
         """
         labelsFilePath = self.modelPath(modelName).joinpath("labels.csv")
+        if not labelsFilePath.exists():
+            return None
         return self._labelDescriptions(labelsFilePath)
 
     def _labelDescriptions(self, labelsFilePath):
@@ -1471,6 +1473,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
         labelValueToDescription = self.labelDescriptions(model)
+        if labelValueToDescription is None:
+            outputSegmentation.AddDefaultStorageNode()
+            storageNode = outputSegmentation.GetStorageNode()
+            storageNode.SetFileName(outputSegmentationFile)
+            storageNode.ReadData(outputSegmentation)
+            return
 
         # Get label descriptions
         maxLabelValue = max(labelValueToDescription.keys())
