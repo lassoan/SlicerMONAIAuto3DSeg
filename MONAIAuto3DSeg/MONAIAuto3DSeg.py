@@ -16,7 +16,7 @@ from slicer.i18n import translate
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 from MONAIAuto3DSegLib.model_database import ModelDatabase
-from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec
+from MONAIAuto3DSegLib.utils import humanReadableTimeFromSec, get_safe_path
 from MONAIAuto3DSegLib.dependency_handler import SlicerPythonDependencies, RemotePythonDependencies
 from MONAIAuto3DSegLib.process import InferenceServer, LocalInference, BackgroundProcess, EventCode, ExitCode, SegmentationTaskListInfo, SegmentationTaskInfo
 
@@ -1293,11 +1293,11 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             tempDir = self.debugSkipInferenceTempDir
         else:
             # Create new empty folder
-            tempDir = slicer.util.tempDirectory()
+            tempDir = get_safe_path(slicer.util.tempDirectory())
 
         # Get Python executable path
         import shutil
-        pythonSlicerExecutablePath = shutil.which("PythonSlicer")
+        pythonSlicerExecutablePath = get_safe_path(shutil.which("PythonSlicer"))
         if not pythonSlicerExecutablePath:
             raise RuntimeError("Python was not found")
 
@@ -1317,8 +1317,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
                 raise ValueError(f"Input node type {inputNode.GetClassName()} is not supported")
 
         outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
-        modelPtFile = modelPath.joinpath("model.pt")
-        inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
+        modelPtFile = get_safe_path(modelPath.joinpath("model.pt"))
+        inferenceScriptPyFile = get_safe_path(os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py"))
         auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
             "--model-file", str(modelPtFile),
             "--image-file", inputFiles[0],

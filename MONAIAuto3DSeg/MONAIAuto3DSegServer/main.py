@@ -17,6 +17,7 @@ for path in paths:
         sys.path.insert(0, path)
 
 from MONAIAuto3DSegLib.model_database import ModelDatabase
+from MONAIAuto3DSegLib.utils import get_safe_path
 
 import shutil
 import asyncio
@@ -86,7 +87,7 @@ async def infer(
     image_file_4: UploadFile = None
 ):
     import tempfile
-    session_dir = tempfile.mkdtemp(dir=tempfile.gettempdir())
+    session_dir = get_safe_path(tempfile.mkdtemp(dir=tempfile.gettempdir()))
     background_tasks.add_task(shutil.rmtree, session_dir, ignore_errors=False)
 
     logging.debug(session_dir)
@@ -104,13 +105,13 @@ async def infer(
     outputSegmentationFile = str(Path(session_dir) / "output-segmentation.nrrd")
 
     modelPath = modelDB.modelPath(model_name)
-    modelPtFile = modelPath.joinpath("model.pt")
+    modelPtFile = get_safe_path(modelPath.joinpath("model.pt"))
 
     assert os.path.exists(modelPtFile)
 
     moduleDir = Path(__file__).parent.parent
-    inferenceScriptPyFile = os.path.join(moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
-    auto3DSegCommand = [sys.executable, str(inferenceScriptPyFile),
+    inferenceScriptPyFile = get_safe_path(os.path.join(moduleDir, "Scripts", "auto3dseg_segresnet_inference.py"))
+    auto3DSegCommand = [get_safe_path(sys.executable), str(inferenceScriptPyFile),
                         "--model-file", str(modelPtFile),
                         "--image-file", inputFiles[0],
                         "--result-file", outputSegmentationFile]

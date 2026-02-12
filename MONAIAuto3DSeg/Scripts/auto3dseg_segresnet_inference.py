@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import fire
 import time
@@ -45,6 +46,29 @@ def logits2pred(logits, sigmoid=False, dim=1):
     return pred
 
 
+def _get_safe_path(path_str):
+    """Convert to Windows short path if non-ASCII characters are present."""
+    if path_str is None or sys.platform != "win32":
+        return path_str
+    path_str = str(path_str)
+    try:
+        path_str.encode("ascii")
+        return path_str
+    except UnicodeEncodeError:
+        pass
+    import ctypes
+    from ctypes import wintypes
+    GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
+    GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    GetShortPathNameW.restype = wintypes.DWORD
+    buf_size = GetShortPathNameW(path_str, None, 0)
+    if buf_size == 0:
+        return path_str
+    buf = ctypes.create_unicode_buffer(buf_size)
+    GetShortPathNameW(path_str, buf, buf_size)
+    return buf.value
+
+
 @torch.no_grad()
 def main(model_file,
          image_file,
@@ -54,6 +78,14 @@ def main(model_file,
          image_file_3=None,
          image_file_4=None,
          **kwargs):
+    # Convert paths to short (8.3) format on Windows to avoid issues with non-ASCII characters
+    model_file = _get_safe_path(model_file)
+    image_file = _get_safe_path(image_file)
+    result_file = _get_safe_path(result_file)
+    image_file_2 = _get_safe_path(image_file_2)
+    image_file_3 = _get_safe_path(image_file_3)
+    image_file_4 = _get_safe_path(image_file_4)
+
     start_time = time.time()
     timing_checkpoints = []  # list of (operation, time) tuples
 
