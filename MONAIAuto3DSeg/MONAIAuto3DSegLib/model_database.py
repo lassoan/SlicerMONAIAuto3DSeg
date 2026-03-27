@@ -54,12 +54,14 @@ class ModelDatabase:
             with open(modelsJsonFilePath) as f:
                 modelsTree = json.load(f)["models"]
             for model in modelsTree:
+                modelType = model["model_type"]
                 deprecated = False
                 for version in model["versions"]:
                     url = version["url"]
                     # URL format: <path>/<filename>-v<version>.zip
                     # Example URL: https://github.com/lassoan/SlicerMONAIAuto3DSeg/releases/download/Models/17-segments-TotalSegmentator-v1.0.3.zip
-                    match = re.search(r"(?P<filename>[^/]+)-v(?P<version>\d+\.\d+\.\d+)", url)
+                    separator = "_v" if modelType == "MONAIbundle" else "-v"
+                    match = re.search(r"(?P<filename>[^/]+)" + separator + r"(?P<version>\d+\.\d+\.\d+)", url)
                     if match:
                         filename = match.group("filename")
                         version = match.group("version")
@@ -94,7 +96,8 @@ class ModelDatabase:
                             f"<p><b>Subject:</b> {model['subject']}\n"
                             f"<p><b>Segments:</b> {', '.join(segmentNames)}",
                         "url": url,
-                        "deprecated": deprecated
+                        "deprecated": deprecated,
+                        "model_type": modelType,
                         })
                     # First version is not deprecated, all subsequent versions are deprecated
                     deprecated = True
@@ -141,7 +144,7 @@ class ModelDatabase:
     def _modelPath(self, modelName):
         modelRoot = self.modelsPath.joinpath(modelName)
         # find labels.csv file within the modelRoot folder and subfolders
-        for path in Path(modelRoot).rglob("labels.csv"):
+        for path in Path(modelRoot).rglob("model.pt"):
             return path.parent
         raise RuntimeError(f"Model {modelName} path not found")
 

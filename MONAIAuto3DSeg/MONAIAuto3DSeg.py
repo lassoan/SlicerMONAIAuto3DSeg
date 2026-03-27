@@ -671,6 +671,7 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
                 self._segmentationTaskListInfo = self.logic.process(inputNodes, self.ui.outputSegmentationSelector.currentNode(),
                     self._currentModelId(), self.ui.cpuCheckBox.checked, waitForCompletion=waitForCompletion,
+                    modelType=self._currentModelType(),
                     sequenceBrowserNode = sequenceBrowserNode,
                     eventCallback=self.onTaskEvent
                     )
@@ -736,6 +737,11 @@ class MONAIAuto3DSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.modelComboBox.setCurrentRow(itemIndex)
                 return True
         return False
+
+    def _currentModelType(self):
+        with slicer.util.tryWithErrorDisplay(_("Failed to retrieve model information"), waitCursor=True):
+            model = self.logic.model(self._currentModelId())
+        return model.get("model_type")
 
     def onDownloadSampleData(self):
         with slicer.util.tryWithErrorDisplay(_("Failed to retrieve model information"), waitCursor=True):
@@ -1106,6 +1112,8 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmentations.html#terminologyentry-tag
         """
         labelsFilePath = self.modelPath(modelName).joinpath("labels.csv")
+        if not labelsFilePath.exists():
+            return None
         return self._labelDescriptions(labelsFilePath)
 
     def _labelDescriptions(self, labelsFilePath):
@@ -1198,7 +1206,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         if not parameterNode.GetParameter("ServerPort"):
             parameterNode.SetParameter("ServerPort", str(8891))
 
-    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True,
+    def process(self, inputNodes, outputSegmentation, model=None, cpu=False, waitForCompletion=True, modelType="SegResNet",
                 sequenceBrowserNode=None,
                 eventCallback=None,
                 customEventCallbackData=None):
@@ -1224,6 +1232,7 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
         segmentationTaskListInfo.inputNodes = inputNodes
         segmentationTaskListInfo.outputSegmentation = outputSegmentation
         segmentationTaskListInfo.model = model
+        segmentationTaskListInfo.modelType = modelType
         segmentationTaskListInfo.cpu = cpu
         segmentationTaskListInfo.waitForCompletion = waitForCompletion
         segmentationTaskListInfo.sequenceBrowserNode = sequenceBrowserNode
@@ -1316,19 +1325,21 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             else:
                 raise ValueError(f"Input node type {inputNode.GetClassName()} is not supported")
 
-        outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
-        modelPtFile = modelPath.joinpath("model.pt")
-        inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
-        auto3DSegCommand = [ pythonSlicerExecutablePath, str(inferenceScriptPyFile),
-            "--model-file", str(modelPtFile),
-            "--image-file", inputFiles[0],
-            "--result-file", str(outputSegmentationFile) ]
-        for inputIndex in range(1, len(inputFiles)):
-            auto3DSegCommand.append(f"--image-file-{inputIndex+1}")
-            auto3DSegCommand.append(inputFiles[inputIndex])
+        if segmentationTaskListInfo.modelType == 'SegResNet':
+            outputSegmentationFile = tempDir + "/output-segmentation.nrrd"
+            modelPtFile = modelPath.joinpath("model.pt")
+            inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "auto3dseg_segresnet_inference.py")
+            inferenceCommand = self.createAuto3DSegCommand(inferenceScriptPyFile, inputFiles, modelPtFile,
+                                                           outputSegmentationFile, pythonSlicerExecutablePath)
+        elif segmentationTaskListInfo.modelType == 'MONAIbundle':
+            outputSegmentationFile = tempDir + "/output-segmentation.nii.gz"
+            bundleDir = modelPath.parent
+            inferenceScriptPyFile = os.path.join(self.moduleDir, "Scripts", "monaibundle_inference.py")
+            inferenceCommand = self.createMonaiBundleCommand(inferenceScriptPyFile, bundleDir,inputFiles[0],
+                                                             outputSegmentationFile, pythonSlicerExecutablePath) # to do implement this method
+        else:
+            raise ValueError(f"Model type {segmentationTaskListInfo.modelType} is not supported")
 
-        logging.info("Creating segmentations with MONAIAuto3DSeg AI...")
-        logging.info(f"Auto3DSeg command: {auto3DSegCommand}")
 
         additionalEnvironmentVariables = None
         if segmentationTaskListInfo.cpu:
@@ -1349,8 +1360,30 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
             self.onSegmentationProcessCompleted(segmentationTaskInfo)
             return
 
-        segmentationTaskInfo.backgroundProcess.run(auto3DSegCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=segmentationTaskListInfo.waitForCompletion)
+        segmentationTaskInfo.backgroundProcess.run(inferenceCommand, additionalEnvironmentVariables=additionalEnvironmentVariables, waitForCompletion=segmentationTaskListInfo.waitForCompletion)
 
+    def createAuto3DSegCommand(self, inferenceScriptPyFile, inputFiles, modelPtFile, outputSegmentationFile,
+                               pythonSlicerExecutablePath):
+        auto3DSegCommand = [pythonSlicerExecutablePath, str(inferenceScriptPyFile),
+                            "--model-file", str(modelPtFile),
+                            "--image-file", inputFiles[0],
+                            "--result-file", str(outputSegmentationFile)]
+        for inputIndex in range(1, len(inputFiles)):
+            auto3DSegCommand.append(f"--image-file-{inputIndex + 1}")
+            auto3DSegCommand.append(inputFiles[inputIndex])
+        logging.info("Creating segmentations with MONAIAuto3DSeg AI...")
+        logging.info(f"Auto3DSeg command: {auto3DSegCommand}")
+        return auto3DSegCommand
+
+    def createMonaiBundleCommand(self, inferenceScriptPyFile, bundleDir, inputFile, outputSegmentationFile,
+                                 pythonSlicerExecutablePath):
+        inferenceCommand = [pythonSlicerExecutablePath, str(inferenceScriptPyFile),
+                            "--bundle-root-dir", str(bundleDir),
+                            "--image-file", inputFile,
+                            "--result-file", str(outputSegmentationFile)]
+        logging.info("Creating segmentations with MONAIbundle AI...")
+        logging.info(f"MONAIbundle command: {inferenceCommand}")
+        return inferenceCommand
 
     def onSegmentationProcessCompleted(self, segmentationTaskInfo: SegmentationTaskInfo):
         if segmentationTaskInfo.segmentationTaskListInfo.eventCallback:
@@ -1440,6 +1473,12 @@ class MONAIAuto3DSegLogic(ScriptedLoadableModuleLogic, ModelDatabase):
 
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, model):
         labelValueToDescription = self.labelDescriptions(model)
+        if labelValueToDescription is None:
+            outputSegmentation.AddDefaultStorageNode()
+            storageNode = outputSegmentation.GetStorageNode()
+            storageNode.SetFileName(outputSegmentationFile)
+            storageNode.ReadData(outputSegmentation)
+            return
 
         # Get label descriptions
         maxLabelValue = max(labelValueToDescription.keys())
@@ -1741,7 +1780,7 @@ class MONAIAuto3DSegTest(ScriptedLoadableModuleTest):
 
                 self.delayDisplay(f"Running segmentation for {model['title']}...")
                 startTime = time.time()
-                logic.process(inputNodes, outputSegmentation, model["id"], forceUseCpu)
+                logic.process(inputNodes, outputSegmentation, model["id"], model["model_type"], forceUseCpu)
 
                 segmentationTimeSec = time.time() - startTime
 

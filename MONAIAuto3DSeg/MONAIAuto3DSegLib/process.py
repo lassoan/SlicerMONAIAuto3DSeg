@@ -41,6 +41,7 @@ class SegmentationTaskListInfo:
     inputNodes: list = None
     outputSegmentation: slicer.vtkMRMLSegmentationNode = None
     model: str = ""
+    modelType: str = ""
     cpu: bool = False
     waitForCompletion: bool = False
     sequenceBrowserNode: slicer.vtkMRMLSequenceBrowserNode = None
