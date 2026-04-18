@@ -1,0 +1,8 @@
+name: Package Extension
+
+on:
+  pull_request:
+
+jobs:
+  package:
+    uses: lassoan/Slicer/.github/workflows/package-python-extension.yml@python-ext-build
